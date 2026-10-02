@@ -6,37 +6,40 @@
  * ─────────────────────────────────────────────────────────────────────────────────────────
  * INTEGRATION
  *
- *  World.build()  (src/world/World.ts) – after the manor; add the chapel BEFORE the cemetery:
+ *  World.build()  (src/world/World.ts), after the manor:
  *      const h = (x: number, z: number) => this.terrain.heightAt(x, z);
  *      this.add(buildGreenhouse(this.physics, this.materials, h));
  *      this.add(buildChapel(this.physics, this.materials, h));
  *      this.add(buildCemetery(this.physics, this.materials, h));
  *      this.add(buildHuntingStand(this.physics, this.materials, h));
- *    (imports: `import { buildGreenhouse, buildChapel, buildCemetery, buildHuntingStand } from './buildings/Sacred';`)
+ *    (`import { buildGreenhouse, buildChapel, buildCemetery, buildHuntingStand } from './buildings/Sacred';`)
+ *    The cemetery is open ground and returns no rooms/spans (a room would count as "indoors").
  *
  *  Game.load()  (src/Game.ts):
  *    - preload:   this.assets.preload([...MANOR_PROP_IDS, ...SACRED_PROP_IDS, ...VAN_CARGO])
  *                 (`import { SACRED_PROP_IDS, placeSacredProps } from './world/props/SacredProps';`)
- *    - props:     the manor placer `this.props` is hidden away from the manor (propCull), so use a
- *                 placer of its own:
- *                     const sacred = new PropPlacer(this.assets, this.physics);
- *                     placeSacredProps(sacred);          // or iterate SACRED_PROPS like MANOR_PROPS
- *                     scene.add(sacred.group);
+ *    - props:     `this.props` is hidden whenever the camera is away from the manor (prop culling in
+ *                 the frame loop), so give these a placer of their own, after world.build():
+ *                     const sacredProps = new PropPlacer(this.assets, this.physics);
+ *                     placeSacredProps(sacredProps);     // or iterate SACRED_PROPS like MANOR_PROPS
+ *                     scene.add(sacredProps.group);
  *    - documents: placeDocuments([...MANOR_DOCS, ...SACRED_DOCS], this.physics, this.interaction, …)
  *                 (`import { SACRED_DOCS } from './world/story/SacredDocs';`)
- *    SACRED_PROPS / SACRED_DOCS hold absolute positions; they are refreshed automatically whenever
- *    one of the builders below runs (the chapel floor, the hunting stand etc. follow the terrain),
- *    so read them after World.build().
+ *    SACRED_PROPS / SACRED_DOCS hold absolute positions and are refreshed automatically whenever a
+ *    builder below has run (the chapel floor and the hunting stand follow the terrain), so read
+ *    them after World.build().
  *
- *  Needs a one-line change elsewhere to look right:
- *    - Doors.cull(): with the camera away from the manor `range` is 0, so only ids matching
- *      EXTERIOR_DOOR stay visible. 'door:chapel_front', 'door:greenhouse_front' and
- *      'door:hunting_stand_front' match; 'door:chapel_crypt' does not (add `crypt` to the regex or
- *      cull by distance to the door's own building).
- *    - LightPool draws a cord + bakelite socket + bulb for every fixture; skip those for
- *      kind === 'candle' (light:chapel_candle sits on the altar step) and skip the bulb hum for it.
- *    - Forest: the nameless cross stands under three spruces just outside the cemetery wall.
- *      Add CEMETERY_SPRUCES ([x, z, model]) to the hand-placed `special` list in Forest.scatter().
+ *  Small changes elsewhere that these structures need to look right:
+ *    - Doors.cull(): away from the manor `range` is 0, so only ids matching EXTERIOR_DOOR stay
+ *      visible. 'door:chapel_front', 'door:greenhouse_front' and 'door:hunting_stand_front' match;
+ *      'door:chapel_crypt' does not (add `crypt` to the regex, or cull by distance per building).
+ *    - LightPool gives every fixture a cord, a bakelite socket and an emissive bulb sphere (and Game
+ *      plays the bulb hum for working ones). For kind === 'candle' skip all of that: the flame is
+ *      geometry of the chapel. The fixture sits 0.06 above the flame because LightPool lowers its
+ *      point light by 0.06.
+ *    - Forest: the nameless cross stands under three spruces just outside the cemetery wall. Add
+ *      CEMETERY_SPRUCES ([x, z, model]) to the hand-placed `special` list in Forest.scatter(), and
+ *      consider a tree blocker of ~4 m around POI.huntingStand.
  * ─────────────────────────────────────────────────────────────────────────────────────────
  *
  * All builders take `heightAt` (TerrainData.heightAt) and sit everything on the terrain. The
