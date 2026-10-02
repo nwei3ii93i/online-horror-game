@@ -78,7 +78,7 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
   const { F, T, SLAB } = TUNNEL;
   const { ax, L1, L2, HEAD, G } = TUNNEL_GEOMETRY;
   const wallIn: FaceSpec = { mat: 'tunnel_wall', dado: { mat: 'tunnel_wall_damp', h: 0.45 } };
-  const brickIn: FaceSpec = { mat: 'tunnel_brick', dado: { mat: 'tunnel_wall_damp', h: 0.3 } };
+  const brickIn: FaceSpec = { mat: 'tunnel_brick', dado: { mat: 'tunnel_brick_damp', h: 0.3 } };
 
   // ------------------------------------------------------------------ ceiling sections (follow the terrain)
   const groundMin = (x0: number, x1: number, z0: number, z1: number): number => {
@@ -227,7 +227,7 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
     }
   }
   // the missing bricks near the top of the blocking wall (a black gap) and what fell out of it
-  mb.quad('black_soot', [G.x0 + 0.002, ys + 0.12, G.zc - 0.42], [G.x0 + 0.002, ys + 0.12, G.zc - 0.12], [G.x0 + 0.002, ys + 0.26, G.zc - 0.14], [G.x0 + 0.002, ys + 0.24, G.zc - 0.4], [1, 0, 0]);
+  orientedQuad(mb, 'black_soot', [G.x0 + 0.002, ys + 0.12, G.zc - 0.42], [G.x0 + 0.002, ys + 0.12, G.zc - 0.12], [G.x0 + 0.002, ys + 0.26, G.zc - 0.14], [G.x0 + 0.002, ys + 0.24, G.zc - 0.4], [1, 0, 0]);
   scatterBlocks(mb, 'tunnel_brick_new', G.x0 + 0.05, G.zc - 0.6, G.x0 + 0.5, G.zc - 0.15, F, 5, rng);
   // collapse: two timber sets with lagging; rubble heaps along the walls (crouch through here)
   const C = TUNNEL.COLLAPSE;
@@ -280,7 +280,7 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
     const o0 = 0.0, o1 = 0.36;
     mb.beam('rust_metal_int', p(o0, yHeat - 0.1), p(o1, yHeat - 0.1), 0.04, 0.04, V(0, 1, 0));
     mb.beam('rust_metal_int', p(0.02, yHeat - 0.32), p(0.3, yHeat - 0.12), 0.03, 0.03, V(0, 1, 0));
-    mb.beam('rust_metal_int', p(0.012, yHeat - 0.36), p(0.012, yHeat - 0.05), 0.05, 0.012, V(0, 1, 0));
+    mb.beam('rust_metal_int', p(0.015, yHeat - 0.36), p(0.015, yHeat - 0.05), 0.03, 0.03, V(0, 1, 0));
     mb.beam('rust_metal_int', p(o0, yMain - 0.08), p(0.17, yMain - 0.08), 0.035, 0.035, V(0, 1, 0));
     for (const o of [0.1, 0.28]) flange(mb, 'rust_metal_int', p(o, yHeat), dir, 0.081, 0.015, 10);
     rustStreak(p(0.0, yHeat - 0.12));

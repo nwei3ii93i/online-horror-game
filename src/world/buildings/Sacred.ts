@@ -581,8 +581,9 @@ const GH_NB = { z0: GH.z0 + GH_T + 0.03, z1: GH.z0 + GH_T + 0.85, sections: 8, c
 const GH_SB = { z0: GH.z1 - GH_T - 0.85, z1: GH.z1 - GH_T - 0.03, sections: 7, collapsed: [4] };
 /** Raised bed in the south-east corner – the one place where something still grows. */
 const GH_BED = { x0: GH_BX0 + GH_SB.sections * GH_SEC + 0.05, x1: GH.x1 - GH_T - 0.98, z0: GH.z1 - GH_T - 1.7, z1: GH.z1 - GH_T - 0.02 };
-/** Potting bench across the east end. */
-const GH_POT = { x0: GH.x1 - GH_T - 0.88, x1: GH.x1 - GH_T - 0.03, z0: (GH.z0 + GH.z1) / 2 - 1.6, z1: (GH.z0 + GH.z1) / 2 + 0.7, top: 0.86 };
+/** Potting bench across the east end (top height relative to the floor; shelf above at 1.55). */
+const GH_POT = { x0: GH.x1 - GH_T - 0.88, x1: GH.x1 - GH_T - 0.03, z0: (GH.z0 + GH.z1) / 2 - 1.6, z1: (GH.z0 + GH.z1) / 2 + 0.7, top: 0.86, shelf: 1.565 };
+export const GREENHOUSE_POTTING_BENCH: Readonly<typeof GH_POT> = GH_POT;
 
 export interface GreenhousePot { x: number; y: number; z: number; ry: number; state: 'dead' | 'empty' | 'sprout' | 'fallen' }
 /** Clay pots (placed as props by SacredProps; the builder adds what grows – or died – in them). y relative to the floor. */
@@ -606,17 +607,17 @@ export const GREENHOUSE_POTS: GreenhousePot[] = (() => {
   // knocked off the benches
   out.push({ x: GH_BX0 + 2.6 * GH_SEC, y: 0.13, z: GH_NB.z1 + 0.35, ry: 0.7, state: 'fallen' });
   out.push({ x: GH_BX0 + 4.4 * GH_SEC, y: 0.13, z: GH_SB.z0 - 0.3, ry: 2.1, state: 'fallen' });
-  // the tidy ones next to the raised bed
-  out.push({ x: GH_POT.x0 + 0.45, y: GH_POT.top + 0.005, z: GH_POT.z1 - 0.25, ry: 0.3, state: 'sprout' });
-  out.push({ x: GH_POT.x0 + 0.2, y: GH_POT.top + 0.005, z: GH_POT.z1 - 0.45, ry: 1.2, state: 'sprout' });
-  out.push({ x: GH_POT.x0 + 0.62, y: GH_POT.top + 0.005, z: GH_POT.z1 - 0.52, ry: 2.2, state: 'empty' });
+  // the tidy ones on the potting bench next to the raised bed
+  out.push({ x: GH_POT.x0 + 0.18, y: GH_POT.top + 0.005, z: GH_POT.z1 - 0.2, ry: 0.3, state: 'sprout' });
+  out.push({ x: GH_POT.x0 + 0.62, y: GH_POT.top + 0.005, z: GH_POT.z1 - 0.22, ry: 1.2, state: 'sprout' });
+  out.push({ x: GH_POT.x1 - 0.12, y: GH_POT.shelf, z: GH_POT.z0 + 0.8, ry: 2.2, state: 'empty' });
   return out;
 })();
 
 /** Seeding trays (props) with seedlings (geometry). y relative to the floor. */
 export const GREENHOUSE_TRAYS: { x: number; y: number; z: number; ry: number }[] = [
-  { x: GH_POT.x0 + 0.3, y: GH_POT.top + 0.005, z: GH_POT.z1 - 0.95, ry: 0.05 },
-  { x: GH_POT.x0 + 0.58, y: GH_POT.top + 0.005, z: GH_POT.z1 - 0.98, ry: -0.04 },
+  { x: GH_POT.x0 + 0.25, y: GH_POT.top + 0.005, z: GH_POT.z1 - 1.2, ry: 0.05 },
+  { x: GH_POT.x0 + 0.53, y: GH_POT.top + 0.005, z: GH_POT.z1 - 1.22, ry: -0.04 },
   { x: GH_BED.x0 + 0.25, y: 0.37, z: GH_BED.z0 + 0.22, ry: 0.1 },
 ];
 
@@ -878,12 +879,12 @@ export function buildGreenhouse(physics: Physics | undefined, materials: Materia
     mb.box('rough_timber', (P.x0 + P.x1) / 2, F + 0.25, (P.z0 + P.z1) / 2, P.x1 - P.x0 - 0.04, 0.03, P.z1 - P.z0 - 0.04, { uv: 'local', uvRotate: true });
     // up-stand and shelf on brackets against the glazing
     mb.box('rough_timber', P.x1 - 0.02, top + 0.2, (P.z0 + P.z1) / 2, 0.03, 0.4, P.z1 - P.z0, { uv: 'local' });
-    mb.box('rough_timber', P.x1 - 0.12, F + 1.55, (P.z0 + P.z1) / 2, 0.2, 0.03, P.z1 - P.z0 - 0.2, { uv: 'local' });
+    mb.box('rough_timber', P.x1 - 0.12, F + P.shelf - 0.015, (P.z0 + P.z1) / 2, 0.2, 0.03, P.z1 - P.z0 - 0.2, { uv: 'local' });
     for (const z of [P.z0 + 0.3, P.z1 - 0.3]) mb.box('rust_metal', P.x1 - 0.06, F + 1.5, z, 0.12, 0.1, 0.02);
     // soil heap on the bench, twine, labels
-    mound(mb, 'gh_soil_dry', (P.x0 + P.x1) / 2, top, P.z0 + 0.45, 0.4, 0.28, 0.08, 0.32);
-    mb.cylinder('hay', P.x0 + 0.2, top, P.z0 + 1.05, 0.05, 0.05, 0.09, 10);
-    for (let i = 0; i < 6; i++) mb.box('painted_wood_white', P.x0 + 0.5 + rng.range(-0.1, 0.1), top + 0.002, P.z0 + 0.95 + i * 0.03, 0.12, 0.004, 0.018);
+    mound(mb, 'gh_soil_dry', P.x0 + 0.48, top, P.z0 + 0.35, 0.4, 0.26, 0.08, 0.24);
+    mb.cylinder('hay', P.x0 + 0.15, top, P.z0 + 0.72, 0.05, 0.05, 0.09, 10);
+    for (let i = 0; i < 6; i++) mb.box('painted_wood_white', P.x0 + 0.58 + rng.range(-0.05, 0.05), top + 0.002, P.z0 + 0.62 + i * 0.03, 0.12, 0.004, 0.018);
     physics?.addBox({ cx: (P.x0 + P.x1) / 2, cy: F + P.top / 2, cz: (P.z0 + P.z1) / 2, hx: (P.x1 - P.x0) / 2, hy: P.top / 2, hz: (P.z1 - P.z0) / 2, surface: 'wood' });
     kit.anchor('greenhouse_potting_bench', (P.x0 + P.x1) / 2, top, (P.z0 + P.z1) / 2, -PI / 2, 'greenhouse');
   }

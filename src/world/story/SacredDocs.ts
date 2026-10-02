@@ -1,5 +1,5 @@
 import type { DocPlacement } from './DocumentProps';
-import { SacredDatum, onSacredLevels, sacredPoint, sacredYaw } from '../buildings/Sacred';
+import { GREENHOUSE_POTTING_BENCH as PB, SacredDatum, onSacredLevels, sacredPoint, sacredYaw } from '../buildings/Sacred';
 
 /**
  * Documents in the greenhouse, the chapel and the hunting stand. Heights follow the floors the
@@ -7,8 +7,8 @@ import { SacredDatum, onSacredLevels, sacredPoint, sacredYaw } from '../building
  * one of them has run (read it after World.build()).
  */
 const SPECS: { id: string; d: SacredDatum; x: number; y: number; z: number; rot: number }[] = [
-  // on the potting bench by the raised bed, between the seed trays and the soil heap
-  { id: 'greenhouse_seed_packet', d: 'gh', x: 33.18, y: 0.861, z: -42.35, rot: 0.42 },
+  // on the potting bench by the raised bed, between the seed trays and the pots with seedlings
+  { id: 'greenhouse_seed_packet', d: 'gh', x: PB.x0 + 0.38, y: PB.top + 0.001, z: PB.z1 - 0.72, rot: 0.42 },
   // on the altar step beside the candle stubs
   { id: 'drawing_chapel_undated', d: 'chapel', x: 50.02, y: 0.161, z: -110.0, rot: -0.3 },
   // on the gun rest under the shooting window of the hunting stand (stand-local frame)

@@ -29,6 +29,7 @@ export const TUNNEL_MATS: Record<string, MatSpec> = {
   tunnel_water: { color: '#090a0a', roughness: 0.04 },
   tunnel_brick: { tex: 'brick', scale: 2.08, color: '#9c8e84' },
   tunnel_brick_new: { tex: 'brick', scale: 2.08, color: '#c39b85' },
+  tunnel_brick_damp: { tex: 'brick', scale: 2.08, color: '#62574f', roughness: 0.6 },
   coal_floor: { tex: 'concrete', scale: 2, color: '#47423c', roughness: 0.95 },
   coal: { color: '#121110', roughness: 0.42 },
   pipe_lagging: { tex: 'fabric_white', scale: 0.4, color: '#9c9384', vertexColors: true },
@@ -163,10 +164,15 @@ export function heap(mb: MeshBuilder, mat: string, cx: number, y: number, cz: nu
 export function scatterBlocks(mb: MeshBuilder, mat: string, x0: number, z0: number, x1: number, z1: number, y: number, n: number, rng: RNG, size: [number, number, number] = [0.24, 0.07, 0.115]): void {
   for (let i = 0; i < n; i++) {
     const x = rng.range(x0, x1), z = rng.range(z0, z1);
-    const tilt = rng.range(-0.35, 0.35);
+    const tilt = rng.range(-0.35, 0.35), roll = rng.range(-0.3, 0.3);
     const sc = rng.range(0.45, 1);
-    mb.pushTRS(x, y + size[1] * 0.4, z, rng.range(0, Math.PI), 1, 1, 1, tilt, rng.range(-0.3, 0.3));
-    mb.box(mat, 0, 0, 0, size[0] * sc, size[1], size[2], { uv: 'local', uvOffset: [rng.float() * 3, rng.float() * 3] });
+    const sx = size[0] * sc, sy = size[1], sz = size[2];
+    // rest the lowest corner on the floor (2 mm sunk so it never floats)
+    const rot = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(tilt, 0, roll, 'YXZ'));
+    let low = 0;
+    for (const cx of [-sx / 2, sx / 2]) for (const cy of [-sy / 2, sy / 2]) for (const cz of [-sz / 2, sz / 2]) low = Math.min(low, new THREE.Vector3(cx, cy, cz).applyMatrix4(rot).y);
+    mb.pushTRS(x, y - low - 0.002, z, rng.range(0, Math.PI), 1, 1, 1, tilt, roll);
+    mb.box(mat, 0, 0, 0, sx, sy, sz, { uv: 'local', uvOffset: [rng.float() * 3, rng.float() * 3] });
     mb.pop();
   }
 }
@@ -204,7 +210,8 @@ export function drainGrate(mb: MeshBuilder, x: number, y: number, z: number, s =
 
 /** Quad whose winding is flipped if needed so its front face looks along n. */
 export function orientedQuad(mb: MeshBuilder, mat: string, a: number[], b: number[], c: number[], d: number[], n: number[], uvs?: number[][]): void {
-  const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  // diagonals: robust even when one edge has collapsed to a point
+  const e1 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]], e2 = [d[0] - b[0], d[1] - b[1], d[2] - b[2]];
   const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
   if (cr[0] * n[0] + cr[1] * n[1] + cr[2] * n[2] < 0) mb.quad(mat, a, d, c, b, n, uvs ? [uvs[0], uvs[3], uvs[2], uvs[1]] : undefined);
   else mb.quad(mat, a, b, c, d, n, uvs);
