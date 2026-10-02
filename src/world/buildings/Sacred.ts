@@ -1419,10 +1419,13 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
     const ring: number[][] = [[CX - rho - go, gy, Zs], off(cWN), off(cNW), off(cNE), off(cEN), [CX + rho + go, gy, Zs]];
     for (let i = 0; i < ring.length - 1; i++) gutter(mb, 'rust_metal', V3(ring[i][0], ring[i][1], ring[i][2]), V3(ring[i + 1][0], ring[i + 1][1], ring[i + 1][2]));
     for (const s of [-1, 1]) {
-      const x = CX + s * (rho + go), z = Zs - 0.1;
-      const g = heightAt(x, z + 0.3);
-      mb.rod('rust_metal', V3(x, gy, z), V3(x, g + 0.25, z), 0.04);
-      mb.rod('rust_metal', V3(x, g + 0.25, z), V3(x, g + 0.05, z + 0.25), 0.04);
+      // outlet at the gutter, swan-neck back to the wall, then down along the render
+      const x = CX + s * (rho + go), z = Zs - 0.1, xw = CX + s * (W / 2 + 0.09);
+      const g = heightAt(xw, z + 0.3);
+      mb.rod('rust_metal', V3(x, gy, z), V3(x, gy - 0.12, z), 0.04);
+      mb.rod('rust_metal', V3(x, gy - 0.12, z), V3(xw, gy - 0.5, z), 0.04);
+      mb.rod('rust_metal', V3(xw, gy - 0.5, z), V3(xw, g + 0.25, z), 0.04);
+      mb.rod('rust_metal', V3(xw, g + 0.25, z), V3(xw, g + 0.05, z + 0.25), 0.04);
     }
   }
   // bell turret (Dachreiter) on the ridge above the entrance
