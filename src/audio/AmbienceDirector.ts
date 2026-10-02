@@ -423,7 +423,7 @@ export class AmbienceDirector {
       if (this.breathT <= 0) {
         const k = (ex - 0.35) / 0.65;
         this.breathT = rand(1.15, 1.35) / (0.85 + 0.45 * k);
-        this.engine.play('breath_tired', { volume: 0.3 + 0.7 * k, pitch: 0.97 + 0.08 * k, priority: 6 });
+        this.engine.play('breath_tired', { volume: 0.1 + 0.32 * k, pitch: 0.97 + 0.06 * k, priority: 6 });
       }
     } else this.breathT = Math.min(this.breathT, 0.3);
   }

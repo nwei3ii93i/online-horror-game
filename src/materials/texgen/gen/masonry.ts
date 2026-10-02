@@ -134,9 +134,9 @@ export function plasterInterior(b: TexBuilder, tint = '#c9c3b4'): void {
 export function stoneWall(b: TexBuilder): void {
   const nz = b.noise;
   const W = worleyResult();
-  b.normalStrength = 3.0;
-  b.cavity = 0.8;
-  b.cavityRadius = 0.02;
+  b.normalStrength = 1.7;
+  b.cavity = 0.5;
+  b.cavityRadius = 0.015;
   const stones = [hex('#77736b'), hex('#6b675f'), hex('#837c70'), hex('#5f5d58'), hex('#8a8579'), hex('#6f6a5e')];
   b.each((u, v, i) => {
     // stretch cells horizontally for coursed rubble look
@@ -317,5 +317,44 @@ export function wallTiles(b: TexBuilder, tint = '#d8d6cc'): void {
     b.h[i] = lerp(h, 0.45, grout);
     b.setColor(i, c[0], c[1], c[2]);
     b.rough[i] = lerp(rough, 0.9, grout);
+  });
+}
+
+/** Dressed granite slabs / ashlar (steps, terraces, socles), worn edges and lichen (2 m tile). */
+export function stoneSlab(b: TexBuilder): void {
+  const nz = b.noise;
+  const W = worleyResult();
+  b.normalStrength = 1.3;
+  b.cavity = 0.45;
+  const rows = 3;
+  b.each((u, v, i) => {
+    const y = v * rows;
+    const row = Math.floor(y);
+    const off = idRand(row, 4) * 0.7;
+    const cols = 2 + Math.floor(idRand(row, 5) * 2);
+    const x = u * cols + off;
+    const col = Math.floor(x);
+    const lx = x - col, ly = y - row;
+    const id = (((col % cols) + cols) % cols) + row * 17;
+    const ex = Math.min(lx, 1 - lx) * (2 / cols) * 2, ey = Math.min(ly, 1 - ly) * (2 / rows) * 2; // ~metres to edge ×2
+    const e = Math.min(ex, ey);
+    const joint = 1 - smoothstep(0.004, 0.012, e + nz.fbm(u, v, 40, 2) * 0.004);
+    const wear = 1 - smoothstep(0.0, 0.05, e);              // rounded, worn arrises
+    const grain = nz.worley(u, v, 380, W).f1;
+    const speck = idRand(W.id, 2);
+    const f = nz.fbm(u, v, 12, 4) * 0.5 + 0.5;
+    const tone = 0.85 + idRand(id, 3) * 0.25;
+    let c = mix3(hex('#7a7670'), hex('#959089'), f).map((k) => k * tone);
+    if (speck > 0.85) c = mix3(c, hex('#c4bdb2'), 0.35);
+    else if (speck < 0.12) c = mix3(c, hex('#33302c'), 0.45);
+    void grain;
+    const lichen = smoothstep(0.62, 0.74, nz.fbm(u + 3, v + 9, 10, 4) * 0.5 + 0.5);
+    c = mix3(c, hex('#9a9c80'), lichen * 0.45);
+    const dirt = smoothstep(0.0, 0.9, nz.fbm(u + 1, v + 4, 3, 4));
+    c = mix3(c, hex('#3d3a33'), dirt * 0.3 + wear * 0.15);
+    c = mix3(c, hex('#2c2a26'), joint * 0.8);
+    b.h[i] = 0.75 - joint * 0.35 - wear * 0.12 + f * 0.04 + (speck - 0.5) * 0.01;
+    b.setColor(i, c[0], c[1], c[2]);
+    b.rough[i] = 0.72 + f * 0.15 + joint * 0.1 - lichen * 0.05;
   });
 }

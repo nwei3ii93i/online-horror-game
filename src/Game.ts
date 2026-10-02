@@ -16,6 +16,7 @@ import type { LoadingScreen } from './ui/LoadingScreen';
 import { HUD } from './ui/HUD';
 import { Forest } from './world/vegetation/Forest';
 import { createVegTextures } from './world/vegetation/VegTextures';
+import { GroundCover } from './world/vegetation/GroundCover';
 import { AudioEngine, AmbienceDirector, playFootstep, playLanding } from './audio';
 import { GROUP, groups } from './physics/Physics';
 import { World } from './world/World';
@@ -50,6 +51,7 @@ export class Game {
   inventory = new Set<string>();
   hud!: HUD;
   forest!: Forest;
+  groundCover!: GroundCover;
   private adaptExposure = 1;
   audio!: AudioEngine;
   ambience!: AmbienceDirector;
@@ -103,6 +105,8 @@ export class Game {
     const veg = createVegTextures();
     this.forest = new Forest(terrain, this.textures, veg, this.physics, q.vegetationDensity);
     scene.add(this.forest.group);
+    this.groundCover = new GroundCover(terrain, this.textures, this.materials, veg, this.physics, q.vegetationDensity);
+    scene.add(this.groundCover.group);
     console.log('trees', this.forest.totalTrees);
 
     loading.set(0.9, 'Lighting');
@@ -122,8 +126,10 @@ export class Game {
     // compile every pipeline now instead of hitching when things first come into view
     loading.set(0.97, 'Compiling shaders');
     this.forest.prepareWarmup(true);
+    this.groundCover.prepareWarmup(true);
     try { await this.engine.renderer.compileAsync(scene, this.engine.camera); } catch (err) { console.warn('compileAsync failed', err); }
     this.forest.prepareWarmup(false);
+    this.groundCover.prepareWarmup(false);
     loading.set(1, 'Ready');
   }
 
@@ -159,6 +165,7 @@ export class Game {
         this.volumetrics?.update(dt, e.camera);
         this.terrainMesh.update(e.camera.position, this.settings.profile.viewDistance);
         this.forest.update(e.camera, this.settings.profile.viewDistance, this.player.position);
+        this.groundCover.update(this.player.position);
         worldUniforms.windTime.value += dt;
         this.updateAudio(dt);
       },
@@ -207,7 +214,8 @@ export class Game {
       listener: cam.position, indoor: this.indoorSmooth, environment: env,
       rain: worldUniforms.rainIntensity.value, wind: worldUniforms.windStrength.value,
       time: this.engine.time, isNearTrees: trees > 0.2,
-      exertion: 1 - this.player.stamina,
+      // only real exhaustion should be audible
+      exertion: Math.max(0, (0.4 - this.player.stamina) / 0.4),
     });
     this.audio.update(dt);
   }

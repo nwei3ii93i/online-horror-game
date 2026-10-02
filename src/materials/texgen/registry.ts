@@ -16,7 +16,7 @@ export interface TextureDef {
 }
 
 /** Bump when generators change so cached textures are regenerated. */
-export const TEXGEN_VERSION = 3;
+export const TEXGEN_VERSION = 4;
 
 export const TEXTURE_DEFS: TextureDef[] = [
   { id: 'brick', gen: masonry.brick, seed: 11 },
@@ -24,6 +24,7 @@ export const TEXTURE_DEFS: TextureDef[] = [
   { id: 'plaster_ext_grey', gen: (b) => masonry.plasterExterior(b, '#9c9a92'), seed: 13 },
   { id: 'plaster_int', gen: (b) => masonry.plasterInterior(b), seed: 14 },
   { id: 'stone_wall', gen: masonry.stoneWall, seed: 15 },
+  { id: 'stone_slab', gen: masonry.stoneSlab, seed: 21 },
   { id: 'concrete', gen: (b) => masonry.concrete(b), seed: 16 },
   { id: 'roof_tiles', gen: masonry.roofTiles, seed: 17 },
   { id: 'floor_tiles', gen: (b) => masonry.floorTiles(b), seed: 18, res: 0.5 },

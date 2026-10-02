@@ -50,6 +50,7 @@ export const MATERIALS: Record<string, MatSpec> = {
   brick_int: { tex: 'brick', scale: 2.08, color: '#c8c0b8' },
   stone_wall: { tex: 'stone_wall', scale: 3, exterior: true, groundDirt: 0.8, mossUp: 0.9 },
   stone_wall_int: { tex: 'stone_wall', scale: 3, color: '#b8b4ac' },
+  stone_slab: { tex: 'stone_slab', scale: 2, exterior: true, groundDirt: 0.6, mossUp: 0.35, puddles: true },
   concrete: { tex: 'concrete', scale: 4, exterior: true, groundDirt: 1, mossUp: 0.4 },
   concrete_int: { tex: 'concrete', scale: 4 },
   roof_tiles: { tex: 'roof_tiles', scale: 2, exterior: true, normalScale: 1.2 },

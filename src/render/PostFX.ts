@@ -63,7 +63,7 @@ export class PostFX {
       aoPass.radius.value = 0.6;
       aoPass.thickness.value = 1.2;
       aoPass.scale.value = 1.1;
-      aoPass.samples.value = q.renderScale >= 1 ? 16 : 10;
+      aoPass.samples.value = q.renderScale >= 1 ? 10 : 8;
       aoPass.useTemporalFiltering = q.temporalAA;
       this.aoPass = aoPass;
       const aoVal = aoPass.getTextureNode().sample(screenUV).r;
@@ -114,13 +114,13 @@ export class PostFX {
       const c = vec3(input.rgb).toVar();
       // gentle split tone: cool shadows, neutral-warm highlights (kept very subtle)
       const l = luminance(c);
-      const shadowTint = vec3(0.94, 0.98, 1.06);
-      const highTint = vec3(1.03, 1.0, 0.96);
+      const shadowTint = vec3(0.97, 0.99, 1.03);
+      const highTint = vec3(1.03, 1.0, 0.97);
       c.assign(c.mul(mix(shadowTint, highTint, smoothstep(0.05, 0.6, l))));
       // gentle filmic contrast around the low mid-tones
       c.assign(clamp(c.sub(0.32).mul(1.1).add(0.32), 0, 1));
       // slight desaturation – "photographed", not graded
-      c.assign(mix(vec3(l), c, float(0.88).sub(stress.mul(0.5))));
+      c.assign(mix(vec3(l), c, float(1.04).sub(stress.mul(0.6))));
       // vignette (optical falloff)
       const d = length(screenUV.sub(0.5).mul(vec2(1.0, 0.82)));
       const vig = smoothstep(0.85, 0.2, d).mul(this.vignette).add(float(1).sub(this.vignette));

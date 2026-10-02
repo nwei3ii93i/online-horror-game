@@ -24,7 +24,7 @@ const WX0 = H.X0 + H.T / 2, WX1 = H.X1 - H.T / 2, WZ0 = H.Z0 + H.T / 2, WZ1 = H.
 const IX0 = H.X0 + H.T, IX1 = H.X1 - H.T, IZ0 = H.Z0 + H.T, IZ1 = H.Z1 - H.T;           // inner faces
 
 export function buildManor(physics: Physics | undefined, materials: MaterialLibrary): BuildingOutput {
-  const kit = new BuildingKit('manor', physics, { mat: 'plaster_ext' });
+  const kit = new BuildingKit('manor', physics, { mat: 'plaster_ext_ochre' });
   const mb = kit.mb;
   const rng = new RNG('manor');
   const plaster = { mat: 'plaster_int' };
@@ -74,7 +74,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   kit.buildRoomSurfaces();
 
   // ======================================================================= walls
-  const ext = (level: 'B' | 'G' | 'U' | 'A') => level === 'B' ? { mat: 'stone_wall' } : { mat: 'plaster_ext' };
+  const ext = (level: 'B' | 'G' | 'U' | 'A') => level === 'B' ? { mat: 'stone_wall' } : { mat: 'plaster_ext_ochre' };
   const extIn = (level: 'B' | 'G' | 'U' | 'A') => level === 'B' ? 'auto' : 'auto';
   const y0Of = { B: B0, G: G0 - 0.3, U: U0 - 0.3, A: H.A0 - 0.3 } as const;
   const y1Of = { B: G0 - 0.3, G: U0 - 0.3, U: H.A0 - 0.3, A: H.EAVE } as const;
@@ -92,7 +92,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   for (const L of levels) {
     const y0 = y0Of[L], y1 = y1Of[L];
     const outer = ext(L);
-    const common = { y0, y1, t: H.T, cap: L === 'B' ? 'stone_wall' : 'plaster_ext', surface: 'stone', noTop: L !== 'A' };
+    const common = { y0, y1, t: H.T, cap: L === 'B' ? 'stone_wall' : 'plaster_ext_ochre', surface: 'stone', noTop: L !== 'A' };
     // front façade (south): from west to east → right side faces south (+z)
     const frontWins: { o: any; opts: any }[] = [];
     const frontDoors: { o: any; frame?: string | null }[] = [];
@@ -263,7 +263,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
     mb.box(mat, H.X1 + d / 2, y, (H.Z0 + H.Z1) / 2, d, h, H.Z1 - H.Z0, { skip: ['nx'] });
     mb.box(mat, H.X0 - d / 2, y, (H.Z0 + H.Z1) / 2, d, h, H.Z1 - H.Z0, { skip: ['px'] });
   };
-  band(G0 - 0.05, 0.12, 0.08, 'stone_wall');                   // socle cap
+  band(G0 - 0.05, 0.12, 0.08, 'stone_slab');                   // socle cap
   band(U0 - 0.15, 0.22, 0.07, 'plaster_ext_grey');             // storey band
   band(H.EAVE - 0.25, 0.3, 0.12, 'plaster_ext_grey');          // eaves cornice
   band(H.EAVE - 0.08, 0.1, 0.2, 'plaster_ext_grey');
@@ -298,7 +298,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   // entrance portico with balcony and steps
   for (const x of [-1.45, 1.45]) {
     mb.box('plaster_ext_grey', x, (0 + U0 - 0.25) / 2, -13.7, 0.45, U0 - 0.25, 0.45);
-    mb.box('stone_wall', x, 0.35, -13.7, 0.6, 0.7, 0.6);
+    mb.box('stone_slab', x, 0.35, -13.7, 0.6, 0.7, 0.6);
     physics?.addBox({ cx: x, cy: U0 / 2, cz: -13.7, hx: 0.23, hy: U0 / 2, hz: 0.23, surface: 'stone' });
   }
   buildSlab(mb, -2.0, -15.0, 2.0, -13.3, U0, 0.28, 'floor_tiles', 'plaster_ext_grey', physics, 'tile');
@@ -307,18 +307,18 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   for (let i = 0; i < 4; i++) {
     const y = G0 - (i + 1) * 0.1875;
     const z0 = -15.0 + i * 0.32;
-    buildSlab(mb, -2.4 - i * 0.15, z0, 2.4 + i * 0.15, z0 + 0.34, y + 0.1875, 0.1875 + 0.6, 'stone_wall', null, physics, 'stone');
-    mb.box('stone_wall', 0, y + 0.1875 / 2 - 0.3, z0 + 0.34, 4.8 + i * 0.3, 0.1875 + 0.6, 0.02, { skip: ['nz'] });
+    buildSlab(mb, -2.4 - i * 0.15, z0, 2.4 + i * 0.15, z0 + 0.34, y + 0.1875, 0.1875 + 0.6, 'stone_slab', null, physics, 'stone');
+    mb.box('stone_slab', 0, y + 0.1875 / 2 - 0.3, z0 + 0.34, 4.8 + i * 0.3, 0.1875 + 0.6, 0.02, { skip: ['nz'] });
   }
 
   // terrace at the back (garden side)
-  buildSlab(mb, -4.5, -32.2, 4.5, -29.0, G0 - 0.45, 0.3, 'stone_wall', null, physics, 'stone');
-  mb.box('stone_wall', 0, (G0 - 0.45) / 2 - 0.15, -32.2, 9.0, G0 - 0.15, 0.04);
-  mb.box('stone_wall', -4.5, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
-  mb.box('stone_wall', 4.5, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
+  buildSlab(mb, -4.5, -32.2, 4.5, -29.0, G0 - 0.45, 0.3, 'stone_slab', null, physics, 'stone');
+  mb.box('stone_slab', 0, (G0 - 0.45) / 2 - 0.15, -32.2, 9.0, G0 - 0.15, 0.04);
+  mb.box('stone_slab', -4.5, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
+  mb.box('stone_slab', 4.5, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
   // step up from terrace to the door sill
-  buildSlab(mb, -0.9, -29.4, 0.9, -29.0, G0 - 0.22, 0.25, 'stone_wall', null, physics, 'stone');
-  for (let i = 0; i < 2; i++) buildSlab(mb, -1.4, -32.2 - (i + 1) * 0.32, 1.4, -32.2 - i * 0.32, G0 - 0.45 - (i + 1) * 0.15, 0.6, 'stone_wall', null, physics, 'stone');
+  buildSlab(mb, -0.9, -29.4, 0.9, -29.0, G0 - 0.22, 0.25, 'stone_slab', null, physics, 'stone');
+  for (let i = 0; i < 2; i++) buildSlab(mb, -1.4, -32.2 - (i + 1) * 0.32, 1.4, -32.2 - i * 0.32, G0 - 0.45 - (i + 1) * 0.15, 0.6, 'stone_slab', null, physics, 'stone');
 
   // roof (hipped, Biberschwanz tiles) and chimneys
   const roof = buildRoof(mb, { type: 'hip', x0: H.X0, z0: H.Z0, x1: H.X1, z1: H.Z1, eaveY: H.EAVE, pitch: (47 * Math.PI) / 180, overhang: 0.75, thickness: 0.24, innerMat: 'rough_timber', rafters: { mat: 'rough_timber', spacing: 0.95, size: 0.16 }, gutterMat: 'rust_metal' }, physics);

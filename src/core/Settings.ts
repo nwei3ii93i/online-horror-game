@@ -34,19 +34,19 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     viewDistance: 140, grassRadius: 18, anisotropy: 2,
   },
   medium: {
-    renderScale: 0.85, maxPixelRatio: 1.25, shadowMapSize: 2048, shadowCascades: 3, shadowFar: 60,
+    renderScale: 0.85, maxPixelRatio: 1, shadowMapSize: 2048, shadowCascades: 2, shadowFar: 55,
     flashlightShadowSize: 1024, ao: true, volumetrics: true, volumetricSteps: 8, volumetricScale: 0.25,
     bloom: true, temporalAA: true, textureSize: 1024, vegetationDensity: 0.75, detailRadius: 80,
     viewDistance: 170, grassRadius: 26, anisotropy: 4,
   },
   high: {
-    renderScale: 1, maxPixelRatio: 1.5, shadowMapSize: 2048, shadowCascades: 3, shadowFar: 80,
-    flashlightShadowSize: 1024, ao: true, volumetrics: true, volumetricSteps: 12, volumetricScale: 0.33,
+    renderScale: 1, maxPixelRatio: 1, shadowMapSize: 2048, shadowCascades: 2, shadowFar: 70,
+    flashlightShadowSize: 1024, ao: true, volumetrics: true, volumetricSteps: 10, volumetricScale: 0.33,
     bloom: true, temporalAA: true, textureSize: 1024, vegetationDensity: 1, detailRadius: 100,
     viewDistance: 200, grassRadius: 34, anisotropy: 8,
   },
   ultra: {
-    renderScale: 1, maxPixelRatio: 2, shadowMapSize: 4096, shadowCascades: 4, shadowFar: 110,
+    renderScale: 1, maxPixelRatio: 1.5, shadowMapSize: 4096, shadowCascades: 3, shadowFar: 100,
     flashlightShadowSize: 2048, ao: true, volumetrics: true, volumetricSteps: 16, volumetricScale: 0.5,
     bloom: true, temporalAA: true, textureSize: 2048, vegetationDensity: 1.25, detailRadius: 130,
     viewDistance: 240, grassRadius: 44, anisotropy: 16,

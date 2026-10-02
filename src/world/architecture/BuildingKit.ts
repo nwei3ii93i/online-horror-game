@@ -143,6 +143,17 @@ export class BuildingKit {
     for (const d of w.doors ?? []) {
       if (d.frame !== null) buildDoorFrame(this.mb, f, d.o, d.frame ?? 'painted_wood_white', d.architrave ?? true);
     }
+    // thresholds: close the floor across the wall thickness under doors and floor-level holes
+    for (const o of openings) {
+      if (o.bottom > 0.05) continue;
+      const c = [f.ax + f.dx * o.at, f.y0 + o.bottom, f.az + f.dz * o.at];
+      const ry = -Math.atan2(f.dz, f.dx);
+      const hole = o.kind === 'hole';
+      this.mb.pushTRS(c[0], c[1], c[2], ry);
+      this.mb.box(hole ? 'concrete_int' : 'furniture_oak', 0, hole ? -0.01 : 0.004, 0, o.width + 0.02, hole ? 0.02 : 0.03, w.t + 0.02, { uv: 'local' });
+      this.mb.pop();
+      this.physics?.addBox({ cx: c[0], cy: c[1] - 0.1, cz: c[2], hx: o.width / 2 + 0.01, hy: 0.115, hz: w.t / 2 + 0.01, ry, surface: hole ? 'concrete' : 'wood' });
+    }
     if (w.skirting !== false) {
       const skL = left ? this.skirtingFor(w, -1, f) : null;
       const skR = right ? this.skirtingFor(w, 1, f) : null;

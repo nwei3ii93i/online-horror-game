@@ -13,14 +13,15 @@ import { bell, creakLayer, doorModes, metalClickInto, muffle, strike, swishInto,
 // ------------------------------------------------------------------------------- doors
 
 export function doorOpenCreak(fs: number, rng: Rng, v: number): Buf {
-  const style = v % 3;
+  // 0 = groaning stick-slip, 2 = slow heavy creak (the high squeal style 1 sounded cartoonish)
+  const style: number = v % 2 === 0 ? 0 : 2;
   const dur = style === 2 ? rng.range(2.2, 2.8) : rng.range(1.5, 2.2);
   const out = buf((dur + 0.35) * fs);
   metalClickInto(out, fs, rng, 0.01, 0.45, 1500, 2100, 0.03);
   metalClickInto(out, fs, rng, 0.05 + rng.range(0, 0.03), 0.25, 1700, 2400, 0.02);
   const t0 = 0.12 + rng.range(0, 0.1);
   const cd = dur - t0 - 0.05;
-  const hinge = modes(rng.range(1000, 1350), [1, 1.62, 2.38, 3.3, 4.6], [0.06, 0.05, 0.04, 0.03, 0.02], [1, 0.8, 0.6, 0.4, 0.25], rng, 0.05);
+  const hinge = modes(rng.range(620, 820), [1, 1.62, 2.38, 3.3, 4.6], [0.05, 0.04, 0.035, 0.03, 0.02], [0.55, 0.45, 0.32, 0.2, 0.12], rng, 0.05);
   const body = doorModes(rng, rng.range(88, 112), 0.85);
   const m = [...hinge, ...body];
   let c: Buf;

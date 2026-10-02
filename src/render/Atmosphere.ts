@@ -34,7 +34,7 @@ export class Atmosphere {
     this.moonDirU.value.copy(this.moonDir);
 
     // Moonlight through thin cloud: desaturated cold light.
-    this.moon = new THREE.DirectionalLight(0x8496b6, this.moonIntensity);
+    this.moon = new THREE.DirectionalLight(0xa3adc2, this.moonIntensity);
     this.moon.position.copy(this.moonDir).multiplyScalar(150);
     this.moon.castShadow = true;
     this.moon.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
@@ -42,11 +42,11 @@ export class Atmosphere {
     this.moon.shadow.normalBias = 0.03;
     this.moon.shadow.camera.near = 1;
     this.moon.shadow.camera.far = 400;
-    this.moon.layers.enable(LAYER_VOLUMETRIC);
+    // the moon is NOT on the volumetric layer: near-field volumetrics are for the torch only (big perf win)
     scene.add(this.moon, this.moon.target);
 
     // Sky / ground ambient
-    this.hemi = new THREE.HemisphereLight(0x2e3b52, 0x0e0c0a, 0.32);
+    this.hemi = new THREE.HemisphereLight(0x3a4458, 0x14110d, 0.34);
     scene.add(this.hemi);
 
     this.sky = this.createSky();
@@ -70,7 +70,7 @@ export class Atmosphere {
     const sky = Fn(() => {
       const up = clamp(dir.y, -0.2, 1);
       // horizon = exactly the fog colour for this direction, so fully fogged objects melt into the sky
-      const horizon = this.fogColorFor(dir);
+      const horizon = this.horizonColorFor(dir);
       const zenith = vec3(0.012, 0.016, 0.026);
       const col = mix(horizon, zenith, smoothstep(-0.02, 0.55, up)).toVar();
       // clouds: domain-warped fractal noise on a plane
@@ -108,8 +108,16 @@ export class Atmosphere {
     return mesh;
   }
 
-  /** In-scattered colour of the fog along a view direction (moon glow, lightning). */
+  /**
+   * Colour of fully fogged geometry along a view direction: follows the sky gradient so
+   * distant tree crowns above the horizon don't glow brighter than the sky behind them.
+   */
   fogColorFor(v: any): any {
+    return mix(this.horizonColorFor(v), vec3(0.012, 0.016, 0.026), smoothstep(-0.02, 0.55, v.y).mul(0.9));
+  }
+
+  /** In-scattered colour at the horizon along a view direction (moon glow, lightning). */
+  horizonColorFor(v: any): any {
     const md = max(dot(v, this.moonDirU), 0);
     const glow = pow(md, 6).mul(0.45).add(pow(md, 2).mul(0.1));
     const c = mix(vec3(this.fogColor), vec3(this.moonGlowColor), glow);

@@ -1,3 +1,4 @@
+import * as THREE from 'three/webgpu';
 import { Settings } from './core/Settings';
 import { Game } from './Game';
 import { LoadingScreen } from './ui/LoadingScreen';
@@ -9,6 +10,7 @@ async function boot() {
   const loading = new LoadingScreen(document.body);
   const game = new Game(app, settings, { seed: Number(params.get('seed') ?? 1987), automation: params });
   (window as any).__game = game;
+  (window as any).THREE = THREE; // debugging / automation
   try {
     await game.load(loading);
   } catch (e) {

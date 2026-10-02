@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 const args = process.argv.slice(2);
 const url = args[0];
 const out = args[1] || 'shot.png';
-const opt = Object.fromEntries(args.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
+const opt = Object.fromEntries(args.slice(2).filter(a => a.startsWith('--')).map(a => { const i = a.indexOf('='); return i < 0 ? [a.slice(2), true] : [a.slice(2, i), a.slice(i + 1)]; }));
 const [w, h] = (opt.size || '1280x720').split('x').map(Number);
 import os from 'node:os';
 import path from 'node:path';
@@ -32,6 +32,7 @@ const timeout = Number(opt.timeout || 600000);
 try {
   await page.waitForFunction(() => window.__ready, null, { timeout, polling: 500 });
 } catch (e) { console.log('timeout waiting for __ready'); }
+if (opt.evalfile) { const { readFileSync } = await import('node:fs'); opt.eval = readFileSync(opt.evalfile, 'utf8'); }
 if (opt.eval) { await page.evaluate(opt.eval); }
 if (opt.wait) await page.waitForTimeout(Number(opt.wait));
 const ready = await page.evaluate(() => window.__ready);
