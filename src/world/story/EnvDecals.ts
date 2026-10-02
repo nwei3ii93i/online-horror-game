@@ -117,8 +117,8 @@ function workshopSign(seed: number): DrawFn {
       gr.addColorStop(0, 'rgba(110,52,22,0.5)'); gr.addColorStop(1, 'rgba(110,52,22,0)');
       g.fillStyle = gr; g.fillRect(px * w - 2, h * 0.5, 4, h * 0.5);
     }
-    textBlock([{ t: title.toUpperCase(), s: 1.25 }, { t: rule, s: 0.8, color: 'rgba(128,28,20,0.92)' }], {
-      font: FONT_SANS, weight: '700', mode: 'paint', color: 'rgba(24,22,20,0.92)', pad: 0.07, lead: 1.15, wear: 0.6, seed,
+    textBlock([{ t: title.toUpperCase(), s: 1.2 }, { t: rule, s: 0.95, color: 'rgba(150,24,16,0.95)' }], {
+      font: FONT_SANS, weight: '700', mode: 'paint', color: 'rgba(24,22,20,0.92)', pad: 0.06, lead: 1.12, wear: 0.4, seed,
     })(g, w, h);
   };
 }
@@ -298,7 +298,8 @@ export function buildEnvDecals(buildings: { id: string; anchors: Anchor[] }[]): 
         case 'stencil_pumpe': inner.add(at(), right, up, 0.62, 0.15, stencil(stencils[2].de, 60), 500); break;
         case 'workshop_sign': outer.add(at(), right, up, 1.56, 0.32, workshopSign(31), 420, 0.002); break;
         case 'pumphouse_sign': outer.add(at(), right, up, 0.52, 0.26, enamelRect(ENV_TEXT.signs.pumphouse.de.split(' · '), 1958), 1100, 0.001); break;
-        case 'generator_label': inner.add(at(), right, up, 0.21, 0.12, generatorNote(1993), 2400, 0.002); break;
+        // beside the cable conduit that runs down the wall at the anchor
+        case 'generator_label': inner.add(at(0.24), right, up, 0.21, 0.12, generatorNote(1993), 2400, 0.002); break;
         case 'pumphouse_calendar': inner.add(at(), right, up, 0.3, 0.46, calendar1993(1993), 1700, 0.002); break;
         case 'barn_diesel_cans': {
           // anchor sits on the upper shelf at the rack centre; the cans stand on both shelves
