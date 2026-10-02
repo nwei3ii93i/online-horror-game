@@ -4,7 +4,14 @@ import {
   normalMap, mx_noise_float, int,
 } from 'three/tsl';
 import { TerrainData, SPLAT_N, SPLAT_LAYERS } from './TerrainData';
-import { WORLD_HALF, Rect } from './Layout';
+import { WORLD_HALF, Rect, TUNNELS } from './Layout';
+
+/** Footprints of the underground passages (+ margin): terrain skirts must not hang into them. */
+const UNDERGROUND: Rect[] = TUNNELS.flatMap((t) => t.points.slice(1).map((p, i) => {
+  const a = t.points[i], m = t.width / 2 + 1.2;
+  return { x0: Math.min(a[0], p[0]) - m, z0: Math.min(a[1], p[1]) - m, x1: Math.max(a[0], p[0]) + m, z1: Math.max(a[1], p[1]) + m };
+}));
+const underground = (x: number, z: number) => UNDERGROUND.some((r) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1);
 import { TextureStore } from '../materials/TextureStore';
 import { worldUniforms } from '../render/WorldUniforms';
 
@@ -163,7 +170,10 @@ export class TerrainMesh {
       const start = v;
       for (let k = 0; k < n; k++) {
         const src = getIdx(k);
-        put(pos[src * 3], pos[src * 3 + 2], skirt);
+        const sx = pos[src * 3], sz = pos[src * 3 + 2];
+        // no curtain hanging into a tunnel or a cellar
+        const below = underground(sx, sz) || this.holes.some((h) => sx >= h.x0 - 1 && sx <= h.x1 + 1 && sz >= h.z0 - 1 && sz <= h.z1 + 1);
+        put(sx, sz, below ? 0 : skirt);
       }
       for (let k = 0; k < n - 1; k++) {
         const a = getIdx(k), b = getIdx(k + 1), sa = start + k, sb = start + k + 1;
