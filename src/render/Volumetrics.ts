@@ -75,8 +75,8 @@ const sampleAtlas3D = (tex: THREE.DataTexture, p: any) => {
  */
 export class Volumetrics {
   readonly mesh: THREE.Mesh;
-  readonly density: any = uniform(0.012);
-  readonly groundFog: any = uniform(0.035);
+  readonly density: any = uniform(0.006);
+  readonly groundFog: any = uniform(0.014);
   readonly drift: any = uniform(new THREE.Vector3(0.35, 0.02, 0.12));
   private t: any = uniform(0);
   private material: THREE.VolumeNodeMaterial;
@@ -96,11 +96,14 @@ export class Volumetrics {
       const noiseD = smoothstep(0.25, 0.85, n1.mul(0.7).add(n2.mul(0.45)));
       const hAbove = max(p.y.sub(W.terrainHeight(p.xz)), 0);
       const ground = exp(hAbove.mul(-0.55)).mul(this.groundFog);
-      const indoorFade = float(1).sub(W.indoor(p).mul(0.94));
+      const indoorFade = float(1).sub(W.indoor(p).mul(0.97));
       const rain = W.rainIntensity.mul(0.4).add(1);
       // no scattering right at the lens (avoids the 1/r² hot spot of the hand-held light)
-      const near = smoothstep(0.5, 1.8, p.sub(cameraPosition).length());
-      return vec3(clamp(this.density.mul(noiseD.mul(1.3).add(0.25)).add(ground.mul(noiseD.add(0.3))), 0, 0.5).mul(indoorFade).mul(rain).mul(near));
+      const dist = p.sub(cameraPosition).length();
+      const near = smoothstep(0.5, 1.8, dist);
+      // spherical falloff well inside the box so its faces never show up as hard edges
+      const far = float(1).sub(smoothstep(12.0, 25.0, dist));
+      return vec3(clamp(this.density.mul(noiseD.mul(1.3).add(0.25)).add(ground.mul(noiseD.add(0.3))), 0, 0.5).mul(indoorFade).mul(rain).mul(near).mul(far));
     }) as any;
     this.material = mat;
     this.mesh = new THREE.Mesh(new THREE.BoxGeometry(56, 24, 56), mat);

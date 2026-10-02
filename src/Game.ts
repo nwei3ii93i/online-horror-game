@@ -14,6 +14,8 @@ import { PlayerController } from './gameplay/PlayerController';
 import { Flashlight } from './gameplay/Flashlight';
 import type { LoadingScreen } from './ui/LoadingScreen';
 import { HUD } from './ui/HUD';
+import { Forest } from './world/vegetation/Forest';
+import { createVegTextures } from './world/vegetation/VegTextures';
 import { World } from './world/World';
 import { Interaction } from './gameplay/Interaction';
 import { Doors } from './gameplay/Doors';
@@ -45,6 +47,7 @@ export class Game {
   bridge: WorldBridge = new LocalWorldBridge();
   inventory = new Set<string>();
   hud!: HUD;
+  forest!: Forest;
 
   constructor(container: HTMLElement, readonly settings: Settings, readonly opts: GameOptions) {
     this.engine = new Engine(container, settings);
@@ -83,6 +86,13 @@ export class Game {
     this.doors = new Doors(this.physics, this.materials, this.interaction, this.bridge);
     for (const d of this.world.doorSpecs) this.doors.add(d);
     scene.add(this.doors.group);
+
+    loading.set(0.85, 'Growing the forest');
+    await new Promise((r) => setTimeout(r, 0));
+    const veg = createVegTextures();
+    this.forest = new Forest(terrain, this.textures, veg, this.physics, q.vegetationDensity);
+    scene.add(this.forest.group);
+    console.log('trees', this.forest.totalTrees);
 
     loading.set(0.9, 'Lighting');
     this.player = new PlayerController(this.physics, this.engine.input, this.settings, this.engine.camera);
@@ -130,6 +140,7 @@ export class Game {
         this.atmosphere.update(dt, e.camera);
         this.volumetrics?.update(dt, e.camera);
         this.terrainMesh.update(e.camera.position, this.settings.profile.viewDistance);
+        this.forest.update(e.camera, this.settings.profile.viewDistance, this.player.position);
         worldUniforms.windTime.value += dt;
       },
     });

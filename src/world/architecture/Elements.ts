@@ -188,14 +188,17 @@ export function buildDoorFrame(mb: MeshBuilder, f: WallFrame, o: Opening, mat = 
   const W = o.width, H = o.top - o.bottom, T = f.t;
   pushOpeningFrame(mb, f, o, 1);
   const lt = 0.03; // lining thickness
-  mb.box(mat, -W / 2 + lt / 2, H / 2, 0, lt, H, T + 0.01, { uv: 'local', uvRotate: true });
-  mb.box(mat, W / 2 - lt / 2, H / 2, 0, lt, H, T + 0.01, { uv: 'local', uvRotate: true });
-  mb.box(mat, 0, H - lt / 2, 0, W, lt, T + 0.01, { uv: 'local' });
+  // thin walls get a full-depth wooden lining (Futter); thick masonry keeps its plastered
+  // reveal with a frame set into the middle
+  const LD = Math.min(T + 0.01, 0.26);
+  mb.box(mat, -W / 2 + lt / 2, H / 2, 0, lt, H, LD, { uv: 'local', uvRotate: true });
+  mb.box(mat, W / 2 - lt / 2, H / 2, 0, lt, H, LD, { uv: 'local', uvRotate: true });
+  mb.box(mat, 0, H - lt / 2, 0, W, lt, LD, { uv: 'local' });
   // door stop
   mb.box(mat, -W / 2 + lt + 0.012, H / 2, 0, 0.024, H - lt, 0.04, { uv: 'local' });
   mb.box(mat, W / 2 - lt - 0.012, H / 2, 0, 0.024, H - lt, 0.04, { uv: 'local' });
   mb.box(mat, 0, H - lt - 0.012, 0, W - 2 * lt, 0.024, 0.04, { uv: 'local' });
-  if (architrave) {
+  if (architrave && T < 0.4) {
     const aw = 0.09, ad = 0.022;
     for (const side of [1, -1]) {
       const z = side * (T / 2 + ad / 2);

@@ -36,5 +36,5 @@ if (opt.eval) { await page.evaluate(opt.eval); }
 if (opt.wait) await page.waitForTimeout(Number(opt.wait));
 const ready = await page.evaluate(() => window.__ready);
 console.log('ready', JSON.stringify(ready), 'elapsed', (Date.now() - t0) / 1000, 's');
-await page.screenshot({ path: out });
+await page.screenshot({ path: out, timeout: 900000 });
 await browser.close();

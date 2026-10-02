@@ -175,18 +175,18 @@ export function paintedWood(b: TexBuilder, paint = '#d8d2c2', boards = 1): void 
     const { g } = grain(b, v, lu / boards, idRand(col, 2), u, v, false);
     let wood = mix3(hex('#7d746a'), hex('#4b4339'), g);
     // alligatored paint: worley edges
-    nz.worley(u, v, 26, W, 0.9);
-    const cellEdge = 1 - smoothstep(0.0, 0.06, W.f2 - W.f1);
+    nz.worley(u, v, 72, W, 0.9);
+    const cellEdge = (1 - smoothstep(0.0, 0.05, W.f2 - W.f1)) * (0.35 + 0.65 * smoothstep(0.3, 0.8, nz.fbm(u + 7, v + 2, 4, 3) * 0.5 + 0.5));
     const flakeN = nz.fbm(u + 1, v + 4, 5, 5) * 0.5 + 0.5;
     const flaked = smoothstep(0.68, 0.71, flakeN + idRand(W.id, 3) * 0.1);
     const paintEdge = smoothstep(0.63, 0.68, flakeN + idRand(W.id, 3) * 0.1) - flaked;
     let c = pc.map((x) => x * (0.88 + nz.fbm(u, v, 8, 3) * 0.1));
     c = mix3(c, hex('#8f8672'), smoothstep(0.0, 1.0, nz.fbm(u + 3, v, 3, 4)) * 0.4); // grime
-    c = c.map((x) => x * (1 - cellEdge * 0.25));
+    c = c.map((x) => x * (1 - cellEdge * 0.12));
     c = mix3(c, wood, flaked);
     const boardGap = boards > 1 ? 1 - smoothstep(0.0, 0.015, Math.min(lu, 1 - lu)) : 0;
     c = c.map((x) => x * (1 - boardGap * 0.8));
-    b.h[i] = 0.7 + (1 - flaked) * 0.12 + paintEdge * 0.05 - cellEdge * 0.04 * (1 - flaked) - g * 0.03 * flaked - boardGap * 0.4;
+    b.h[i] = 0.7 + (1 - flaked) * 0.08 + paintEdge * 0.04 - cellEdge * 0.015 * (1 - flaked) - g * 0.03 * flaked - boardGap * 0.4;
     b.setColor(i, c[0], c[1], c[2]);
     b.rough[i] = lerp(0.55 + cellEdge * 0.2, 0.9, flaked);
   });

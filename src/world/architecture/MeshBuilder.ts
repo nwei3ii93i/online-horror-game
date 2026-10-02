@@ -6,6 +6,7 @@ interface Part {
   nor: number[];
   uv: number[];
   col: number[];
+  aux: number[];
   idx: number[];
 }
 
@@ -39,10 +40,14 @@ export class MeshBuilder {
   private nm = new THREE.Matrix3();
   private identity = true;
   color: [number, number, number] = [1, 1, 1];
+  /** Free per-vertex scalar (vegetation: bend weight 0 = rigid … 1 = tip). */
+  aux = 0;
+  /** Write the `aux` attribute into built geometries. */
+  emitAux = false;
 
   part(mat: string): Part {
     let p = this.parts.get(mat);
-    if (!p) { p = { pos: [], nor: [], uv: [], col: [], idx: [] }; this.parts.set(mat, p); }
+    if (!p) { p = { pos: [], nor: [], uv: [], col: [], aux: [], idx: [] }; this.parts.set(mat, p); }
     return p;
   }
 
@@ -97,6 +102,7 @@ export class MeshBuilder {
     p.nor.push(nx, ny, nz);
     p.uv.push(u, v);
     p.col.push(this.color[0], this.color[1], this.color[2]);
+    p.aux.push(this.aux);
     return i;
   }
 
@@ -262,6 +268,53 @@ export class MeshBuilder {
     this.pop();
   }
 
+  /**
+   * Generalised tube along a polyline with per-point radius (tree trunks, branches, roots).
+   * UV: u around the circumference in metres, v along the path in metres. Optional per-point aux.
+   */
+  tube(mat: string, pts: THREE.Vector3[], radii: number[], sides = 8, aux?: number[], capEnd = false): void {
+    if (pts.length < 2) return;
+    const p = this.part(mat);
+    const base = p.pos.length / 3;
+    // parallel-transport frames
+    let t = new THREE.Vector3().subVectors(pts[1], pts[0]).normalize();
+    let n = Math.abs(t.y) < 0.9 ? new THREE.Vector3(0, 1, 0).cross(t).normalize() : new THREE.Vector3(1, 0, 0).cross(t).normalize();
+    let b = new THREE.Vector3().crossVectors(t, n);
+    let along = 0;
+    const prevAux = this.aux;
+    for (let k = 0; k < pts.length; k++) {
+      if (k > 0) {
+        const nt = new THREE.Vector3().subVectors(pts[Math.min(k + 1, pts.length - 1)], pts[k - 1]).normalize();
+        const axis = new THREE.Vector3().crossVectors(t, nt);
+        const ang = Math.asin(Math.min(1, axis.length()));
+        if (ang > 1e-5) { axis.normalize(); n.applyAxisAngle(axis, ang); b.applyAxisAngle(axis, ang); }
+        t = nt;
+        along += pts[k].distanceTo(pts[k - 1]);
+      }
+      const r = radii[k];
+      const circ = 2 * Math.PI * Math.max(r, 0.01);
+      if (aux) this.aux = aux[k];
+      for (let i = 0; i <= sides; i++) {
+        const a = (i / sides) * Math.PI * 2;
+        const ca = Math.cos(a), sa = Math.sin(a);
+        const nx = n.x * ca + b.x * sa, ny = n.y * ca + b.y * sa, nz = n.z * ca + b.z * sa;
+        this.vert(p, pts[k].x + nx * r, pts[k].y + ny * r, pts[k].z + nz * r, nx, ny, nz, (i / sides) * circ, along);
+      }
+    }
+    const R = sides + 1;
+    for (let k = 0; k < pts.length - 1; k++) for (let i = 0; i < sides; i++) {
+      const a0 = base + k * R + i, a1 = a0 + 1, b0 = a0 + R, b1 = b0 + 1;
+      p.idx.push(a0, b0, a1, a1, b0, b1);
+    }
+    if (capEnd) {
+      const last = pts[pts.length - 1];
+      const c = this.vert(p, last.x, last.y, last.z, t.x, t.y, t.z, 0, along);
+      const s0 = base + (pts.length - 1) * R;
+      for (let i = 0; i < sides; i++) p.idx.push(s0 + i, c, s0 + i + 1);
+    }
+    this.aux = prevAux;
+  }
+
   /** Surface of revolution around Y from a profile of [radius, y] points. */
   lathe(mat: string, profile: [number, number][], segments = 16, uvScale = 1): void {
     const p = this.part(mat);
@@ -354,6 +407,7 @@ export class MeshBuilder {
         p.pos.push(x, y, z); p.nor.push(nx, ny, nz);
         p.uv.push(src.uv[i * 2], src.uv[i * 2 + 1]);
         p.col.push(src.col[i * 3], src.col[i * 3 + 1], src.col[i * 3 + 2]);
+        p.aux.push(src.aux[i] ?? 0);
       }
       for (const i of src.idx) p.idx.push(base + i);
     }
@@ -370,6 +424,7 @@ export class MeshBuilder {
       g.setAttribute('normal', new THREE.Float32BufferAttribute(p.nor, 3));
       g.setAttribute('uv', new THREE.Float32BufferAttribute(p.uv, 2));
       g.setAttribute('color', new THREE.Float32BufferAttribute(p.col, 3));
+      if (this.emitAux) g.setAttribute('aux', new THREE.Float32BufferAttribute(p.aux, 1));
       const vc = p.pos.length / 3;
       g.setIndex(vc > 65535 ? new THREE.Uint32BufferAttribute(p.idx, 1) : new THREE.Uint16BufferAttribute(p.idx, 1));
       g.computeBoundingSphere();

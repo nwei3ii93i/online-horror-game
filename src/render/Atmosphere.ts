@@ -26,7 +26,7 @@ export class Atmosphere {
   readonly moonGlowColor: any = uniform(new THREE.Color(0x5d6a7c));
   readonly cloudCover: any = uniform(0.78);
   readonly skyBrightness: any = uniform(1);
-  readonly moonIntensity = 0.95;
+  readonly moonIntensity = 1.5;
   csm: CSMShadowNode | null = null;
   private cloudTime: any = uniform(0);
 
@@ -34,7 +34,7 @@ export class Atmosphere {
     this.moonDirU.value.copy(this.moonDir);
 
     // Moonlight through thin cloud: desaturated cold light.
-    this.moon = new THREE.DirectionalLight(0x7f92b4, this.moonIntensity);
+    this.moon = new THREE.DirectionalLight(0x8496b6, this.moonIntensity);
     this.moon.position.copy(this.moonDir).multiplyScalar(150);
     this.moon.castShadow = true;
     this.moon.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
@@ -46,7 +46,7 @@ export class Atmosphere {
     scene.add(this.moon, this.moon.target);
 
     // Sky / ground ambient
-    this.hemi = new THREE.HemisphereLight(0x3d4c66, 0x15120e, 0.6);
+    this.hemi = new THREE.HemisphereLight(0x34425a, 0x110f0c, 0.38);
     scene.add(this.hemi);
 
     this.sky = this.createSky();

@@ -16,7 +16,7 @@ export interface TextureDef {
 }
 
 /** Bump when generators change so cached textures are regenerated. */
-export const TEXGEN_VERSION = 2;
+export const TEXGEN_VERSION = 3;
 
 export const TEXTURE_DEFS: TextureDef[] = [
   { id: 'brick', gen: masonry.brick, seed: 11 },
