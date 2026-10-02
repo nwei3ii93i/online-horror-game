@@ -16,6 +16,8 @@ import type { LoadingScreen } from './ui/LoadingScreen';
 import { HUD } from './ui/HUD';
 import { Forest } from './world/vegetation/Forest';
 import { createVegTextures } from './world/vegetation/VegTextures';
+import { AudioEngine, AmbienceDirector, playFootstep, playLanding } from './audio';
+import { GROUP, groups } from './physics/Physics';
 import { World } from './world/World';
 import { Interaction } from './gameplay/Interaction';
 import { Doors } from './gameplay/Doors';
@@ -49,6 +51,11 @@ export class Game {
   hud!: HUD;
   forest!: Forest;
   private adaptExposure = 1;
+  audio!: AudioEngine;
+  ambience!: AmbienceDirector;
+  private indoorSmooth = 0;
+  private _fwd = new THREE.Vector3();
+  private _up = new THREE.Vector3();
 
   constructor(container: HTMLElement, readonly settings: Settings, readonly opts: GameOptions) {
     this.engine = new Engine(container, settings);
@@ -64,7 +71,10 @@ export class Game {
     const texP = this.textures.loadAll((d, t, id) => loading.set(0.05 + 0.6 * (d / t), `Synthesising materials (${id})`));
     const terrainP = TerrainData.generateAsync(this.opts.seed);
     const physP = this.physics.init();
-    const [terrain] = await Promise.all([terrainP, texP, physP]);
+    this.audio = new AudioEngine({ masterVolume: this.settings.values.masterVolume });
+    const audioP = this.audio.init(() => undefined);
+    const [terrain] = await Promise.all([terrainP, texP, physP, audioP]);
+    this.ambience = new AmbienceDirector(this.audio);
     this.terrain = terrain;
 
     loading.set(0.68, 'Shaping terrain');
@@ -106,6 +116,7 @@ export class Game {
       this.volumetrics.setDepth(this.engine.post.depthNode);
     }
     this.hud = new HUD(document.body, this.engine.input, this.engine.renderer.domElement);
+    this.setupAudio();
     this.registerSystems();
     this.applyAutomation();
     // compile every pipeline now instead of hitching when things first come into view
@@ -140,7 +151,7 @@ export class Game {
         if (e.input.wasPressed('interact') && this.interaction.focused) {
           this.interaction.focused.interact({ playerId: 'local', hasItem: (id) => this.inventory.has(id), point: this.interaction.focusPoint });
         }
-        if (e.input.wasPressed('flashlight')) this.flashlight.toggle();
+        if (e.input.wasPressed('flashlight')) { this.flashlight.toggle(); this.audio.play('flashlight_click'); }
         const moving = Math.min(1, Math.hypot(this.player.velocity.x, this.player.velocity.z) / 2);
         this.flashlight.update(dt, e.camera, moving);
         this.updateEyeAdaptation(dt);
@@ -149,8 +160,56 @@ export class Game {
         this.terrainMesh.update(e.camera.position, this.settings.profile.viewDistance);
         this.forest.update(e.camera, this.settings.profile.viewDistance, this.player.position);
         worldUniforms.windTime.value += dt;
+        this.updateAudio(dt);
       },
     });
+  }
+
+  /** Wire gameplay events to the procedural sound engine. */
+  private setupAudio(): void {
+    const a = this.audio;
+    const wet = () => worldUniforms.wetness.value > 0.3;
+    const surf = (s: string, p: THREE.Vector3) => (s === 'terrain' ? `terrain:${this.terrain.surfaceAt(p.x, p.z)}` : s);
+    this.player.onFootstep = (ev) => playFootstep(a, surf(ev.surface, ev.position), ev.position, ev.intensity, ev.stance, wet());
+    this.player.onLand = (speed, s) => playLanding(a, surf(s, this.player.position), this.player.position.clone(), speed, wet());
+    this.doors.events.on('creak', (ev) => a.play(ev.kind === 'metal' ? 'gate_iron_creak' : 'door_open_creak', { position: ev.position }));
+    this.doors.events.on('close', (ev) => a.play('door_close', { position: ev.position }));
+    this.doors.events.on('locked', (ev) => a.play('door_locked', { position: ev.position }));
+    this.doors.events.on('unlock', (ev) => a.play('door_unlock', { position: ev.position }));
+    const d = new THREE.Vector3();
+    const mask = groups(GROUP.PLAYER, GROUP.STATIC | GROUP.DOOR);
+    a.setOcclusionProvider((from, to) => {
+      d.subVectors(to, from);
+      const len = d.length();
+      if (len < 0.5) return 0;
+      d.divideScalar(len);
+      const hit = this.physics.raycast(from, d, len - 0.3, mask);
+      if (!hit) return 0;
+      const back = this.physics.raycast(to, d.clone().negate(), len - 0.3, mask);
+      return back && len - back.toi - hit.toi > 0.6 ? 0.9 : 0.65;
+    });
+    const unlock = () => void a.resume();
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    this.settings.onChange((s) => a.setMasterVolume(s.masterVolume));
+  }
+
+  private updateAudio(dt: number): void {
+    const cam = this.engine.camera;
+    cam.getWorldDirection(this._fwd);
+    this._up.set(0, 1, 0).applyQuaternion(cam.quaternion);
+    this.audio.setListener(cam.position, this._fwd, this._up);
+    const room = this.world.roomAt(this.player.position);
+    this.indoorSmooth += ((room ? 1 : 0) - this.indoorSmooth) * Math.min(1, dt * 2);
+    const trees = this.forest.densityAt(cam.position.x, cam.position.z);
+    const env = room ? room.env : trees > 0.35 ? 'forest' : 'outdoor';
+    this.ambience.update(dt, {
+      listener: cam.position, indoor: this.indoorSmooth, environment: env,
+      rain: worldUniforms.rainIntensity.value, wind: worldUniforms.windStrength.value,
+      time: this.engine.time, isNearTrees: trees > 0.2,
+      exertion: 1 - this.player.stamina,
+    });
+    this.audio.update(dt);
   }
 
   /**
