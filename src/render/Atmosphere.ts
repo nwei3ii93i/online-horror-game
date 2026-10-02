@@ -26,7 +26,7 @@ export class Atmosphere {
   readonly moonGlowColor: any = uniform(new THREE.Color(0x5d6a7c));
   readonly cloudCover: any = uniform(0.78);
   readonly skyBrightness: any = uniform(1);
-  readonly moonIntensity = 1.5;
+  readonly moonIntensity = 0.8;
   csm: CSMShadowNode | null = null;
   private cloudTime: any = uniform(0);
 
@@ -46,7 +46,7 @@ export class Atmosphere {
     scene.add(this.moon, this.moon.target);
 
     // Sky / ground ambient
-    this.hemi = new THREE.HemisphereLight(0x34425a, 0x110f0c, 0.38);
+    this.hemi = new THREE.HemisphereLight(0x2e3b52, 0x0e0c0a, 0.32);
     scene.add(this.hemi);
 
     this.sky = this.createSky();

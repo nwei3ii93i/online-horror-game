@@ -1,5 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { uniform, texture, vec2, float, positionWorld, step, Fn, clamp, smoothstep } from 'three/tsl';
+import { Noise } from '../materials/texgen/noise';
 
 /**
  * Global shading inputs shared by every world material:
@@ -25,6 +26,32 @@ export class WorldUniforms {
   readonly terrainOrigin: any = uniform(new THREE.Vector2(-300, -300));
   readonly terrainSize: any = uniform(new THREE.Vector2(600, 600));
   terrainTex: THREE.DataTexture;
+
+  /** Tileable 256² noise (4 octave bands in RGBA) – far cheaper than procedural noise per pixel. */
+  readonly noiseTex: THREE.DataTexture = (() => {
+    const N = 256, nz = new Noise(777);
+    const d = new Uint8Array(N * N * 4);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const u = x / N, v = y / N, o = (y * N + x) * 4;
+      d[o] = (nz.fbm(u, v, 4, 3) * 0.5 + 0.5) * 255;
+      d[o + 1] = (nz.fbm(u + 0.3, v + 0.7, 8, 3) * 0.5 + 0.5) * 255;
+      d[o + 2] = (nz.fbm(u + 0.6, v + 0.1, 16, 2) * 0.5 + 0.5) * 255;
+      d[o + 3] = (nz.fbm(u + 0.9, v + 0.4, 32, 2) * 0.5 + 0.5) * 255;
+    }
+    const t = new THREE.DataTexture(d, N, N, THREE.RGBAFormat, THREE.UnsignedByteType);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.generateMipmaps = true; t.needsUpdate = true;
+    return t;
+  })();
+  private noiseNode: any = texture(this.noiseTex);
+
+  /** World-space value noise in [-1,1] (works on walls and floors alike). `scale` = 1/metres. */
+  noise(p: any, scale: number): any {
+    const q = vec2(p.x.add(p.y.mul(0.37)), p.z.sub(p.y.mul(0.61))).mul(scale / 4);
+    const s = this.noiseNode.sample(q);
+    return s.x.mul(0.6).add(s.y.mul(0.3)).add(s.z.mul(0.1)).mul(2).sub(1);
+  }
 
   /** Texture nodes are shared by all materials; swapping `.value` rebinds everywhere. */
   private interiorNode: any;

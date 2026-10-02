@@ -62,7 +62,7 @@ export class Engine {
     this.backend = (r.backend as any).isWebGPUBackend ? 'webgpu' : 'webgl2';
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFShadowMap;
-    r.toneMapping = THREE.AgXToneMapping;
+    r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = this.settings.values.brightness;
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.domElement.classList.add('game-canvas');

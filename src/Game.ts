@@ -48,6 +48,7 @@ export class Game {
   inventory = new Set<string>();
   hud!: HUD;
   forest!: Forest;
+  private adaptExposure = 1;
 
   constructor(container: HTMLElement, readonly settings: Settings, readonly opts: GameOptions) {
     this.engine = new Engine(container, settings);
@@ -107,6 +108,11 @@ export class Game {
     this.hud = new HUD(document.body, this.engine.input, this.engine.renderer.domElement);
     this.registerSystems();
     this.applyAutomation();
+    // compile every pipeline now instead of hitching when things first come into view
+    loading.set(0.97, 'Compiling shaders');
+    this.forest.prepareWarmup(true);
+    try { await this.engine.renderer.compileAsync(scene, this.engine.camera); } catch (err) { console.warn('compileAsync failed', err); }
+    this.forest.prepareWarmup(false);
     loading.set(1, 'Ready');
   }
 
@@ -137,6 +143,7 @@ export class Game {
         if (e.input.wasPressed('flashlight')) this.flashlight.toggle();
         const moving = Math.min(1, Math.hypot(this.player.velocity.x, this.player.velocity.z) / 2);
         this.flashlight.update(dt, e.camera, moving);
+        this.updateEyeAdaptation(dt);
         this.atmosphere.update(dt, e.camera);
         this.volumetrics?.update(dt, e.camera);
         this.terrainMesh.update(e.camera.position, this.settings.profile.viewDistance);
@@ -144,6 +151,23 @@ export class Game {
         worldUniforms.windTime.value += dt;
       },
     });
+  }
+
+  /**
+   * Cheap eye adaptation: when the torch lights a surface very close to the eye the
+   * camera "stops down", in wide dark spaces it opens up slightly. Smoothed over time.
+   */
+  private updateEyeAdaptation(dt: number): void {
+    const cam = this.engine.camera;
+    const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
+    const hit = this.physics.raycast({ x: cam.position.x, y: cam.position.y, z: cam.position.z }, { x: dir.x, y: dir.y, z: dir.z }, 12, undefined, this.player.rapierCollider);
+    const d = hit ? hit.toi : 12;
+    const torch = this.flashlight.on ? 1 : 0;
+    // close surfaces under the torch → lower exposure; nothing lit → open up a little
+    const target = torch ? THREE.MathUtils.lerp(0.42, 1.0, THREE.MathUtils.smoothstep(d, 0.4, 4.5)) : 1.12;
+    const rate = target < this.adaptExposure ? 6 : 1.2; // close down fast, open up slowly
+    this.adaptExposure += (target - this.adaptExposure) * Math.min(1, dt * rate);
+    this.engine.post.exposureBoost.value = this.adaptExposure;
   }
 
   /** URL-driven automation for screenshots / tests: ?cam=x,y,z,yawDeg,pitchDeg&noclip&wet=0.8 */

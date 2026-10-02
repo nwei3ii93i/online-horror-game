@@ -201,8 +201,8 @@ export class MaterialLibrary {
     // Macro variation to break tiling (two octaves of world-space noise)
     const macro = spec.macro ?? (spec.tex ? 0.22 : 0);
     if (macro > 0) {
-      const m1 = mx_noise_float(pw.mul(0.21));
-      const m2 = mx_noise_float(pw.mul(0.9).add(17.3));
+      const m1 = W.noise(pw, 0.21);
+      const m2 = W.noise(pw.add(17.3), 0.9);
       albedo = albedo.mul(float(1).add(m1.mul(macro)).add(m2.mul(macro * 0.35)));
       rough = rough.add(m1.mul(macro * 0.15));
     }
@@ -213,7 +213,7 @@ export class MaterialLibrary {
       const muv = pw.xz.div(1.6);
       const mossA = texture(mossSet.a, muv);
       const up = smoothstep(0.35, 0.85, normalWorld.y);
-      const n = smoothstep(-0.25, 0.35, mx_noise_float(pw.mul(0.55)));
+      const n = smoothstep(-0.25, 0.35, W.noise(pw, 0.55));
       const mm = clamp(up.mul(n).mul(spec.mossUp), 0, 1);
       albedo = mix(albedo, mossA.rgb, mm);
       rough = mix(rough, 0.95, mm);

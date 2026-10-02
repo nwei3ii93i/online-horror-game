@@ -115,7 +115,7 @@ export function genSpruce(seed: number, height: number, dense = true): TreeModel
       const rel = (y - crownBase) / (height - crownBase);
       const alive = y >= crownBase;
       const step = alive ? 0.32 + rng.float() * 0.22 + (1 - rel) * 0.12 : 0.45 + rng.float() * 0.4;
-      const nb = lod === 0 ? (alive ? 5 : 4) : (alive ? 3 : 2);
+      const nb = lod === 0 ? (alive ? 4 : 3) : (alive ? 3 : 2);
       const az0 = rng.float() * Math.PI * 2;
       const base = trunkAt(y);
       for (let k = 0; k < nb; k++) {
@@ -129,11 +129,11 @@ export function genSpruce(seed: number, height: number, dense = true): TreeModel
           const side = V(-horiz.z, 0, horiz.x);
           const tone = 0.85 + rng.float() * 0.3;
           mb.withColor([tone, tone, tone], () => {
-            card(mb, 'cardA', base, dir, side, len, len * (lod === 0 ? 0.62 : 0.8), 0.18, lod === 0 ? 3 : 2, 0.15);
+            card(mb, 'cardA', base, dir, side, len, len * (lod === 0 ? 0.66 : 0.8), 0.18, 2, 0.15);
             if (lod === 0) {
               // second, tilted card for volume
               const side2 = side.clone().applyAxisAngle(dir, 1.05).normalize();
-              card(mb, 'cardA', base.clone().add(V(0, 0.04, 0)), dir, side2, len * 0.92, len * 0.45, 0.22, 3, 0.15);
+              card(mb, 'cardA', base.clone().add(V(0, 0.04, 0)), dir, side2, len * 0.92, len * 0.45, 0.22, 2, 0.15);
             }
           });
           if (lod === 0 && len > 1.1) {

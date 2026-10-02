@@ -98,7 +98,7 @@ export class Volumetrics {
       const noiseD = smoothstep(0.25, 0.85, n1.mul(0.7).add(n2.mul(0.45)));
       const hAbove = max(p.y.sub(W.terrainHeight(p.xz)), 0);
       const ground = exp(hAbove.mul(-0.55)).mul(this.groundFog);
-      const indoorFade = float(1).sub(W.indoor(p).mul(0.97));
+      const indoorFade = float(1).sub(W.indoor(p).mul(0.985));
       const rain = W.rainIntensity.mul(0.4).add(1);
       // no scattering right at the lens (avoids the 1/r² hot spot of the hand-held light)
       const dist = p.sub(cameraPosition).length();

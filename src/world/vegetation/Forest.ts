@@ -43,6 +43,7 @@ export class Forest {
   private lastPos = new THREE.Vector3(1e9, 0, 0);
   private lastQuat = new THREE.Quaternion();
   private dummy = new THREE.Object3D();
+  private wide = new THREE.PerspectiveCamera();
   totalTrees = 0;
 
   constructor(private terrain: TerrainData, private textures: TextureStore, private veg: VegTextureSet, private physics: Physics, density = 1) {
@@ -172,7 +173,7 @@ export class Forest {
           mesh.instanceMatrix = attr;
           mesh.count = 0;
           mesh.frustumCulled = false;
-          mesh.castShadow = li < 2;
+          mesh.castShadow = li === 0;
           mesh.receiveShadow = true;
           mesh.name = `tree_${mi}_${li}_${slot}`;
           this.group.add(mesh);
@@ -186,8 +187,8 @@ export class Forest {
 
   /** Rebin visible instances (cheap; only when the camera moved or turned noticeably). */
   update(camera: THREE.PerspectiveCamera, viewDistance: number, playerPos: THREE.Vector3): void {
-    const moved = camera.position.distanceToSquared(this.lastPos) > 2.5 * 2.5;
-    const turned = 1 - Math.abs(camera.quaternion.dot(this.lastQuat)) > 0.0015;
+    const moved = camera.position.distanceToSquared(this.lastPos) > 4 * 4;
+    const turned = 1 - Math.abs(camera.quaternion.dot(this.lastQuat)) > 0.008; // ≈ 14°
     if (moved || turned) {
       this.lastPos.copy(camera.position);
       this.lastQuat.copy(camera.quaternion);
@@ -198,7 +199,12 @@ export class Forest {
 
   private rebuild(camera: THREE.PerspectiveCamera, viewDistance: number): void {
     camera.updateMatrixWorld();
-    this.m4.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    // widened frustum so small turns don't require a rebuild
+    this.wide.copy(camera);
+    this.wide.fov = Math.min(150, camera.fov + 50);
+    this.wide.aspect = camera.aspect;
+    this.wide.updateProjectionMatrix();
+    this.m4.multiplyMatrices(this.wide.projectionMatrix, camera.matrixWorldInverse);
     this.frustum.setFromProjectionMatrix(this.m4);
     for (const lods of this.lods) for (const l of lods) l.count = 0;
     const cp = camera.position;
@@ -209,10 +215,10 @@ export class Forest {
       const dist = Math.max(0, Math.hypot(cxw - cp.x, czw - cp.z) - CELL * 0.7);
       if (dist > viewDistance) continue;
       // cells close by are always kept (they cast shadows into view)
-      if (dist > 30 && !this.frustum.intersectsBox(c.box)) continue;
+      if (dist > 24 && !this.frustum.intersectsBox(c.box)) continue;
       for (const t of c.trees) {
         const td = Math.hypot(t.x - cp.x, t.z - cp.z);
-        const lod = td < 42 ? 0 : td < 105 ? 1 : 2;
+        const lod = td < 32 ? 0 : td < 85 ? 1 : 2;
         const L = this.lods[t.model][lod];
         d.position.set(t.x, t.y, t.z);
         d.rotation.set(0, t.ry, 0);
@@ -247,6 +253,12 @@ export class Forest {
         c.colliders = null;
       }
     }
+  }
+
+  /** Make every instanced mesh drawable once so the renderer can compile all pipelines up front. */
+  prepareWarmup(on: boolean): void {
+    for (const lods of this.lods) for (const l of lods) for (const s of l.slots) s.mesh.count = on ? 1 : l.count;
+    if (!on) this.lastPos.set(1e9, 0, 0);
   }
 
   /** Approximate tree density around a point (0..1), for audio ambience. */

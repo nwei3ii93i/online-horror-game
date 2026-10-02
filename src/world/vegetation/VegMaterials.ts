@@ -77,7 +77,7 @@ export function barkMaterial(textures: TextureStore, texId: string, scaleU: numb
   let rough: any = B.z;
   // green algae / moss on the windward (north-west) side and low on the trunk
   const pw = positionWorld;
-  const mossN = smoothstep(-0.1, 0.6, mx_noise_float(pw.mul(0.8)));
+  const mossN = smoothstep(-0.1, 0.6, W.noise(pw, 0.8));
   const side = clamp(dot(normalWorld, vec3(-0.5, 0.25, -0.8)).mul(0.8).add(0.35), 0, 1);
   const low = float(1).sub(smoothstep(0.5, 3.5, pw.y.sub(W.terrainHeight(pw.xz))));
   const moss = clamp(mossN.mul(side).mul(low.mul(0.7).add(0.3)).mul(mossUp), 0, 1);

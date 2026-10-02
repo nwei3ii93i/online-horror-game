@@ -70,7 +70,8 @@ export class TerrainMesh {
     const s0 = texture(this.splatTex0, suv);
     const s1 = texture(this.splatTex1, suv);
     // break up splat bilinear blockiness with noise
-    const jn = mx_noise_float(pw.mul(0.6)).mul(0.08);
+    const W0 = worldUniforms;
+    const jn = W0.noise(pw, 0.6).mul(0.08);
     const weights = [s0.x, s0.y, s0.z, s0.w, s1.x, s1.y, s1.z];
     const A: any[] = [], B: any[] = [];
     for (let i = 0; i < 7; i++) {
@@ -98,8 +99,8 @@ export class TerrainMesh {
       height = height.add(A[i].a.mul(w));
     }
     // macro variation: large soft patches of tone and moisture
-    const m1 = mx_noise_float(pw.mul(0.045));
-    const m2 = mx_noise_float(pw.mul(0.19).add(9.1));
+    const m1 = W0.noise(pw, 0.045);
+    const m2 = W0.noise(pw.add(9.1), 0.19);
     albedo = albedo.mul(float(1).add(m1.mul(0.22)).add(m2.mul(0.1)));
     // wetness & puddles (puddles only on mud/gravel/asphalt layers, in low spots)
     const outdoor = float(1).sub(W.indoorAt());

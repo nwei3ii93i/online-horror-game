@@ -117,6 +117,8 @@ export class PostFX {
       const shadowTint = vec3(0.94, 0.98, 1.06);
       const highTint = vec3(1.03, 1.0, 0.96);
       c.assign(c.mul(mix(shadowTint, highTint, smoothstep(0.05, 0.6, l))));
+      // gentle filmic contrast around the low mid-tones
+      c.assign(clamp(c.sub(0.32).mul(1.1).add(0.32), 0, 1));
       // slight desaturation – "photographed", not graded
       c.assign(mix(vec3(l), c, float(0.88).sub(stress.mul(0.5))));
       // vignette (optical falloff)
