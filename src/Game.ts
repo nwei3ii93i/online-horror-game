@@ -288,6 +288,7 @@ export class Game {
         if (this.propCullTimer <= 0) {
           this.propCullTimer = 0.2;
           const c = e.camera.position;
+          this.world.cull(c);
           const room = this.world.roomAt(c);
           const floorY = room ? room.y0 : null;
           const nearRect = (r: Rect) => {

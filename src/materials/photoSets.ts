@@ -33,7 +33,8 @@ export const PHOTO_OVERRIDES: Record<string, PhotoOverride> = {
   furniture_wood: { photo: 'wood_cabinet_worn_long', scale: [1, 0.5] },
   rough_timber: { photo: 'rough_wood', scale: 0.9 },
   // metal
-  rust_metal: { photo: 'rusty_metal_02', scale: 1.0, alphaMode: 'metal' },
+  // rust is a dielectric: as full metal the scan mirrored the torch and old iron read as chrome-white
+  rust_metal: { photo: 'rusty_metal_02', scale: 1.0, tint: [0.62, 0.56, 0.52] },
   corrugated: { photo: 'rusty_corrugated_iron', scale: 2.0 },
   // ground (terrain layers)
   forest_floor: { photo: 'forest_leaves_02', scale: 3.0 },

@@ -98,6 +98,21 @@ export class World {
     return this.rooms.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && p.y >= r.y0 - 0.3 && p.y < r.y1);
   }
 
+  private cullInfo: { b: BuildingOutput; box: THREE.Box3 }[] | null = null;
+
+  /**
+   * Whole-building visibility: beyond ~120 m the fog has swallowed a building anyway, and the
+   * tunnels are only drawn when the camera is below ground (they're buried everywhere else).
+   */
+  cull(cam: THREE.Vector3): void {
+    if (!this.cullInfo) this.cullInfo = this.buildings.map((b) => ({ b, box: new THREE.Box3().setFromObject(b.group) }));
+    for (const { b, box } of this.cullInfo) {
+      const d = box.distanceToPoint(cam);
+      if (b.id === 'tunnels') b.group.visible = cam.y < 0.3 && d < 70;
+      else b.group.visible = d < (b.id === 'manor' ? 220 : 125);
+    }
+  }
+
   get doorSpecs() { return this.buildings.flatMap((b) => b.doors); }
   get lightFixtures() { return this.buildings.flatMap((b) => b.lights); }
 }
