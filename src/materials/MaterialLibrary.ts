@@ -178,7 +178,8 @@ export class MaterialLibrary {
 
     if (spec.tex) {
       const set = this.textures.get(spec.tex);
-      const sc = spec.scale ?? 1;
+      // photoscans carry their real-world size; tints still apply on top
+      const sc = set.scale ?? spec.scale ?? 1;
       const su = Array.isArray(sc) ? sc[0] : sc;
       const sv = Array.isArray(sc) ? sc[1] : sc;
       const tuv = uv().div(vec2(su, sv));

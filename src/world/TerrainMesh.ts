@@ -28,6 +28,7 @@ export class TerrainMesh {
   private chunks: Chunk[] = [];
   private splatTex0: THREE.DataTexture;
   private splatTex1: THREE.DataTexture;
+  private layerScale: number[];
 
   constructor(private data: TerrainData, textures: TextureStore, private holes: Rect[]) {
     this.group.name = 'terrain';
@@ -43,6 +44,7 @@ export class TerrainMesh {
     this.splatTex0 = mk(data.splat0);
     this.splatTex1 = mk(data.splat1);
     const arr = textures.buildArray(LAYER_TEX);
+    this.layerScale = LAYER_TEX.map((id, i) => textures.get(id).scale?.[0] ?? LAYER_SCALE[i]);
     this.material = this.createMaterial(arr.a, arr.b);
     void SPLAT_LAYERS;
     const nC = (WORLD_HALF * 2) / CHUNK;
@@ -76,7 +78,7 @@ export class TerrainMesh {
     const A: any[] = [], B: any[] = [];
     for (let i = 0; i < 7; i++) {
       // rotate/offset per layer slightly to decorrelate
-      const tuv = pw.xz.div(LAYER_SCALE[i]).add(vec2(i * 0.37, i * 0.71));
+      const tuv = pw.xz.div(this.layerScale[i]).add(vec2(i * 0.37, i * 0.71));
       A.push(texture(arrA, tuv).depth(int(i)));
       B.push(texture(arrB, tuv).depth(int(i)));
     }

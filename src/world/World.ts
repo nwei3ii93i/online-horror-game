@@ -5,6 +5,8 @@ import type { TerrainData } from './TerrainData';
 import type { BuildingOutput, InteriorSpan, Room } from './architecture/BuildingKit';
 import { buildManor } from './buildings/Manor';
 import { worldUniforms } from '../render/WorldUniforms';
+import { buildVan, VanOutput } from './vehicles/Van';
+import { POI } from './Layout';
 
 export const INTERIOR_ORIGIN = new THREE.Vector2(-128, -160);
 export const INTERIOR_SIZE = new THREE.Vector2(256, 256);
@@ -39,6 +41,7 @@ export class World {
   readonly group = new THREE.Group();
   readonly buildings: BuildingOutput[] = [];
   readonly rooms: Room[] = [];
+  van!: VanOutput;
 
   constructor(private physics: Physics, private materials: MaterialLibrary, private terrain: TerrainData) {
     this.group.name = 'world';
@@ -55,6 +58,9 @@ export class World {
   build(): void {
     const manor = buildManor(this.physics, this.materials);
     this.add(manor);
+    const v = POI.van;
+    this.van = buildVan(this.materials, this.physics, v.x, v.z, v.heading, (x, z) => this.terrain.heightAt(x, z));
+    this.group.add(this.van.group);
   }
 
   private add(b: BuildingOutput): void {

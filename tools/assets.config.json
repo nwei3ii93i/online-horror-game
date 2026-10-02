@@ -1,0 +1,496 @@
+{
+  "maxTris": 40000,
+  "textures": [
+    {
+      "id": "yellow_plaster_02",
+      "res": "2k"
+    },
+    {
+      "id": "worn_mossy_plasterwall",
+      "res": "2k"
+    },
+    {
+      "id": "worn_plaster_wall",
+      "res": "1k"
+    },
+    {
+      "id": "damaged_plaster",
+      "res": "1k"
+    },
+    {
+      "id": "decrepit_wallpaper",
+      "res": "2k"
+    },
+    {
+      "id": "peeling_painted_wall",
+      "res": "1k"
+    },
+    {
+      "id": "worn_cracked_plaster",
+      "res": "1k"
+    },
+    {
+      "id": "painted_plaster_wall",
+      "res": "1k"
+    },
+    {
+      "id": "red_brick_plaster_patch_02",
+      "res": "1k"
+    },
+    {
+      "id": "slumped_mortar_brick",
+      "res": "1k"
+    },
+    {
+      "id": "old_stone_wall",
+      "res": "1k"
+    },
+    {
+      "id": "mossy_stone_wall",
+      "res": "1k"
+    },
+    {
+      "id": "monastery_stone_floor",
+      "res": "1k"
+    },
+    {
+      "id": "granite_tile",
+      "res": "1k"
+    },
+    {
+      "id": "clay_roof_tiles_02",
+      "res": "2k"
+    },
+    {
+      "id": "old_wood_floor",
+      "res": "2k"
+    },
+    {
+      "id": "old_wooden_floor_02",
+      "res": "1k"
+    },
+    {
+      "id": "herringbone_parquet",
+      "res": "1k"
+    },
+    {
+      "id": "old_linoleum_flooring_01",
+      "res": "1k"
+    },
+    {
+      "id": "worn_tile_floor",
+      "res": "1k"
+    },
+    {
+      "id": "dirty_tiles",
+      "res": "1k"
+    },
+    {
+      "id": "damaged_concrete_floor",
+      "res": "1k"
+    },
+    {
+      "id": "concrete_wall_008",
+      "res": "1k"
+    },
+    {
+      "id": "weathered_planks",
+      "res": "1k"
+    },
+    {
+      "id": "wood_peeling_paint_weathered",
+      "res": "1k"
+    },
+    {
+      "id": "rough_wood",
+      "res": "1k"
+    },
+    {
+      "id": "wood_cabinet_worn_long",
+      "res": "1k"
+    },
+    {
+      "id": "rough_pine_door",
+      "res": "1k"
+    },
+    {
+      "id": "rusty_metal_02",
+      "res": "1k"
+    },
+    {
+      "id": "rusty_corrugated_iron",
+      "res": "1k"
+    },
+    {
+      "id": "dirty_carpet",
+      "res": "1k"
+    },
+    {
+      "id": "forest_leaves_02",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "forest_floor",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "withered_grass",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "brown_mud_leaves_01",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "gravel_road",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "road_damaged",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "rock_ground",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "mossy_rock",
+      "res": "1k",
+      "disp": true
+    },
+    {
+      "id": "pine_bark",
+      "res": "1k"
+    },
+    {
+      "id": "bark_brown_02",
+      "res": "1k"
+    },
+    {
+      "id": "tree_bark_03",
+      "res": "1k"
+    }
+  ],
+  "models": [
+    {
+      "id": "ArmChair_01"
+    },
+    {
+      "id": "ClassicNightstand_01"
+    },
+    {
+      "id": "GothicBed_01"
+    },
+    {
+      "id": "GothicCabinet_01"
+    },
+    {
+      "id": "GothicCommode_01"
+    },
+    {
+      "id": "Rockingchair_01"
+    },
+    {
+      "id": "Shelf_01"
+    },
+    {
+      "id": "Sofa_01"
+    },
+    {
+      "id": "WoodenChair_01"
+    },
+    {
+      "id": "WoodenTable_01"
+    },
+    {
+      "id": "WoodenTable_03"
+    },
+    {
+      "id": "dining_chair_02"
+    },
+    {
+      "id": "dining_table"
+    },
+    {
+      "id": "drawer_cabinet"
+    },
+    {
+      "id": "mantel_clock_01",
+      "tex": 512
+    },
+    {
+      "id": "vintage_grandfather_clock_01"
+    },
+    {
+      "id": "Television_01"
+    },
+    {
+      "id": "Chandelier_01"
+    },
+    {
+      "id": "Lantern_01",
+      "tex": 512
+    },
+    {
+      "id": "book_encyclopedia_set_01",
+      "tex": 512
+    },
+    {
+      "id": "wooden_bookshelf_worn"
+    },
+    {
+      "id": "fancy_picture_frame_01",
+      "tex": 512
+    },
+    {
+      "id": "hanging_picture_frame_02",
+      "tex": 512
+    },
+    {
+      "id": "standing_picture_frame_01",
+      "tex": 512
+    },
+    {
+      "id": "Barrel_01"
+    },
+    {
+      "id": "wooden_crate_01"
+    },
+    {
+      "id": "wooden_crate_02"
+    },
+    {
+      "id": "cardboard_box_01",
+      "tex": 512
+    },
+    {
+      "id": "can_rusted",
+      "tex": 512
+    },
+    {
+      "id": "metal_jerrycan",
+      "tex": 512
+    },
+    {
+      "id": "metal_tool_chest"
+    },
+    {
+      "id": "wooden_ladder"
+    },
+    {
+      "id": "hatchet",
+      "tex": 512
+    },
+    {
+      "id": "handsaw_wood",
+      "tex": 512
+    },
+    {
+      "id": "sledgehammer_01",
+      "tex": 512
+    },
+    {
+      "id": "covered_car"
+    },
+    {
+      "id": "old_bed_frame"
+    },
+    {
+      "id": "painted_wooden_cabinet"
+    },
+    {
+      "id": "painted_wooden_chair_01"
+    },
+    {
+      "id": "painted_wooden_nightstand"
+    },
+    {
+      "id": "painted_wooden_table"
+    },
+    {
+      "id": "vintage_cabinet_01"
+    },
+    {
+      "id": "vintage_day_bed"
+    },
+    {
+      "id": "vintage_suitcase",
+      "tex": 512
+    },
+    {
+      "id": "vintage_oil_lamp",
+      "tex": 512
+    },
+    {
+      "id": "wall_clock",
+      "tex": 512
+    },
+    {
+      "id": "ornate_mirror_01"
+    },
+    {
+      "id": "spinning_wheel_01"
+    },
+    {
+      "id": "wicker_basket_01",
+      "tex": 512
+    },
+    {
+      "id": "wooden_bucket_01",
+      "tex": 512
+    },
+    {
+      "id": "watering_can_metal_01",
+      "tex": 512
+    },
+    {
+      "id": "rusted_spade_01",
+      "tex": 512
+    },
+    {
+      "id": "old_tyre",
+      "tex": 512
+    },
+    {
+      "id": "portable_generator"
+    },
+    {
+      "id": "propane_tank",
+      "tex": 512
+    },
+    {
+      "id": "rubber_boots",
+      "tex": 512
+    },
+    {
+      "id": "russian_food_cans_01",
+      "tex": 512
+    },
+    {
+      "id": "wine_bottles_01",
+      "tex": 512
+    },
+    {
+      "id": "pot_enamel_01",
+      "tex": 512
+    },
+    {
+      "id": "tea_set_01",
+      "tex": 512
+    },
+    {
+      "id": "rubber_duck_toy",
+      "tex": 512
+    },
+    {
+      "id": "treasure_chest",
+      "maxTris": 20000
+    },
+    {
+      "id": "wheelchair_01"
+    },
+    {
+      "id": "vintage_crutches_01",
+      "tex": 512
+    },
+    {
+      "id": "steel_frame_shelves_01"
+    },
+    {
+      "id": "worn_metal_rack"
+    },
+    {
+      "id": "wooden_stool_01",
+      "tex": 512
+    },
+    {
+      "id": "bench_vice_01",
+      "tex": 512
+    },
+    {
+      "id": "old_drill_press"
+    },
+    {
+      "id": "wooden_barrels_01"
+    },
+    {
+      "id": "planter_pot_clay",
+      "tex": 512
+    },
+    {
+      "id": "seeding_tray_01",
+      "tex": 512
+    },
+    {
+      "id": "caged_hanging_light",
+      "tex": 512
+    },
+    {
+      "id": "pull_chain_light_socket",
+      "tex": 512
+    },
+    {
+      "id": "power_box_01",
+      "tex": 512
+    },
+    {
+      "id": "small_lpg_tank",
+      "tex": 512
+    },
+    {
+      "id": "vintage_telephone_wall_clock",
+      "tex": 512
+    },
+    {
+      "id": "wooden_broom",
+      "tex": 512
+    },
+    {
+      "id": "tree_stump_01"
+    },
+    {
+      "id": "tree_stump_02"
+    },
+    {
+      "id": "rock_moss_set_01"
+    },
+    {
+      "id": "rock_moss_set_02"
+    },
+    {
+      "id": "boulder_01",
+      "maxTris": 16000
+    },
+    {
+      "id": "dead_tree_trunk"
+    },
+    {
+      "id": "fern_02",
+      "tex": 512
+    },
+    {
+      "id": "nettle_plant",
+      "tex": 512
+    },
+    {
+      "id": "dry_branches_medium_01",
+      "tex": 512
+    },
+    {
+      "id": "root_cluster_01",
+      "maxTris": 16000
+    },
+    {
+      "id": "moss_01",
+      "tex": 512,
+      "maxTris": 16000
+    }
+  ]
+}

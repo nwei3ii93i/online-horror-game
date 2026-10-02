@@ -17,7 +17,7 @@ export class Atmosphere {
   readonly moon: THREE.DirectionalLight;
   readonly hemi: THREE.HemisphereLight;
   readonly sky: THREE.Mesh;
-  readonly moonDir = new THREE.Vector3(-0.42, 0.62, -0.66).normalize();
+  readonly moonDir = new THREE.Vector3(-0.6, 0.52, 0.6).normalize(); // south-west: rakes the entrance façade
   readonly moonDirU: any = uniform(new THREE.Vector3());
   readonly fogDensity: any = uniform(0.024);
   readonly fogHeightFalloff: any = uniform(0.09);
@@ -26,7 +26,7 @@ export class Atmosphere {
   readonly moonGlowColor: any = uniform(new THREE.Color(0x5d6a7c));
   readonly cloudCover: any = uniform(0.78);
   readonly skyBrightness: any = uniform(1);
-  readonly moonIntensity = 0.8;
+  readonly moonIntensity = 0.95;
   csm: CSMShadowNode | null = null;
   private cloudTime: any = uniform(0);
 

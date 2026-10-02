@@ -70,7 +70,7 @@ export function foliageMaterial(o: FoliageOpts): THREE.MeshStandardNodeMaterial 
 export function barkMaterial(textures: TextureStore, texId: string, scaleU: number, scaleV: number, treeHeight: number, trunkSway: number, mossUp = 0.4): THREE.MeshStandardNodeMaterial {
   const set = textures.get(texId);
   const mat = new THREE.MeshStandardNodeMaterial();
-  const tuv = uv().div(vec2(scaleU, scaleV));
+  const tuv = uv().div(set.scale ? vec2(set.scale[0], set.scale[1]) : vec2(scaleU, scaleV));
   const A = texture(set.a, tuv), B = texture(set.b, tuv);
   const W = worldUniforms;
   let albedo: any = A.rgb.mul(attribute('color', 'vec3'));

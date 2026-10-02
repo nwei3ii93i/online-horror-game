@@ -139,6 +139,8 @@ export const POI = {
   woodshed: { x: 38, z: -4 },
   chickenCoop: { x: -60, z: -24 },
   playerSpawn: { x: 36, z: 60, rot: Math.PI * 0.95 },
+  /** The group's van, pulled onto the shoulder of the service road below the gate. */
+  van: { x: 32.2, z: 39.35, heading: -2.709 },
 } as const;
 
 export function grow(r: Rect, m: number): Rect {

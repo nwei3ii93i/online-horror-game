@@ -1,0 +1,1616 @@
+{
+ "source": "https://polyhaven.com (CC0)",
+ "textures": {
+  "decrepit_wallpaper": {
+   "size": [
+    2.5,
+    2.5
+   ],
+   "res": 2048,
+   "disp": false,
+   "name": "Decrepit Wallpaper",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "worn_plaster_wall": {
+   "size": [
+    1.8000000715255737,
+    1.8000000715255737
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Worn Plaster Wall",
+   "authors": [
+    "Dimitrios Savva"
+   ]
+  },
+  "damaged_plaster": {
+   "size": [
+    1.8500001430511475,
+    1.8500001430511475
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Damaged Plaster",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "peeling_painted_wall": {
+   "size": [
+    1.8000000715255737,
+    1.8000000715255737
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Peeling Painted Wall",
+   "authors": [
+    "Dimitrios Savva"
+   ]
+  },
+  "worn_cracked_plaster": {
+   "size": [
+    1.7999999523162842,
+    1.7999999523162842
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Worn Cracked Plaster",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "painted_plaster_wall": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Painted Plaster Wall",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "red_brick_plaster_patch_02": {
+   "size": [
+    1.5,
+    1.5
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Red Brick Plaster Patch 02",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "worn_mossy_plasterwall": {
+   "size": [
+    1.8000000715255737,
+    1.8000000715255737
+   ],
+   "res": 2048,
+   "disp": false,
+   "name": "Worn Mossy Plasterwall",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "yellow_plaster_02": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 2048,
+   "disp": false,
+   "name": "Yellow Plaster 02",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "monastery_stone_floor": {
+   "size": [
+    1.7999999523162842,
+    1.7999999523162842
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Monastery Stone Floor",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "mossy_stone_wall": {
+   "size": [
+    1.9999996423721313,
+    1.9999996423721313
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Mossy Stone Wall",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "old_stone_wall": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Old Stone Wall",
+   "authors": [
+    "Charlotte Baglioni"
+   ]
+  },
+  "slumped_mortar_brick": {
+   "size": [
+    1.7699999809265137,
+    1.7699999809265137
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Slumped Mortar Brick",
+   "authors": [
+    "Dimitrios Savva"
+   ]
+  },
+  "old_wooden_floor_02": {
+   "size": [
+    2.0299999713897705,
+    2.0299999713897705
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Old Wooden Floor 02",
+   "authors": [
+    "Charlotte Baglioni",
+    "Jenelle van Heerden"
+   ]
+  },
+  "granite_tile": {
+   "size": [
+    2.299999952316284,
+    2.299999952316284
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Granite Tile",
+   "authors": [
+    "Charlotte Baglioni"
+   ]
+  },
+  "herringbone_parquet": {
+   "size": [
+    3.4000000953674316,
+    3.4000000953674316
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Herringbone Parquet",
+   "authors": [
+    "Jenelle van Heerden",
+    "Sergej Majboroda"
+   ]
+  },
+  "clay_roof_tiles_02": {
+   "size": [
+    2.5,
+    2.5
+   ],
+   "res": 2048,
+   "disp": false,
+   "name": "Clay Roof Tiles 02",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "old_linoleum_flooring_01": {
+   "size": [
+    1.9900001287460327,
+    1.9900001287460327
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Old Linoleum Flooring 01",
+   "authors": [
+    "Charlotte Baglioni"
+   ]
+  },
+  "dirty_tiles": {
+   "size": [
+    2.259999990463257,
+    2.259999990463257
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Dirty Tiles",
+   "authors": [
+    "Matterfield",
+    "Jenelle van Heerden"
+   ]
+  },
+  "worn_tile_floor": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Worn Tile Floor",
+   "authors": [
+    "Dimitrios Savva"
+   ]
+  },
+  "damaged_concrete_floor": {
+   "size": [
+    4.5,
+    4.5
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Damaged Concrete Floor",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "old_wood_floor": {
+   "size": [
+    3,
+    3
+   ],
+   "res": 2048,
+   "disp": false,
+   "name": "Old Wood Floor",
+   "authors": [
+    "Guillaume Monsergent"
+   ]
+  },
+  "concrete_wall_008": {
+   "size": [
+    2.7100000381469727,
+    2.7100000381469727
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Concrete Wall 008",
+   "authors": [
+    "Dario Barresi",
+    "Charlotte Baglioni"
+   ]
+  },
+  "rough_wood": {
+   "size": [
+    0.5,
+    0.5
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Rough Wood",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "weathered_planks": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Weathered Planks",
+   "authors": [
+    "Dario Barresi",
+    "Dimitrios Savva"
+   ]
+  },
+  "wood_peeling_paint_weathered": {
+   "size": [
+    0.7619999647140503,
+    0.7620000243186951
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Wood Peeling Paint Weathered",
+   "authors": [
+    "Rob Tuytel",
+    "Dimitrios Savva"
+   ]
+  },
+  "rusty_corrugated_iron": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Rusty Corrugated Iron",
+   "authors": [
+    "Charlotte Baglioni"
+   ]
+  },
+  "wood_cabinet_worn_long": {
+   "size": [
+    1,
+    0.5
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Wood Cabinet Worn Long",
+   "authors": [
+    "Dimitrios Savva",
+    "Rico Cilliers"
+   ]
+  },
+  "rough_pine_door": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Rough Pine Door",
+   "authors": [
+    "Dimitrios Savva"
+   ]
+  },
+  "rusty_metal_02": {
+   "size": [
+    1,
+    1
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Rusty Metal 02",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "forest_leaves_02": {
+   "size": [
+    3.0009725093841553,
+    3.0009801387786865
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Forest Leaves 02",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "dirty_carpet": {
+   "size": [
+    0.5999999046325684,
+    0.5999999046325684
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Dirty Carpet",
+   "authors": [
+    "Rohit Seervi"
+   ]
+  },
+  "forest_floor": {
+   "size": [
+    2.1399996280670166,
+    2.1399996280670166
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Forest Floor",
+   "authors": [
+    "eye-candy.xyz"
+   ]
+  },
+  "withered_grass": {
+   "size": [
+    1.9999996423721313,
+    1.9999996423721313
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Withered Grass",
+   "authors": [
+    "Charlotte Baglioni"
+   ]
+  },
+  "gravel_road": {
+   "size": [
+    2,
+    2
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Gravel Road",
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "brown_mud_leaves_01": {
+   "size": [
+    1.2999998331069946,
+    1.2999998331069946
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Brown Mud Leaves 01",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "road_damaged": {
+   "size": [
+    2.200000047683716,
+    2.200000047683716
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Road Damaged",
+   "authors": [
+    "Dimitrios Savva"
+   ]
+  },
+  "rock_ground": {
+   "size": [
+    1.5,
+    1.5
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Rock Ground",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "pine_bark": {
+   "size": [
+    1.9999996423721313,
+    1.9999996423721313
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Pine Bark",
+   "authors": [
+    "Dimitrios Savva"
+   ]
+  },
+  "bark_brown_02": {
+   "size": [
+    0.9999990463256836,
+    0.999998927116394
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Bark Brown 02",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "mossy_rock": {
+   "size": [
+    3,
+    3
+   ],
+   "res": 1024,
+   "disp": true,
+   "name": "Mossy Rock",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  },
+  "tree_bark_03": {
+   "size": [
+    1,
+    1
+   ],
+   "res": 1024,
+   "disp": false,
+   "name": "Tree Bark 03",
+   "authors": [
+    "Rob Tuytel"
+   ]
+  }
+ },
+ "models": {
+  "fern_02": {
+   "name": "Fern 02",
+   "polycount": 6232,
+   "dimensions": [
+    1.9725302457809448,
+    1.7240281701087952,
+    0.4276947118341923
+   ],
+   "authors": [
+    "Rob Tuytel",
+    "Rico Cilliers"
+   ]
+  },
+  "ArmChair_01": {
+   "name": "Arm Chair 01",
+   "polycount": 5626,
+   "dimensions": [
+    0.8484309017658234,
+    0.7657602727413177,
+    1.065087635157397
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "dead_tree_trunk": {
+   "name": "Dead Tree Trunk",
+   "polycount": 101802,
+   "dimensions": [
+    3.051015019416809,
+    0.27752751111984253,
+    0.29043155536055565
+   ],
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "simplified": 40000
+  },
+  "ClassicNightstand_01": {
+   "name": "Classic Nightstand 01",
+   "polycount": 2002,
+   "dimensions": [
+    0.5677522718906403,
+    0.424192875623703,
+    0.6999649838462041
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "GothicBed_01": {
+   "name": "Gothic Bed 01",
+   "polycount": 18741,
+   "dimensions": [
+    1.493751883506775,
+    2.0399999022483826,
+    1.5338402975614966
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "GothicCabinet_01": {
+   "name": "Gothic Cabinet 01",
+   "polycount": 12170,
+   "dimensions": [
+    1.7191437482833862,
+    1.1286656260490417,
+    2.3609009534249883
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "GothicCommode_01": {
+   "name": "Gothic Commode 01",
+   "polycount": 3897,
+   "dimensions": [
+    1.2014026641845703,
+    0.5806596577167511,
+    1.212042630148815
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "Rockingchair_01": {
+   "name": "Rockingchair 01",
+   "polycount": 11866,
+   "dimensions": [
+    0.7081280946731567,
+    0.833482027053833,
+    0.9949284568428993
+   ],
+   "authors": [
+    "Jorge Camacho"
+   ]
+  },
+  "Shelf_01": {
+   "name": "Shelf 01",
+   "polycount": 182,
+   "dimensions": [
+    1.003443717956543,
+    0.2569795063869833,
+    2.080310344696045
+   ],
+   "authors": [
+    "Gabriel Radić"
+   ]
+  },
+  "Sofa_01": {
+   "name": "Sofa 01",
+   "polycount": 4101,
+   "dimensions": [
+    1.5714675784111023,
+    0.6580145359039307,
+    0.796515051391907
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "WoodenChair_01": {
+   "name": "Wooden Chair 01",
+   "polycount": 19992,
+   "dimensions": [
+    0.6881728172302246,
+    0.6584618389606476,
+    2.273514856118709
+   ],
+   "authors": [
+    "Jake Mobley"
+   ]
+  },
+  "WoodenTable_01": {
+   "name": "Wooden Table 01",
+   "polycount": 952,
+   "dimensions": [
+    1.7996479272842407,
+    0.6571746468544006,
+    0.5488492709302584
+   ],
+   "authors": [
+    "Ethan Place"
+   ]
+  },
+  "WoodenTable_03": {
+   "name": "Wooden Table 03",
+   "polycount": 2298,
+   "dimensions": [
+    1.3268529176712036,
+    0.5617093443870544,
+    0.8300816416740417
+   ],
+   "authors": [
+    "Gabriel Radić"
+   ]
+  },
+  "dining_chair_02": {
+   "name": "Dining Chair 02",
+   "polycount": 22013,
+   "dimensions": [
+    0.4335707724094391,
+    0.5764201134443283,
+    0.9733776897192001
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "drawer_cabinet": {
+   "name": "Drawer Cabinet",
+   "polycount": 26406,
+   "dimensions": [
+    1.1410778760910034,
+    0.48808445036411285,
+    1.881253957748413
+   ],
+   "authors": [
+    "Ulan Cabanilla"
+   ]
+  },
+  "dining_table": {
+   "name": "Dining Table",
+   "polycount": 1048,
+   "dimensions": [
+    2.255895972251892,
+    1.3902360200881958,
+    0.876989221200347
+   ],
+   "authors": [
+    "Aron Łyczek"
+   ]
+  },
+  "mantel_clock_01": {
+   "name": "Mantel Clock 01",
+   "polycount": 29742,
+   "dimensions": [
+    0.4836633503437042,
+    0.25080496072769165,
+    0.1609499454498291
+   ],
+   "authors": [
+    "Yann Kervran",
+    "Rico Cilliers"
+   ]
+  },
+  "Television_01": {
+   "name": "Television 01",
+   "polycount": 1918,
+   "dimensions": [
+    0.5999999642372131,
+    0.4708106815814972,
+    0.45684892892313655
+   ],
+   "authors": [
+    "Gabriel Radić"
+   ]
+  },
+  "Chandelier_01": {
+   "name": "Chandelier 01",
+   "polycount": 26860,
+   "dimensions": [
+    0.7464556992053986,
+    0.8155497610569,
+    0.7982709443223541
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "wooden_bookshelf_worn": {
+   "name": "Wooden Bookshelf Worn",
+   "polycount": 10106,
+   "dimensions": [
+    1.37395179271698,
+    0.5813020169734955,
+    2.063442051410675
+   ],
+   "authors": [
+    "Ulan Cabanilla"
+   ]
+  },
+  "book_encyclopedia_set_01": {
+   "name": "Book Encyclopedia Set 01",
+   "polycount": 67306,
+   "dimensions": [
+    0.5512974057346582,
+    0.16306233406066895,
+    0.23741818653931634
+   ],
+   "authors": [
+    "John Malcolm"
+   ],
+   "simplified": 40000
+  },
+  "vintage_grandfather_clock_01": {
+   "name": "Vintage Grandfather Clock 01",
+   "polycount": 12604,
+   "dimensions": [
+    0.9966365396976471,
+    0.7952136099338531,
+    2.1905919313430786
+   ],
+   "authors": [
+    "Yann Kervran",
+    "James Ray Cock"
+   ]
+  },
+  "fancy_picture_frame_01": {
+   "name": "Fancy Picture Frame 01",
+   "polycount": 938,
+   "dimensions": [
+    0.603030264377594,
+    0.019993074471130967,
+    0.46412645280361176
+   ],
+   "authors": [
+    "Rob Tuytel",
+    "Rico Cilliers"
+   ]
+  },
+  "hanging_picture_frame_02": {
+   "name": "Hanging Picture Frame 02",
+   "polycount": 3678,
+   "dimensions": [
+    0.7518134415149689,
+    0.03307514381594956,
+    0.4999999701976776
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "standing_picture_frame_01": {
+   "name": "Standing Picture Frame 01",
+   "polycount": 1634,
+   "dimensions": [
+    0.2007998451590538,
+    0.1002768762409687,
+    0.24965811520814896
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "Barrel_01": {
+   "name": "Barrel_01",
+   "polycount": 2682,
+   "dimensions": [
+    0.5630351305007935,
+    0.5630352199077606,
+    0.8800000050105155
+   ],
+   "authors": [
+    "Jorge Camacho"
+   ]
+  },
+  "Lantern_01": {
+   "name": "Lantern 01",
+   "polycount": 33902,
+   "dimensions": [
+    0.12208568677306175,
+    0.09718310832977295,
+    0.2942466139793396
+   ],
+   "authors": [
+    "Rajil Jose Macatangay"
+   ]
+  },
+  "wooden_crate_01": {
+   "name": "Wooden Crate 01",
+   "polycount": 6576,
+   "dimensions": [
+    0.8252729177474976,
+    0.4089537411928177,
+    0.3496182831004262
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "cardboard_box_01": {
+   "name": "Cardboard Box 01",
+   "polycount": 16952,
+   "dimensions": [
+    0.38702359795570374,
+    0.5158704221248627,
+    0.3417995423078537
+   ],
+   "authors": [
+    "Rahul Chaudhary"
+   ]
+  },
+  "can_rusted": {
+   "name": "Can Rusted",
+   "polycount": 3520,
+   "dimensions": [
+    0.12453292682766914,
+    0.12467572093009949,
+    0.15137778513599187
+   ],
+   "authors": [
+    "Rahul Chaudhary"
+   ]
+  },
+  "wooden_crate_02": {
+   "name": "Wooden Crate 02",
+   "polycount": 5176,
+   "dimensions": [
+    1.166325867176056,
+    0.5291010439395905,
+    0.46395453810691833
+   ],
+   "authors": [
+    "James Ray Cock",
+    "Jurita Burger"
+   ]
+  },
+  "metal_jerrycan": {
+   "name": "Metal Jerrycan",
+   "polycount": 20022,
+   "dimensions": [
+    0.35032986104488373,
+    0.17174389213323593,
+    0.4551599698197606
+   ],
+   "authors": [
+    "Sean Buckley"
+   ]
+  },
+  "metal_tool_chest": {
+   "name": "Metal Tool Chest",
+   "polycount": 14576,
+   "dimensions": [
+    0.6853884160518646,
+    0.40715324878692627,
+    0.6518355906009674
+   ],
+   "authors": [
+    "Yann Kervran",
+    "John Hutcheson"
+   ]
+  },
+  "wooden_ladder": {
+   "name": "Wooden Ladder",
+   "polycount": 8492,
+   "dimensions": [
+    0.9591718018054962,
+    0.5000000149011612,
+    1.334923267364502
+   ],
+   "authors": [
+    "Miroslav Turura"
+   ]
+  },
+  "handsaw_wood": {
+   "name": "Handsaw Wood",
+   "polycount": 2548,
+   "dimensions": [
+    0.040833745151758194,
+    0.6329791843891144,
+    0.16652002930641174
+   ],
+   "authors": [
+    "Konrad Szałankiewicz"
+   ]
+  },
+  "sledgehammer_01": {
+   "name": "Sledgehammer 01",
+   "polycount": 2596,
+   "dimensions": [
+    0.20848701149225235,
+    0.09047714620828629,
+    1.0056212544441223
+   ],
+   "authors": [
+    "Dylan Guzman"
+   ]
+  },
+  "covered_car": {
+   "name": "Covered Car",
+   "polycount": 12592,
+   "dimensions": [
+    1.788962960243225,
+    4.38025426864624,
+    1.4111130833625793
+   ],
+   "authors": [
+    "MP"
+   ]
+  },
+  "painted_wooden_cabinet": {
+   "name": "Painted Wooden Cabinet",
+   "polycount": 2227,
+   "dimensions": [
+    1.194674551486969,
+    0.6166356205940247,
+    1.1818697528215125
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "old_bed_frame": {
+   "name": "Old Bed Frame",
+   "polycount": 49990,
+   "dimensions": [
+    0.9046578407287598,
+    2.0017260313034058,
+    1.2014837953575999
+   ],
+   "authors": [
+    "Luca B"
+   ],
+   "simplified": 40000
+  },
+  "painted_wooden_chair_01": {
+   "name": "Painted Wooden Chair 01",
+   "polycount": 724,
+   "dimensions": [
+    0.43175144493579865,
+    0.5398241728544235,
+    0.9564821355743334
+   ],
+   "authors": [
+    "Kuutti Siitonen"
+   ]
+  },
+  "painted_wooden_nightstand": {
+   "name": "Painted Wooden Nightstand",
+   "polycount": 470,
+   "dimensions": [
+    0.5045645833015442,
+    0.5087160021066666,
+    0.6155209708555738
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "painted_wooden_table": {
+   "name": "Painted Wooden Table",
+   "polycount": 600,
+   "dimensions": [
+    2.405603766441345,
+    1.1369839906692505,
+    0.9586371183395386
+   ],
+   "authors": [
+    "Kirill Sannikov"
+   ]
+  },
+  "vintage_cabinet_01": {
+   "name": "Vintage Cabinet 01",
+   "polycount": 61096,
+   "dimensions": [
+    2.0217604637145996,
+    0.6698037981987,
+    2.2350515127764083
+   ],
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "simplified": 40000
+  },
+  "vintage_day_bed": {
+   "name": "Vintage Day Bed",
+   "polycount": 2715,
+   "dimensions": [
+    1.9725552201271057,
+    0.85477614402771,
+    1.1273465404283343
+   ],
+   "authors": [
+    "Aron Łyczek"
+   ]
+  },
+  "hatchet": {
+   "name": "Hatchet",
+   "polycount": 5250,
+   "dimensions": [
+    0.026022234931588173,
+    0.10427016951143742,
+    0.2887292727828026
+   ],
+   "authors": [
+    "James Ray Cock",
+    "Ulan Cabanilla"
+   ]
+  },
+  "vintage_suitcase": {
+   "name": "Vintage Suitcase",
+   "polycount": 16474,
+   "dimensions": [
+    1.6081829071044922,
+    0.23917551338672638,
+    0.5679050989929237
+   ],
+   "authors": [
+    "Maximilian Schuster"
+   ]
+  },
+  "wall_clock": {
+   "name": "Wall Clock",
+   "polycount": 3658,
+   "dimensions": [
+    0.3204909861087799,
+    0.0472230945505423,
+    0.3204909861087799
+   ],
+   "authors": [
+    "PierreB3D"
+   ]
+  },
+  "ornate_mirror_01": {
+   "name": "Ornate Mirror 01",
+   "polycount": 14246,
+   "dimensions": [
+    0.4864957332611084,
+    0.025958335027098656,
+    0.7441554069519043
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "vintage_oil_lamp": {
+   "name": "Vintage Oil Lamp",
+   "polycount": 7208,
+   "dimensions": [
+    0.2199999988079071,
+    0.2199999913573265,
+    0.8016371909276536
+   ],
+   "authors": [
+    "Monsta3D"
+   ]
+  },
+  "wicker_basket_01": {
+   "name": "Wicker Basket 01",
+   "polycount": 22276,
+   "dimensions": [
+    0.3832242637872696,
+    0.29501520097255707,
+    0.11742293369024992
+   ],
+   "authors": [
+    "Kuutti Siitonen"
+   ]
+  },
+  "spinning_wheel_01": {
+   "name": "Spinning Wheel 01",
+   "polycount": 52023,
+   "dimensions": [
+    0.4893998056650162,
+    1.0248570144176483,
+    0.9662211883987766
+   ],
+   "authors": [
+    "Sofia Pahaoja"
+   ],
+   "simplified": 40000
+  },
+  "wooden_bucket_01": {
+   "name": "Wooden Bucket 01",
+   "polycount": 5116,
+   "dimensions": [
+    0.36697085201740265,
+    0.3422211855649948,
+    0.549862340092659
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "old_tyre": {
+   "name": "Old Tyre",
+   "polycount": 2880,
+   "dimensions": [
+    0.6000000238418579,
+    0.16499999910593033,
+    0.6000000238418579
+   ],
+   "authors": [
+    "MP"
+   ]
+  },
+  "watering_can_metal_01": {
+   "name": "Watering Can Metal 01",
+   "polycount": 11837,
+   "dimensions": [
+    0.19101857393980026,
+    0.45233607292175293,
+    0.19681852799840271
+   ],
+   "authors": [
+    "Charles Nderitu"
+   ]
+  },
+  "portable_generator": {
+   "name": "Portable Generator",
+   "polycount": 26419,
+   "dimensions": [
+    0.8183408081531525,
+    0.5640000104904175,
+    0.5769232391612604
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "propane_tank": {
+   "name": "Propane Tank",
+   "polycount": 5238,
+   "dimensions": [
+    0.3373616933822632,
+    0.3373616933822632,
+    0.5537950303405523
+   ],
+   "authors": [
+    "Slinc"
+   ]
+  },
+  "rubber_boots": {
+   "name": "Rubber Boots",
+   "polycount": 35004,
+   "dimensions": [
+    0.8914438188076019,
+    0.26926907896995544,
+    0.37304434180259705
+   ],
+   "authors": [
+    "L"
+   ]
+  },
+  "wine_bottles_01": {
+   "name": "Wine Bottles 01",
+   "polycount": 28848,
+   "dimensions": [
+    0.6763246953487396,
+    0.08056290075182915,
+    0.331367195234634
+   ],
+   "authors": [
+    "Rico Cilliers",
+    "Jurita Burger"
+   ]
+  },
+  "pot_enamel_01": {
+   "name": "Pot Enamel 01",
+   "polycount": 11416,
+   "dimensions": [
+    0.26293012499809265,
+    0.1804744154214859,
+    0.17826278507709503
+   ],
+   "authors": [
+    "Kuutti Siitonen"
+   ]
+  },
+  "rubber_duck_toy": {
+   "name": "Rubber Duck Toy",
+   "polycount": 4288,
+   "dimensions": [
+    0.2135048285126686,
+    0.30000218749046326,
+    0.28552286326885223
+   ],
+   "authors": [
+    "Plat251"
+   ]
+  },
+  "tea_set_01": {
+   "name": "Tea Set 01",
+   "polycount": 40296,
+   "dimensions": [
+    0.9184822738170624,
+    0.483876571059227,
+    0.16499304870376363
+   ],
+   "authors": [
+    "James Ray Cock",
+    "Rico Cilliers",
+    "Jurita Burger"
+   ],
+   "simplified": 40000
+  },
+  "rusted_spade_01": {
+   "name": "Rusted Spade 01",
+   "polycount": 11436,
+   "dimensions": [
+    0.1681148111820221,
+    0.04556426405906677,
+    1.1009047627449036
+   ],
+   "authors": [
+    "Blemonade"
+   ]
+  },
+  "treasure_chest": {
+   "name": "Treasure Chest",
+   "polycount": 103330,
+   "dimensions": [
+    0.9590365290641785,
+    0.522853434085846,
+    0.6189745217561722
+   ],
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "simplified": 20000
+  },
+  "russian_food_cans_01": {
+   "name": "Russian Food Cans 01",
+   "polycount": 1348,
+   "dimensions": [
+    0.1423535794019699,
+    0.046203918755054474,
+    0.08489999175071716
+   ],
+   "authors": [
+    "Kosan Aziz"
+   ]
+  },
+  "steel_frame_shelves_01": {
+   "name": "Steel Frame Shelves 01",
+   "polycount": 4348,
+   "dimensions": [
+    1.0974148511886597,
+    0.5021176338195801,
+    2.1405010361922905
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "worn_metal_rack": {
+   "name": "Worn Metal Rack",
+   "polycount": 6372,
+   "dimensions": [
+    0.9154166579246521,
+    0.6000000238418579,
+    1.8999999766365256
+   ],
+   "authors": [
+    "Luca B"
+   ]
+  },
+  "wooden_stool_01": {
+   "name": "Wooden Stool 01",
+   "polycount": 10946,
+   "dimensions": [
+    0.4253551661968231,
+    0.44236281514167786,
+    0.43735266576914
+   ],
+   "authors": [
+    "Kuutti Siitonen"
+   ]
+  },
+  "bench_vice_01": {
+   "name": "Bench Vice 01",
+   "polycount": 2864,
+   "dimensions": [
+    0.20048236846923828,
+    0.3957868218421936,
+    0.2716780751943588
+   ],
+   "authors": [
+    "Yann Kervran",
+    "Antanas Kep"
+   ]
+  },
+  "old_drill_press": {
+   "name": "Old Drill Press",
+   "polycount": 21842,
+   "dimensions": [
+    0.5271955132484436,
+    0.6095176190137863,
+    1.0499999523162842
+   ],
+   "authors": [
+    "Harsh Vardhan Singh"
+   ]
+  },
+  "planter_pot_clay": {
+   "name": "Planter Pot Clay",
+   "polycount": 3080,
+   "dimensions": [
+    0.2659967243671417,
+    0.2634630501270294,
+    0.22187034250237048
+   ],
+   "authors": [
+    "Amal Kumar"
+   ]
+  },
+  "wooden_barrels_01": {
+   "name": "Wooden Barrels 01",
+   "polycount": 33142,
+   "dimensions": [
+    4.440432071685791,
+    3.3445359468460083,
+    0.9567059241235256
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "wheelchair_01": {
+   "name": "Wheelchair 01",
+   "polycount": 40252,
+   "dimensions": [
+    0.8240909576416016,
+    1.090866893529892,
+    1.1035015587694943
+   ],
+   "authors": [
+    "Garreth Dean"
+   ],
+   "simplified": 40000
+  },
+  "vintage_crutches_01": {
+   "name": "Vintage Crutches 01",
+   "polycount": 10628,
+   "dimensions": [
+    0.39943429827690125,
+    0.21663851663470268,
+    1.6149340318515897
+   ],
+   "authors": [
+    "James Ray Cock"
+   ]
+  },
+  "caged_hanging_light": {
+   "name": "Caged Hanging Light",
+   "polycount": 22893,
+   "dimensions": [
+    1.1618340015411377,
+    0.3148960471153259,
+    0.7500966191291809
+   ],
+   "authors": [
+    "Ulan Cabanilla"
+   ]
+  },
+  "power_box_01": {
+   "name": "Power Box 01",
+   "polycount": 21272,
+   "dimensions": [
+    0.3774920701980591,
+    0.41845703125,
+    0.503142774105072
+   ],
+   "authors": [
+    "Rico Cilliers",
+    "Yann Kervran"
+   ]
+  },
+  "small_lpg_tank": {
+   "name": "Small Lpg Tank",
+   "polycount": 15042,
+   "dimensions": [
+    0.4100192189216614,
+    0.4091912806034088,
+    0.6419749736785434
+   ],
+   "authors": [
+    "Ulan Cabanilla"
+   ]
+  },
+  "wooden_broom": {
+   "name": "Wooden Broom",
+   "polycount": 14258,
+   "dimensions": [
+    0.49023744463920593,
+    0.11251410469412804,
+    1.45356784760952
+   ],
+   "authors": [
+    "Balen"
+   ]
+  },
+  "seeding_tray_01": {
+   "name": "Seedling Tray 01",
+   "polycount": 8334,
+   "dimensions": [
+    0.22020762413740158,
+    0.22020763158798218,
+    0.06076497957110405
+   ],
+   "authors": [
+    "Satyaki Mandal"
+   ]
+  },
+  "vintage_telephone_wall_clock": {
+   "name": "Vintage Telephone Wall Clock",
+   "polycount": 15864,
+   "dimensions": [
+    0.34280551970005035,
+    0.1925630047917366,
+    0.5012321323156357
+   ],
+   "authors": [
+    "Adrian C"
+   ]
+  },
+  "pull_chain_light_socket": {
+   "name": "Pull Chain Light Socket",
+   "polycount": 10902,
+   "dimensions": [
+    0.1102633886039257,
+    0.1102633848786354,
+    0.16541572205081323
+   ],
+   "authors": [
+    "Josh Dean"
+   ]
+  },
+  "tree_stump_01": {
+   "name": "Tree Stump 01",
+   "polycount": 41046,
+   "dimensions": [
+    1.4255504608154297,
+    1.5903143286705017,
+    0.5726675391197205
+   ],
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "simplified": 40000
+  },
+  "rock_moss_set_01": {
+   "name": "Rock Moss Set 01",
+   "polycount": 63127,
+   "dimensions": [
+    8.004603862762451,
+    6.948764801025391,
+    1.768319845199585
+   ],
+   "authors": [
+    "Kless Gyzen"
+   ],
+   "simplified": 40000
+  },
+  "boulder_01": {
+   "name": "Boulder 01",
+   "polycount": 123976,
+   "dimensions": [
+    1.2726830840110779,
+    1.8307338953018188,
+    1.0038918256759644
+   ],
+   "authors": [
+    "Rico Cilliers"
+   ],
+   "simplified": 16000
+  },
+  "nettle_plant": {
+   "name": "Nettle Plant",
+   "polycount": 46195,
+   "dimensions": [
+    1.0841034203767776,
+    0.0946834422647953,
+    0.21878226287662983
+   ],
+   "authors": [
+    "Rob Tuytel",
+    "Rico Cilliers"
+   ],
+   "simplified": 40000
+  },
+  "rock_moss_set_02": {
+   "name": "Rock Moss Set 02",
+   "polycount": 57647,
+   "dimensions": [
+    8.278153419494629,
+    3.410416603088379,
+    1.368368238210678
+   ],
+   "authors": [
+    "Kless Gyzen"
+   ],
+   "simplified": 40000
+  },
+  "tree_stump_02": {
+   "name": "Tree Stump 02",
+   "polycount": 62345,
+   "dimensions": [
+    1.5216976404190063,
+    1.3925331234931946,
+    0.5220921486616135
+   ],
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "simplified": 40000
+  },
+  "moss_01": {
+   "name": "Moss 01",
+   "polycount": 246170,
+   "dimensions": [
+    0.8389523178339005,
+    0.30028730630874634,
+    0.29894982278347015
+   ],
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "simplified": 16000
+  },
+  "dry_branches_medium_01": {
+   "name": "Dry Branches Medium 01",
+   "polycount": 16803,
+   "dimensions": [
+    1.059486210346222,
+    1.299152910709381,
+    0.3409853130578995
+   ],
+   "authors": [
+    "Rico Cilliers"
+   ]
+  },
+  "root_cluster_01": {
+   "name": "Root Cluster 01",
+   "polycount": 225261,
+   "dimensions": [
+    4.122708559036255,
+    2.682776689529419,
+    1.5092801377177238
+   ],
+   "authors": [
+    "Jenelle van Heerden",
+    "Rico Cilliers"
+   ],
+   "simplified": 16000
+  }
+ }
+}

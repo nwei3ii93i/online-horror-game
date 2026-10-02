@@ -22,9 +22,17 @@ npm run dev
 
 Open http://localhost:5173 and click into the window to start.
 
-The first start synthesises all PBR materials procedurally in Web Workers
-(10–40 s depending on CPU and quality); the result is cached in IndexedDB, later
-starts are fast.
+The first start prepares all PBR materials in Web Workers (photoscans are packed,
+the remaining procedural sets synthesised; 10–40 s depending on CPU and quality). The
+procedural part is cached in IndexedDB, later starts are fast.
+
+### Photoscanned assets
+
+`public/assets/` holds CC0 photoscans from [Poly Haven](https://polyhaven.com) (≈40
+texture sets for plaster, brick, floors, roof tiles, bark and forest ground, ≈90 props
+and furniture). They are already in the repo; to re-download or change them edit
+`tools/assets.config.json` and run `npm run assets` (add `--force` to refresh). Without
+the folder the game falls back to its procedural materials.
 
 ### Controls
 
@@ -48,14 +56,17 @@ starts are fast.
 | `?cam=x,y,z,yawDeg,pitchDeg` | start at a camera position (debug / screenshots) |
 | `?vol=0&ao=0&taa=0&bloom=0` | toggle individual post effects |
 | `?exposure=1.4` | override exposure |
+| `?nophoto` / `?noprops` | procedural materials only / no furniture (comparison, debugging) |
 
-Example: `http://localhost:5173/?quality=medium&cam=4,1.7,4,8,3` starts in the courtyard
-looking at the manor.
+You start next to the group's van on the service road below the estate. Example:
+`http://localhost:5173/?quality=medium&cam=4,1.7,4,8,3` starts in the courtyard looking at
+the manor.
 
 ## Tech
 
 - TypeScript, Vite, three.js r186 `WebGPURenderer` (WebGPU first, WebGL2 fallback) with TSL node materials
 - Rapier (WASM) physics: kinematic character controller, height-field terrain, door bodies
-- All textures are procedural PBR sets (albedo/height, normal/roughness/AO) generated in workers
+- PBR materials: CC0 photoscans packed into the engine's two-texture layout (albedo/height, normal/roughness/AO) with procedural fallbacks generated in workers; photoscanned GLB props
+- Generator-powered lamps: a fixed pool of point lights with static cube shadows follows the nearest working fixtures (flicker, dropouts)
 - Post: GTAO, raymarched volumetric fog lit by moon (cascaded shadows) and flashlight, TRAA, bloom, AgX, film grain
 - Deterministic world generation from a seed, so every client builds the identical estate

@@ -31,7 +31,10 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
 
   // ======================================================================= rooms
   const G0 = H.G0, Gc = H.U0 - 0.35, U0 = H.U0, Uc = H.A0 - 0.3, B0 = H.B0, Bc = G0 - 0.3;
-  const stairVoid = { x0: -2.32, z0: -25.15, x1: 2.32, z1: -20.55 };
+  // U-shaped hall stair: flights along the side walls, half landing against the back wall
+  // (with the stair window), two-storey open stairwell above it.
+  const STAIR_TOP = -23.92, LANDING = -27.0;
+  const stairVoid = { x0: -2.85, z0: IZ0, x1: 2.85, z1: STAIR_TOP };
   const cellarStairVoid = { x0: 8.85, z0: IZ0, x1: IX1, z1: -27.35 };   // kitchen → potato cellar
   const atticStairVoid = { x0: 3.15, z0: IZ0, x1: 6.1, z1: -27.55 };      // upper storage → attic
 
@@ -122,7 +125,9 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
       for (const x of [-10.4, -6.2]) backWins.push(win(WX1 - x, 1.2, 'G'));
       backWins.push(win(WX1 - 10.6, 1.15, 'G'));
       backWins.push(win(WX1 - 4.6, 0.6, 'G', { style: 'single' }));
-      backDoors.push({ o: { at: WX1 - 0, width: 1.5, bottom: G0 - y0, top: G0 + 2.7 - y0, kind: 'door' }, frame: 'painted_wood_white' });
+      backDoors.push({ o: { at: WX1 - (-8.3), width: 1.5, bottom: G0 - y0, top: G0 + 2.7 - y0, kind: 'door' }, frame: 'painted_wood_white' });
+      // stair window above the half landing
+      backWins.push({ o: { at: WX1 - 0, width: 1.3, bottom: 3.05 - y0, top: 3.95 - y0, kind: 'window' as const }, opts: { style: 'kasten' as const, broken: 0.25 } });
       backDoors.push({ o: { at: WX1 - 8.3, width: 1.0, bottom: G0 - y0, top: G0 + 2.15 - y0, kind: 'door' }, frame: 'painted_wood_brown' });
     }
     if (L === 'U') {
@@ -159,7 +164,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   iw([6.2, -21.325], [6.2, IZ0], 'B', 0.2, [{ at: 3.0, w: 0.9 }]);
 
   // ground floor
-  const gHallW = iw([-3, WZ1], [-3, WZ0], 'G', 0.3, [{ at: WZ1 - (-19.6), w: 1.4, h: 2.5 }, { at: WZ1 - (-25.8), w: 1.0, h: 2.3 }]);
+  const gHallW = iw([-3, WZ1], [-3, WZ0], 'G', 0.3, [{ at: WZ1 - (-19.6), w: 1.4, h: 2.5 }, { at: WZ1 - (-23.0), w: 1.0, h: 2.3 }]);
   const gHallE = iw([3, WZ0], [3, WZ1], 'G', 0.3, [{ at: -19.0 - WZ0, w: 0.95, h: 2.3 }, { at: -23.1 - WZ0, w: 0.95, h: 2.3 }]);
   const gVest = iw([-2.85, -18.2], [2.85, -18.2], 'G', 0.15, [{ at: 2.85, w: 1.6, h: 2.6 }]);
   const gSalonDining = iw([IX0, -22.2], [-3.15, -22.2], 'G', 0.2, [{ at: -7.6 - IX0, w: 1.3, h: 2.4 }]);
@@ -169,7 +174,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   const gCorrPantry = iw([3.15, -25.6], [6.1, -25.6], 'G', 0.15, [{ at: 1.45, w: 0.8 }]);
 
   // upper floor
-  const uHallW = iw([-3, WZ1], [-3, WZ0], 'U', 0.3, [{ at: WZ1 - (-19.0), w: 0.95 }, { at: WZ1 - (-26.5), w: 0.85 }]);
+  const uHallW = iw([-3, WZ1], [-3, WZ0], 'U', 0.3, [{ at: WZ1 - (-19.0), w: 0.95 }, { at: WZ1 - (-23.0), w: 0.85 }]);
   const uHallE = iw([3, WZ0], [3, WZ1], 'U', 0.3, [{ at: -19.0 - WZ0, w: 0.9 }, { at: -23.1 - WZ0, w: 0.9 }]);
   const uSew = iw([-2.85, -18.2], [2.85, -18.2], 'U', 0.15, [{ at: 2.85, w: 0.9 }]);
   const uMasterOma = iw([IX0, -22.2], [-3.15, -22.2], 'U', 0.2, [{ at: -9.0 - IX0, w: 0.85 }]);
@@ -192,7 +197,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   kit.doorInWall('door:manor_front_r', frontWall, { ...fdO, at: fdO.at + 0.375, width: 0.78 }, { style: 'panel2', mat: 'painted_wood_brown_ext', handle: 'none' }, 1, -1, { locked: true, key: 'key_manor_front', sound: 'wood' });
   // terrace door (back, glazed double – one leaf ajar, unlocked)
   const backWall = kit.frames.find((x) => x.wall.y0 === G0 - 0.3 && x.wall.a[1] === WZ0 && x.wall.a[0] === WX1)!.frame;
-  const tdO = { at: WX1 - 0, width: 1.5, bottom: 0.3, top: 0.3 + 2.7, kind: 'door' as const };
+  const tdO = { at: WX1 - (-8.3), width: 1.5, bottom: 0.3, top: 0.3 + 2.7, kind: 'door' as const };
   kit.doorInWall('door:manor_terrace_l', backWall, { ...tdO, at: tdO.at - 0.375, width: 0.78 }, { style: 'glazed', mat: 'painted_wood_white_ext', handle: 'lever' }, -1, -1, { open: 0.35 });
   kit.doorInWall('door:manor_terrace_r', backWall, { ...tdO, at: tdO.at + 0.375, width: 0.78 }, { style: 'glazed', mat: 'painted_wood_white_ext', handle: 'none' }, 1, -1, { locked: true, key: 'never' });
   // kitchen back door
@@ -205,7 +210,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   // ground floor
   D('door:manor_salon', gHallW, WZ1 - (-19.6) - 0.35, 0.7, 2.5, -1, -1, panel(), { open: 1.2 });
   D('door:manor_salon_b', gHallW, WZ1 - (-19.6) + 0.35, 0.7, 2.5, 1, -1, panel());
-  D('door:manor_dining', gHallW, WZ1 - (-25.8), 1.0, 2.3, 1, -1, panel(), { open: 0.4 });
+  D('door:manor_dining', gHallW, WZ1 - (-23.0), 1.0, 2.3, 1, -1, panel(), { open: 0.4 });
   D('door:manor_study', gHallE, -19.0 - WZ0, 0.95, 2.3, -1, -1, panel('painted_wood_brown'), { locked: true, key: 'key_study' });
   D('door:manor_corridor', gHallE, -23.1 - WZ0, 0.95, 2.3, 1, -1, panel(), { open: 1.5 });
   D('door:manor_vestibule_l', gVest, 2.85 - 0.4, 0.8, 2.6, -1, 1, { style: 'glazed', mat: 'painted_wood_white', handle: 'lever' }, { open: 0.9 });
@@ -222,7 +227,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   D('door:manor_b_laundry', bHallE, -24.2 - WZ0, 0.95, 2.15, -1, -1, { style: 'plank', mat: 'rough_timber', handle: 'ring' }, { open: 1.2 });
   // upper floor
   D('door:manor_master', uHallW, WZ1 - (-19.0), 0.95, 2.15, -1, -1, panel(), { open: 0.25 });
-  D('door:manor_bath', uHallW, WZ1 - (-26.5), 0.85, 2.15, 1, -1, panel());
+  D('door:manor_bath', uHallW, WZ1 - (-23.0), 0.85, 2.15, 1, -1, panel());
   // Marie's room: the newer brass bolt is on the OUTSIDE of the door
   D('door:manor_marie', uHallE, -19.0 - WZ0, 0.9, 2.15, -1, -1, panel(), { locked: false });
   D('door:manor_corridor_u', uHallE, -23.1 - WZ0, 0.9, 2.15, 1, -1, panel(), { open: 1.4 });
@@ -238,15 +243,23 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   kit.doorInWall('door:manor_balcony', frontU, { at: 0 - WX0, width: 1.15, bottom: 0.3, top: 0.3 + 2.45, kind: 'door' }, { style: 'glazed', mat: 'painted_wood_white_ext', handle: 'lever' }, -1, -1, { locked: true, key: 'never' });
 
   // ======================================================================= stairs
-  // main dog-leg staircase in the hall
+  // main staircase: first flight up the east side, half landing at the back wall, second flight
+  // back along the west side onto the upper hall – no landing slab at head height in the hall
   const flight = (G0 + U0) / 2 - G0; // 1.825
-  buildStairs(mb, { x: 1.6, z: -20.65, y: G0, dir: 0, width: 1.15, rise: flight, steps: 11, run: 0.28, treadMat: 'furniture_oak', riserMat: 'painted_wood_white', stringerMat: 'furniture_wood', rail: 'right', railMat: 'furniture_wood', surface: 'wood_old' }, physics);
-  buildSlab(mb, -2.2, -25.15, 2.2, -23.73, G0 + flight, 0.2, 'floor_boards', 'ceiling', physics, 'wood_old');
-  mb.box('furniture_wood', 0, G0 + flight - 0.1, -23.73 + 0.06, 4.4, 0.24, 0.12);
-  buildStairs(mb, { x: -1.6, z: -23.73, y: G0 + flight, dir: Math.PI, width: 1.15, rise: U0 - (G0 + flight), steps: 11, run: 0.28, treadMat: 'furniture_oak', riserMat: 'painted_wood_white', stringerMat: 'furniture_wood', rail: 'left', railMat: 'furniture_wood', surface: 'wood_old' }, physics);
-  // landing posts and balustrade around the upper stairwell
-  balustrade(mb, physics, [[2.32, -20.55], [2.32, -25.15], [-2.32, -25.15], [-2.32, -23.73]], U0, 'furniture_wood');
-  balustrade(mb, physics, [[-0.95, -20.55], [2.32, -20.55]], U0, 'furniture_wood');
+  const SW = 1.25, SX = 2.85 - 0.06 - SW / 2;
+  const stairCommon = { width: SW, steps: 11, run: 0.28, treadMat: 'furniture_oak', riserMat: 'painted_wood_white', stringerMat: 'furniture_wood', rail: 'left' as const, railMat: 'furniture_wood', surface: 'wood_old' };
+  buildStairs(mb, { ...stairCommon, x: SX, z: STAIR_TOP, y: G0, dir: 0, rise: flight, closedBelow: true }, physics);
+  buildSlab(mb, -2.85, IZ0, 2.85, LANDING, G0 + flight, 0.2, 'floor_boards', 'ceiling', physics, 'wood_old');
+  mb.box('furniture_wood', 0, G0 + flight - 0.1, LANDING + 0.06, 5.7, 0.24, 0.12);
+  buildStairs(mb, { ...stairCommon, x: -SX, z: LANDING, y: G0 + flight, dir: Math.PI, rise: U0 - (G0 + flight) }, physics);
+  // under-stair cupboard below the landing (a place to hide)
+  const cupboard = kit.wall({ a: [SX - SW / 2 - 0.03, LANDING + 0.05], b: [-2.85, LANDING + 0.05], y0: G0, y1: G0 + flight - 0.2, t: 0.08, left: 'wainscot', right: 'rough_timber', cap: 'painted_wood_white', surface: 'wood', doors: [{ o: { at: SX - SW / 2 - 0.03, width: 0.7, bottom: 0, top: 1.45, kind: 'door' }, frame: 'painted_wood_white' }] });
+  kit.doorInWall('door:manor_understair', cupboard, { at: SX - SW / 2 - 0.03, width: 0.7, bottom: 0, top: 1.45, kind: 'door' }, { style: 'ledged', mat: 'painted_wood_white', handle: 'knob', seed: 3 }, 1, 1, { open: 0.12 });
+  physics?.addBox({ cx: SX, cy: G0 + flight / 2 - 0.1, cz: (STAIR_TOP + LANDING) / 2 - 0.3, hx: SW / 2, hy: flight / 2 - 0.15, hz: (STAIR_TOP - LANDING) / 2 - 0.5, surface: 'wood' });
+  // landing rail between the flights and the gallery rail round the open stairwell
+  balustrade(mb, physics, [[SX - SW / 2 - 0.03, LANDING], [-SX + SW / 2 + 0.03, LANDING]], G0 + flight, 'furniture_wood');
+  balustrade(mb, physics, [[-SX + SW / 2 + 0.03, STAIR_TOP], [2.85, STAIR_TOP]], U0, 'furniture_wood');
+  mb.box('painted_wood_white', 0, U0 - 0.2, STAIR_TOP - 0.02, 5.7, 0.42, 0.04);
 
   // steep cellar stair along the kitchen's north wall (down to the potato cellar)
   buildStairs(mb, { x: 8.9, z: -27.9, y: B0, dir: -Math.PI / 2, width: 0.95, rise: G0 - B0, steps: 14, run: 0.243, treadMat: 'rough_timber', riserMat: 'rough_timber', rail: 'left', railMat: 'rough_timber', surface: 'wood' }, physics);
@@ -311,14 +324,15 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
     mb.box('stone_slab', 0, y + 0.1875 / 2 - 0.3, z0 + 0.34, 4.8 + i * 0.3, 0.1875 + 0.6, 0.02, { skip: ['nz'] });
   }
 
-  // terrace at the back (garden side)
-  buildSlab(mb, -4.5, -32.2, 4.5, -29.0, G0 - 0.45, 0.3, 'stone_slab', null, physics, 'stone');
-  mb.box('stone_slab', 0, (G0 - 0.45) / 2 - 0.15, -32.2, 9.0, G0 - 0.15, 0.04);
-  mb.box('stone_slab', -4.5, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
-  mb.box('stone_slab', 4.5, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
+  // terrace at the back (garden side), in front of the dining-room French doors
+  const TX = -8.3;
+  buildSlab(mb, TX - 4.3, -32.2, TX + 4.3, -29.0, G0 - 0.45, 0.3, 'stone_slab', null, physics, 'stone');
+  mb.box('stone_slab', TX, (G0 - 0.45) / 2 - 0.15, -32.2, 8.6, G0 - 0.15, 0.04);
+  mb.box('stone_slab', TX - 4.3, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
+  mb.box('stone_slab', TX + 4.3, (G0 - 0.45) / 2 - 0.15, -30.6, 0.04, G0 - 0.15, 3.2);
   // step up from terrace to the door sill
-  buildSlab(mb, -0.9, -29.4, 0.9, -29.0, G0 - 0.22, 0.25, 'stone_slab', null, physics, 'stone');
-  for (let i = 0; i < 2; i++) buildSlab(mb, -1.4, -32.2 - (i + 1) * 0.32, 1.4, -32.2 - i * 0.32, G0 - 0.45 - (i + 1) * 0.15, 0.6, 'stone_slab', null, physics, 'stone');
+  buildSlab(mb, TX - 0.9, -29.4, TX + 0.9, -29.0, G0 - 0.22, 0.25, 'stone_slab', null, physics, 'stone');
+  for (let i = 0; i < 2; i++) buildSlab(mb, TX - 1.4, -32.2 - (i + 1) * 0.32, TX + 1.4, -32.2 - i * 0.32, G0 - 0.45 - (i + 1) * 0.15, 0.6, 'stone_slab', null, physics, 'stone');
 
   // roof (hipped, Biberschwanz tiles) and chimneys
   const roof = buildRoof(mb, { type: 'hip', x0: H.X0, z0: H.Z0, x1: H.X1, z1: H.Z1, eaveY: H.EAVE, pitch: (47 * Math.PI) / 180, overhang: 0.75, thickness: 0.24, innerMat: 'rough_timber', rafters: { mat: 'rough_timber', spacing: 0.95, size: 0.16 }, gutterMat: 'rust_metal' }, physics);

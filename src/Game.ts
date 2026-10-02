@@ -6,9 +6,10 @@ import { MaterialLibrary } from './materials/MaterialLibrary';
 import { worldUniforms } from './render/WorldUniforms';
 import { Atmosphere } from './render/Atmosphere';
 import { Volumetrics } from './render/Volumetrics';
+import { LAYER_VOLUMETRIC } from './render/PostFX';
 import { TerrainData } from './world/TerrainData';
 import { TerrainMesh } from './world/TerrainMesh';
-import { WORLD_HALF, HOLES, POI } from './world/Layout';
+import { WORLD_HALF, HOLES, POI, BUILDINGS } from './world/Layout';
 import { Physics } from './physics/Physics';
 import { PlayerController } from './gameplay/PlayerController';
 import { Flashlight } from './gameplay/Flashlight';
@@ -23,6 +24,12 @@ import { World } from './world/World';
 import { Interaction } from './gameplay/Interaction';
 import { Doors } from './gameplay/Doors';
 import { LocalWorldBridge, WorldBridge } from './gameplay/WorldBridge';
+import { LightPool } from './gameplay/LightPool';
+import { AssetManager, ASSET_BASE } from './assets/AssetManager';
+import { PropPlacer } from './world/props/PropPlacer';
+import { MANOR_PROP_IDS, placeManorProps } from './world/props/ManorProps';
+
+const VAN_CARGO = ['metal_tool_chest', 'cardboard_box_01', 'Lantern_01'];
 
 export interface GameOptions {
   seed: number;
@@ -37,6 +44,7 @@ export class Game {
   readonly engine: Engine;
   readonly physics = new Physics();
   textures!: TextureStore;
+  readonly assets = new AssetManager();
   materials!: MaterialLibrary;
   terrain!: TerrainData;
   terrainMesh!: TerrainMesh;
@@ -47,6 +55,8 @@ export class Game {
   world!: World;
   interaction!: Interaction;
   doors!: Doors;
+  props!: PropPlacer;
+  lamps!: LightPool;
   bridge: WorldBridge = new LocalWorldBridge();
   inventory = new Set<string>();
   hud!: HUD;
@@ -70,7 +80,10 @@ export class Game {
     loading.set(0.05, `Renderer: ${this.engine.backend.toUpperCase()}`);
 
     this.textures = new TextureStore(q.textureSize, q.anisotropy);
-    const texP = this.textures.loadAll((d, t, id) => loading.set(0.05 + 0.6 * (d / t), `Synthesising materials (${id})`));
+    await this.assets.init();
+    const photos = this.opts.automation.has('nophoto') ? {} : this.assets.manifest.textures;
+    const texP = this.textures.loadAll((d, t, id) => loading.set(0.05 + 0.6 * (d / t), `Preparing materials (${id})`), photos, ASSET_BASE);
+    const propsP = this.opts.automation.has('noprops') ? Promise.resolve() : this.assets.preload([...MANOR_PROP_IDS, ...VAN_CARGO]);
     const terrainP = TerrainData.generateAsync(this.opts.seed);
     const physP = this.physics.init();
     this.audio = new AudioEngine({ masterVolume: this.settings.values.masterVolume });
@@ -95,6 +108,15 @@ export class Game {
     this.world.build();
     this.world.applyInteriorMap();
     scene.add(this.world.group);
+    loading.set(0.82, 'Furnishing');
+    await propsP;
+    this.props = new PropPlacer(this.assets, this.physics);
+    placeManorProps(this.props);
+    // the group's gear in the van
+    const vanProps = new PropPlacer(this.assets);
+    this.world.van.cargo.forEach((c, i) => vanProps.place(VAN_CARGO[i], c.x, c.y, c.z, c.ry, { collider: 'none' }));
+    scene.add(vanProps.group);
+    scene.add(this.props.group);
     this.interaction = new Interaction(this.physics);
     this.doors = new Doors(this.physics, this.materials, this.interaction, this.bridge);
     for (const d of this.world.doorSpecs) this.doors.add(d);
@@ -111,8 +133,11 @@ export class Game {
 
     loading.set(0.9, 'Lighting');
     this.player = new PlayerController(this.physics, this.engine.input, this.settings, this.engine.camera);
-    const sp = POI.playerSpawn;
+    // everyone starts beside the van's open sliding door (slot 0 = local solo player)
+    const sp = this.world.van?.spawn[0] ?? POI.playerSpawn;
     this.player.init(sp.x, terrain.heightAt(sp.x, sp.z) + 0.05, sp.z, sp.rot);
+    this.setupVanLights();
+    this.lamps = new LightPool(scene, this.world.lightFixtures, this.world.rooms, this.materials);
     this.flashlight = new Flashlight(scene, q.flashlightShadowSize);
     this.engine.setupPost();
     if (q.volumetrics) {
@@ -131,6 +156,23 @@ export class Game {
     this.forest.prepareWarmup(false);
     this.groundCover.prepareWarmup(false);
     loading.set(1, 'Ready');
+  }
+
+  /** Dipped headlights left on: the only warm light outside, scattering in the fog. */
+  private setupVanLights(): void {
+    const van = this.world.van;
+    if (!van) return;
+    const h = van.headlight;
+    const spot = new THREE.SpotLight(0xffe2b0, 260, 55, 0.42, 0.55, 1.6);
+    spot.position.copy(h.pos);
+    spot.target.position.copy(h.pos).addScaledVector(h.dir, 20);
+    spot.castShadow = true;
+    spot.shadow.mapSize.set(512, 512);
+    spot.shadow.bias = -0.0006;
+    spot.shadow.camera.near = 0.3;
+    spot.shadow.camera.far = 55;
+    spot.layers.enable(LAYER_VOLUMETRIC);
+    this.engine.scene.add(spot, spot.target);
   }
 
   private setupWorldMaps(): void {
@@ -160,12 +202,17 @@ export class Game {
         if (e.input.wasPressed('flashlight')) { this.flashlight.toggle(); this.audio.play('flashlight_click'); }
         const moving = Math.min(1, Math.hypot(this.player.velocity.x, this.player.velocity.z) / 2);
         this.flashlight.update(dt, e.camera, moving);
+        this.lamps.update(dt, e.camera.position);
         this.updateEyeAdaptation(dt);
         this.atmosphere.update(dt, e.camera);
         this.volumetrics?.update(dt, e.camera);
         this.terrainMesh.update(e.camera.position, this.settings.profile.viewDistance);
         this.forest.update(e.camera, this.settings.profile.viewDistance, this.player.position);
         this.groundCover.update(this.player.position);
+        // interior dressing is only visible through windows from close by – skip it beyond that
+        const c = e.camera.position, M = BUILDINGS.manor;
+        const dx = Math.max(M.x0 - c.x, 0, c.x - M.x1), dz = Math.max(M.z0 - c.z, 0, c.z - M.z1);
+        this.props.group.visible = dx * dx + dz * dz < 22 * 22;
         worldUniforms.windTime.value += dt;
         this.updateAudio(dt);
       },
