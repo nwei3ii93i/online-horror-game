@@ -28,9 +28,8 @@ const INTERIOR: PropPlacement[] = [
   ['painted_wooden_cabinet', 31.665, G0, 3.4, -H],                                    // Kredenz on the east wall
   ['wall_clock', 31.975, G0 + 1.98, 3.4, -H, wall],
   ['wicker_basket_01', 31.68, G0 + 1.18, 3.05, -H + 0.2, none],                      // on the Kredenz
-  ['pot_enamel_01', S.stove.x - 0.12, S.stove.top, S.stove.z - 0.02, 0.4, none],      // on the hot plate
+  ['pot_enamel_01', S.stove.x + 0.12, S.stove.top, S.stove.z - 0.02, 0.4, none],      // on the hot plate (east ring)
   ['wooden_bucket_01', 31.74, G0, 1.78, 0.4, none],                                  // water, full
-  ['wooden_stool_01', 28.86, G0, 3.72, 0.35],
   ['Lantern_01', S.kitchenTable.x - 0.42, S.kitchenTable.top, S.kitchenTable.z - 0.18, 0.3, none],
   ['wooden_broom', 31.86, G0, 4.16, -H, { tiltX: -0.1, collider: 'none' }],
 

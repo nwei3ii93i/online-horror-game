@@ -100,7 +100,7 @@ const HATCH: Rect = { x0: IX0, z0: 2.3, x1: 28.3, z1: 4.275 };           // kitc
 /** Furniture tops and fixed spots shared with CaretakerProps / CaretakerDocs. */
 export const CARETAKER_SPOTS = {
   kitchenTable: { x: 29.75, z: 1.92, w: 1.1, d: 0.74, top: G0 + 0.78 },
-  woodBox: { x: 30.6, z: 4.01, w: 0.44, d: 0.46, top: G0 + 0.57 },
+  woodBox: { x: 28.8, z: 4.01, w: 0.44, d: 0.46, top: G0 + 0.57 },
   stove: { x: CHIM.x, z: CHIM.z - CHIM.sz / 2 - 0.3, top: G0 + 0.84 },
   livingTable: { x: 28.55, z: 6.45, w: 1.0, d: 0.8, top: G0 + 0.78 },
   /** Cellar jar shelf on the north cellar wall; board tops at C0 + b + 0.0125. */
@@ -863,18 +863,19 @@ function buildKitchen(kit: BuildingKit, physics: Physics | undefined): void {
   mb.box('painted_metal_cream', 0, 0.45, 0, W - 0.02, 0.7, D - 0.04, { uv: 'local' });
   mb.box('ct_iron', 0, 0.12, 0.005, W, 0.04, D - 0.03);
   mb.box('ct_iron', 0, 0.82, 0, W + 0.04, 0.04, D + 0.02);
-  mb.cylinder('ct_iron', -0.28, 0.84, -0.02, 0.12, 0.12, 0.006, 16, 'top');
-  mb.cylinder('ct_iron', -0.28, 0.846, -0.02, 0.075, 0.075, 0.006, 14, 'top');
-  mb.cylinder('ct_iron', 0.12, 0.84, -0.02, 0.1, 0.1, 0.006, 16, 'top');
+  // (the stove faces north, so local +x is world −x: firebox on the west side, next to the wood box)
+  mb.cylinder('ct_iron', 0.28, 0.84, -0.02, 0.12, 0.12, 0.006, 16, 'top');
+  mb.cylinder('ct_iron', 0.28, 0.846, -0.02, 0.075, 0.075, 0.006, 14, 'top');
+  mb.cylinder('ct_iron', -0.12, 0.84, -0.02, 0.1, 0.1, 0.006, 16, 'top');
   // fire door with the glow of last night's embers in the draught slots, ash door below
-  mb.box('ct_iron', -0.3, 0.6, D / 2, 0.26, 0.2, 0.02);
-  for (const dy of [-0.045, 0, 0.045]) mb.box('ct_ember', -0.3, 0.6 + dy, D / 2 + 0.011, 0.13, 0.011, 0.004);
-  mb.box('brass', -0.19, 0.6, D / 2 + 0.02, 0.012, 0.05, 0.02);
-  mb.box('ct_iron', -0.3, 0.26, D / 2, 0.26, 0.09, 0.02);
+  mb.box('ct_iron', 0.3, 0.6, D / 2, 0.26, 0.2, 0.02);
+  for (const dy of [-0.045, 0, 0.045]) mb.box('ct_ember', 0.3, 0.6 + dy, D / 2 + 0.011, 0.13, 0.011, 0.004);
+  mb.box('brass', 0.19, 0.6, D / 2 + 0.02, 0.012, 0.05, 0.02);
+  mb.box('ct_iron', 0.3, 0.26, D / 2, 0.26, 0.09, 0.02);
   // oven door (right) with a chrome bar
-  mb.box('painted_metal_cream', 0.22, 0.44, D / 2 - 0.005, 0.5, 0.38, 0.02, { uv: 'local' });
-  mb.rod('chrome', V(0.02, 0.6, D / 2 + 0.035), V(0.42, 0.6, D / 2 + 0.035), 0.008, 0.008, 6);
-  for (const hx of [0.04, 0.4]) mb.box('chrome', hx, 0.6, D / 2 + 0.02, 0.012, 0.012, 0.03);
+  mb.box('painted_metal_cream', -0.22, 0.44, D / 2 - 0.005, 0.5, 0.38, 0.02, { uv: 'local' });
+  mb.rod('chrome', V(-0.42, 0.6, D / 2 + 0.035), V(-0.02, 0.6, D / 2 + 0.035), 0.008, 0.008, 6);
+  for (const hx of [-0.04, -0.4]) mb.box('chrome', hx, 0.6, D / 2 + 0.02, 0.012, 0.012, 0.03);
   // brass towel rail
   mb.rod('brass', V(-W / 2 + 0.02, 0.76, D / 2 + 0.06), V(W / 2 - 0.02, 0.76, D / 2 + 0.06), 0.008, 0.008, 6);
   for (const hx of [-W / 2 + 0.03, W / 2 - 0.03]) mb.box('brass', hx, 0.76, D / 2 + 0.03, 0.012, 0.012, 0.06);
@@ -898,15 +899,15 @@ function buildKitchen(kit: BuildingKit, physics: Physics | undefined): void {
   // a few logs and kindling on the floor next to it
   for (let i = 0; i < 3; i++) {
     mb.withColor([rng.range(0.8, 1), rng.range(0.8, 1), rng.range(0.75, 0.95)], () => {
-      mb.pushTRS(30.6 + rng.range(-0.15, 0.15), G0 + 0.05 + i * 0.002, 3.55 + rng.range(-0.08, 0.08), rng.range(-0.5, 0.5), 1, 1, 1, 0, 0);
+      mb.pushTRS(wb.x + 0.05 + rng.range(-0.12, 0.12), G0 + 0.05 + i * 0.002, wb.z - 0.42 + rng.range(-0.06, 0.06), rng.range(-0.5, 0.5), 1, 1, 1, 0, 0);
       mb.box({ pz: 'ct_firewood_end', nz: 'ct_firewood_end', default: rng.chance(0.5) ? 'ct_bark' : 'ct_firewood' }, 0, 0, 0, 0.1, 0.09, 0.33, { uv: 'local' });
       mb.pop();
     });
   }
   // charred scraps of newspaper by the stove door
   for (let i = 0; i < 4; i++) {
-    // the fire door is on the stove's local −x = world +x side (stove faces north)
-    const x = st.x + 0.3 + rng.range(-0.2, 0.15), z = st.z - 0.42 - rng.range(0, 0.18), r = rng.range(0.025, 0.05);
+    // the fire door is on the stove's local +x = world −x side (stove faces north)
+    const x = st.x - 0.3 + rng.range(-0.15, 0.2), z = st.z - 0.42 - rng.range(0, 0.18), r = rng.range(0.025, 0.05);
     quadN(mb, 'black_soot', [x - r, G0 + 0.003, z], [x, G0 + 0.003, z - r * rng.range(0.6, 1.2)], [x + r, G0 + 0.003, z], [x, G0 + 0.003, z + r], [0, 1, 0]);
   }
   physics?.addBox({ cx: wb.x, cy: G0 + 0.29, cz: wb.z, hx: wb.w / 2, hy: 0.29, hz: wb.d / 2, surface: 'wood' });
