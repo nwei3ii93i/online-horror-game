@@ -275,7 +275,7 @@ export class Game {
         this.hud.setPrompt(this.interaction.focused && !reading ? this.interaction.focused.prompt(ictx) : null);
         if (e.frame % 30 === 0) {
           const ri = e.renderer.info.render as any;
-          this.hud.setInfo(`${e.backend.toUpperCase()}  ${e.fps.toFixed(0)} fps  ·  ${Math.round(e.dynScale * this.settings.profile.renderScale * 100)}% res  ·  ${ri.drawCalls ?? ri.calls} calls  ·  ${(ri.triangles / 1e6).toFixed(2)}M tris`);
+          this.hud.setInfo(`${e.backend.toUpperCase()}  ${e.fps.toFixed(0)} fps (max ${e.worstFrameMs.toFixed(0)} ms)  ·  ${Math.round(e.dynScale * this.settings.profile.renderScale * 100)}% res  ·  ${ri.drawCalls ?? ri.calls} calls  ·  ${(ri.triangles / 1e6).toFixed(2)}M tris`);
         }
         if (e.input.wasPressed('interact') && this.interaction.focused && !reading && performance.now() - this.readerClosedAt > 300) {
           this.interaction.focused.interact({ playerId: 'local', hasItem: (id) => this.inventory.has(id), point: this.interaction.focusPoint });

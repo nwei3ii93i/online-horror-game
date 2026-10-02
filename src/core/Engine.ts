@@ -34,6 +34,9 @@ export class Engine {
   paused = false;
   readonly fixedDt = 1 / 60;
   fps = 0;
+  /** Longest frame (ms) of the last fps window: spikes that an average hides. */
+  worstFrameMs = 0;
+  private worstAcc = 0;
   private fpsAcc = 0;
   private fpsFrames = 0;
   onAfterRender: (() => void) | null = null;
@@ -157,9 +160,10 @@ export class Engine {
     const now = performance.now();
     let dt = (now - this.last) / 1000;
     this.last = now;
+    this.worstAcc = Math.max(this.worstAcc, dt * 1000);
     if (dt > 0.1) dt = 0.1;
     this.fpsAcc += dt; this.fpsFrames++;
-    if (this.fpsAcc > 0.5) { this.fps = this.fpsFrames / this.fpsAcc; this.fpsAcc = 0; this.fpsFrames = 0; }
+    if (this.fpsAcc > 0.5) { this.fps = this.fpsFrames / this.fpsAcc; this.worstFrameMs = this.worstAcc; this.worstAcc = 0; this.fpsAcc = 0; this.fpsFrames = 0; }
     this.updateDynamicResolution(dt);
     if (!this.paused) this.advance(dt);
     this.render();
