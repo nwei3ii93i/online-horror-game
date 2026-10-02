@@ -18,7 +18,7 @@ const CELL = 32;
 const NC = (WORLD_HALF * 2) / CELL;
 
 interface TreeInst { model: number; x: number; y: number; z: number; ry: number; s: number }
-interface Cell { cx: number; cz: number; trees: TreeInst[]; box: THREE.Box3; lod: number; colliders: RAPIER.Collider[] | null }
+interface Cell { cx: number; cz: number; trees: TreeInst[]; box: THREE.Box3; lod: number; colliders: RAPIER.Collider[] | null; /** Instance matrices, built on first use. */ mats?: Float32Array }
 interface ModelSlot { mesh: THREE.InstancedMesh }
 interface ModelLOD { slots: ModelSlot[]; attr: THREE.InstancedBufferAttribute; count: number }
 
@@ -226,15 +226,27 @@ export class Forest {
       if (dist > viewDistance) continue;
       // cells close by are always kept (they cast shadows into view)
       if (dist > 24 && !this.frustum.intersectsBox(c.box)) continue;
-      for (const t of c.trees) {
-        const td = Math.hypot(t.x - cp.x, t.z - cp.z);
-        const lod = td < 32 ? 0 : td < 85 ? 1 : 2;
+      // matrices are computed once per cell; a rebuild only copies them (turning the camera
+      // triggers this, so it has to stay well under a millisecond)
+      let mats = c.mats;
+      if (!mats) {
+        mats = c.mats = new Float32Array(c.trees.length * 16);
+        c.trees.forEach((t, i) => {
+          d.position.set(t.x, t.y, t.z);
+          d.rotation.set(0, t.ry, 0);
+          d.scale.setScalar(t.s);
+          d.updateMatrix();
+          d.matrix.toArray(mats!, i * 16);
+        });
+      }
+      for (let i = 0; i < c.trees.length; i++) {
+        const t = c.trees[i];
+        const dx = t.x - cp.x, dz = t.z - cp.z, td2 = dx * dx + dz * dz;
+        const lod = td2 < 32 * 32 ? 0 : td2 < 85 * 85 ? 1 : 2;
         const L = this.lods[t.model][lod];
-        d.position.set(t.x, t.y, t.z);
-        d.rotation.set(0, t.ry, 0);
-        d.scale.setScalar(t.s);
-        d.updateMatrix();
-        d.matrix.toArray(L.attr.array as Float32Array, L.count * 16);
+        const dst = L.attr.array as Float32Array;
+        const o = L.count * 16, src = i * 16;
+        for (let k = 0; k < 16; k++) dst[o + k] = mats[src + k];
         L.count++;
       }
     }

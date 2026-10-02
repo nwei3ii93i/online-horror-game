@@ -16,6 +16,21 @@ export const LAYER_VOLUMETRIC = 10;
 export const LAYER_VEGETATION = 11;
 /** Marker bit: a shadow camera with it keeps its own layer mask instead of inheriting the view camera's. */
 export const LAYER_OWN_MASK = 30;
+/** Merged depth-only stand-ins for building geometry: drawn by shadow cameras only. */
+export const LAYER_SHADOW_PROXY = 12;
+
+/** Furniture, inner doors and dressing inside buildings: torch and lamps see them, the moon doesn't. */
+export const LAYER_INDOOR = 13;
+
+/** Layer mask for a shadow camera: buildings via their proxies, vegetation / indoor casters optional. */
+export function shadowCameraLayers(layers: { mask: number }, o: { vegetation: boolean; indoor: boolean }): void {
+  layers.mask = 1 | (1 << LAYER_SHADOW_PROXY) | (1 << LAYER_OWN_MASK) | (o.vegetation ? 1 << LAYER_VEGETATION : 0) | (o.indoor ? 1 << LAYER_INDOOR : 0);
+}
+
+/** Move every mesh under obj onto the indoor layer. */
+export function markIndoor(obj: { traverse(cb: (o: any) => void): void }): void {
+  obj.traverse((o) => { if (o.isMesh) o.layers.set(LAYER_INDOOR); });
+}
 
 export interface PostFXOptions {
   quality: QualityProfile;

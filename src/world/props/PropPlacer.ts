@@ -103,8 +103,8 @@ export class PropPlacer {
    * inside a building), props more than one storey away are hidden too unless very close
    * (stairwells). Hidden props also drop out of every shadow pass.
    */
-  /** Returns true when any prop changed visibility. */
-  cull(cam: THREE.Vector3, range: number, floorY: number | null): boolean {
+  /** Returns true when any prop changed visibility (`onChange` gets its position). */
+  cull(cam: THREE.Vector3, range: number, floorY: number | null, onChange?: (p: THREE.Vector3) => void): boolean {
     const r2 = range * range;
     let changed = false;
     for (const p of this.placed) {
@@ -112,7 +112,7 @@ export class PropPlacer {
       let vis = d2 < (range + p.r) * (range + p.r) || d2 < r2;
       if (vis && floorY !== null && d2 > 36) vis = p.y > floorY - 1.0 && p.y < floorY + 3.0;
       else if (vis && floorY === null) vis = p.y > -0.5; // from outside nothing in the cellar can be seen
-      if (p.obj.visible !== vis) { p.obj.visible = vis; changed = true; }
+      if (p.obj.visible !== vis) { p.obj.visible = vis; changed = true; onChange?.(p.obj.position); }
     }
     return changed;
   }

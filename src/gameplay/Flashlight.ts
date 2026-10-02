@@ -1,5 +1,5 @@
 import * as THREE from 'three/webgpu';
-import { LAYER_VOLUMETRIC } from '../render/PostFX';
+import { LAYER_VOLUMETRIC, shadowCameraLayers } from '../render/PostFX';
 
 /** Projected light pattern of a cheap reflector torch: hot centre, ring, soft spill, lens dust. */
 function createCookie(size = 256): THREE.CanvasTexture {
@@ -67,6 +67,7 @@ export class Flashlight {
     l.shadow.camera.far = 22; // beyond this the torch is too weak for shadows to read – saves a big shadow pass
     l.shadow.bias = -0.0006;
     l.shadow.normalBias = 0.02;
+    shadowCameraLayers(l.shadow.camera.layers, { vegetation: true, indoor: true });
     l.layers.enable(LAYER_VOLUMETRIC);
     this.light = l;
     scene.add(l, l.target);

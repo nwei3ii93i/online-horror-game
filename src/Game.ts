@@ -7,7 +7,7 @@ import { MaterialLibrary } from './materials/MaterialLibrary';
 import { worldUniforms } from './render/WorldUniforms';
 import { Atmosphere } from './render/Atmosphere';
 import { Volumetrics } from './render/Volumetrics';
-import { LAYER_VOLUMETRIC } from './render/PostFX';
+import { LAYER_VOLUMETRIC, markIndoor } from './render/PostFX';
 import { TerrainData } from './world/TerrainData';
 import { TerrainMesh } from './world/TerrainMesh';
 import { WORLD_HALF, HOLES, POI, BUILDINGS, Rect } from './world/Layout';
@@ -160,6 +160,10 @@ export class Game {
     this.interaction = new Interaction(this.physics);
     this.doors = new Doors(this.physics, this.materials, this.interaction, this.bridge);
     for (const d of this.world.doorSpecs) this.doors.add(d);
+    const inRoom = (p: THREE.Vector3) => !!this.world.roomAt(p);
+    this.doors.markIndoorDoors(inRoom);
+    // furniture inside buildings: no moon shadow (from indoors it only cost draw calls)
+    for (const s of this.propSets) for (const p of s.placer.placed) if (inRoom(p.obj.position.clone().setY(p.obj.position.y + 0.3))) markIndoor(p.obj);
     scene.add(this.doors.group);
     this.reader = new DocumentReader(document.body);
     this.reader.onClose = () => { this.readerClosedAt = performance.now(); };
@@ -172,6 +176,7 @@ export class Game {
     scene.add(pickups.group);
     const dressing = buildStoryDressing(this.materials, this.physics);
     scene.add(this.docMeshes, dressing);
+    for (const g of [this.docMeshes, dressing, pickups.group]) markIndoor(g);
     this.interiorGroups.push(dressing);
 
     loading.set(0.85, 'Growing the forest');
@@ -290,7 +295,9 @@ export class Game {
         if (this.propCullTimer <= 0) {
           this.propCullTimer = 0.2;
           const c = e.camera.position;
-          let changed = this.world.cull(c);
+          // lamp shadows are static: re-render the ones whose range a visibility change touches
+          const touched = (p: THREE.Vector3) => this.lamps.refreshNear(p, 0.5);
+          if (this.world.cull(c)) this.lamps.refreshNear(c, 16);
           const room = this.world.roomAt(c);
           const floorY = room ? room.y0 : null;
           const nearRect = (r: Rect) => {
@@ -300,14 +307,14 @@ export class Game {
           // each building's dressing is only visible through its windows from close by
           for (const b of this.propSets) {
             const near = b.rect ? nearRect(b.rect) : true;
-            if (b.placer.group.visible !== near) { b.placer.group.visible = near; changed = true; }
-            if (near && b.placer.cull(c, b.range, floorY)) changed = true;
+            if (b.placer.group.visible !== near) { b.placer.group.visible = near; this.lamps.refreshNear(c, 16); }
+            if (near) b.placer.cull(c, b.range, floorY, touched);
           }
           const nearManor = nearRect(BUILDINGS.manor);
           for (const g of this.interiorGroups) g.visible = nearManor;
           for (const d of this.docMeshes.children) d.visible = d.position.distanceToSquared(c) < 20 * 20;
-          if (this.doors.cull(c, 24, floorY, (x, z) => this.terrain.heightAt(x, z))) changed = true;
-          if (changed || this.doors.moving) this.lamps.refreshShadows();
+          this.doors.cull(c, 24, floorY, (x, z) => this.terrain.heightAt(x, z), touched);
+          for (const h of this.doors.moving) touched(h);
         }
         worldUniforms.windTime.value += dt;
         this.updateAudio(dt);

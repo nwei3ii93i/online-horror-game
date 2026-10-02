@@ -18,7 +18,7 @@ const NC = (WORLD_HALF * 2) / CELL;
 
 type Kind = 'fern' | 'grass' | 'bramble' | 'log' | 'rock' | 'stump' | 'branch';
 interface Inst { kind: Kind; v: number; x: number; y: number; z: number; ry: number; s: number; tilt: THREE.Quaternion }
-interface Cell { trees: Inst[]; colliders: RAPIER.Collider[] | null }
+interface Cell { trees: Inst[]; colliders: RAPIER.Collider[] | null; /** Instance matrices, built on first use. */ mats?: Float32Array }
 interface Variant { kind: Kind; meshes: THREE.InstancedMesh[]; attr: THREE.InstancedBufferAttribute; count: number; cap: number; range: number; size: number }
 
 /** Arching fern frond cards around a centre. */
@@ -268,21 +268,34 @@ export class GroundCover {
     for (const v of this.variants) v.count = 0;
     const d = this.dummy;
     const yq = new THREE.Quaternion();
+    const up = new THREE.Vector3(0, 1, 0);
     const maxR = 110;
     const c0x = Math.max(0, Math.floor((p.x - maxR + WORLD_HALF) / CELL)), c1x = Math.min(NC - 1, Math.floor((p.x + maxR + WORLD_HALF) / CELL));
     const c0z = Math.max(0, Math.floor((p.z - maxR + WORLD_HALF) / CELL)), c1z = Math.min(NC - 1, Math.floor((p.z + maxR + WORLD_HALF) / CELL));
     for (let cz = c0z; cz <= c1z; cz++) for (let cx = c0x; cx <= c1x; cx++) {
       const cell = this.cells[cz * NC + cx];
-      for (const t of cell.trees) {
+      if (!cell.trees.length) continue;
+      // matrices once per cell; walking only copies them (this runs every 3 m)
+      let mats = cell.mats;
+      if (!mats) {
+        mats = cell.mats = new Float32Array(cell.trees.length * 16);
+        cell.trees.forEach((t, i) => {
+          d.position.set(t.x, t.y, t.z);
+          yq.setFromAxisAngle(up, t.ry);
+          d.quaternion.copy(t.tilt).multiply(yq);
+          d.scale.setScalar(t.s);
+          d.updateMatrix();
+          d.matrix.toArray(mats!, i * 16);
+        });
+      }
+      for (let i = 0; i < cell.trees.length; i++) {
+        const t = cell.trees[i];
         const V = this.variants[t.v];
-        const dd = Math.hypot(t.x - p.x, t.z - p.z);
-        if (dd > V.range || V.count >= V.cap) continue;
-        d.position.set(t.x, t.y, t.z);
-        yq.setFromAxisAngle(new THREE.Vector3(0, 1, 0), t.ry);
-        d.quaternion.copy(t.tilt).multiply(yq);
-        d.scale.setScalar(t.s);
-        d.updateMatrix();
-        d.matrix.toArray(V.attr.array as Float32Array, V.count * 16);
+        const dx = t.x - p.x, dz = t.z - p.z;
+        if (dx * dx + dz * dz > V.range * V.range || V.count >= V.cap) continue;
+        const dst = V.attr.array as Float32Array;
+        const o = V.count * 16, src = i * 16;
+        for (let k = 0; k < 16; k++) dst[o + k] = mats[src + k];
         V.count++;
       }
     }

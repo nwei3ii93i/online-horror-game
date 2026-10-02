@@ -8,6 +8,7 @@ import { Physics, GROUP, groups } from '../physics/Physics';
 import type { Interaction, InteractionContext } from './Interaction';
 import type { WorldBridge } from './WorldBridge';
 import { EventBus } from '../core/Events';
+import { markIndoor } from '../render/PostFX';
 
 export interface DoorEvents extends Record<string, unknown> {
   creak: { id: string; position: THREE.Vector3; speed: number; kind: string };
@@ -141,11 +142,11 @@ export class Doors {
     return dx * dx + dz * dz < 0.33 * 0.33;
   }
 
-  /** True while any leaf is swinging (shadow maps that see it need re-rendering). */
-  moving = false;
+  /** Hinges of the leaves that swung this frame (shadow maps that see them need re-rendering). */
+  readonly moving: THREE.Vector3[] = [];
 
   update(dt: number): void {
-    this.moving = false;
+    this.moving.length = 0;
     for (const d of this.doors.values()) {
       const diff = d.target - d.angle;
       if (Math.abs(diff) < 0.0005 && Math.abs(d.vel) < 0.001) {
@@ -165,7 +166,7 @@ export class Doors {
         continue;
       }
       d.blockedTime = 0;
-      this.moving = true;
+      this.moving.push(d.spec.hinge);
       const was = d.angle;
       d.angle = next;
       if (!d.creaked && Math.abs(d.vel) > 0.15) {
@@ -184,10 +185,24 @@ export class Doors {
    * Hide leaves the camera cannot see: beyond `range`, or (camera indoors at floor `floorY`)
    * more than a storey away. Saves a draw call per part and per shadow pass.
    */
+  /**
+   * Doors with a room on both sides go onto the indoor layer: torch and lamps still see them,
+   * the moon's cascades don't.
+   */
+  markIndoorDoors(inRoom: (p: THREE.Vector3) => boolean): void {
+    const p = new THREE.Vector3();
+    for (const d of this.doors.values()) {
+      const { hinge, ry, leaf } = d.spec;
+      const along = new THREE.Vector3(Math.cos(ry), 0, -Math.sin(ry)), n = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry));
+      const mid = hinge.clone().addScaledVector(along, leaf.width / 2).setY(hinge.y + 1);
+      if (inRoom(p.copy(mid).addScaledVector(n, 0.6)) && inRoom(p.copy(mid).addScaledVector(n, -0.6))) markIndoor(d.pivot);
+    }
+  }
+
   /** Returns true when any leaf changed visibility. */
-  cull(cam: THREE.Vector3, range: number, floorY: number | null, groundAt?: (x: number, z: number) => number): boolean {
+  cull(cam: THREE.Vector3, range: number, floorY: number | null, groundAt?: (x: number, z: number) => number, onChange?: (p: THREE.Vector3) => void): boolean {
     let changed = false;
-    const show = (d: { pivot: THREE.Object3D }, v: boolean) => { if (d.pivot.visible !== v) { d.pivot.visible = v; changed = true; } };
+    const show = (d: Door, v: boolean) => { if (d.pivot.visible !== v) { d.pivot.visible = v; changed = true; onChange?.(d.spec.hinge); } };
     for (const d of this.doors.values()) {
       const h = d.spec.hinge;
       const dx = h.x - cam.x, dz = h.z - cam.z, d2 = dx * dx + dz * dz;
@@ -199,6 +214,7 @@ export class Doors {
         d.cast = cast;
         d.pivot.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.castShadow = cast; });
         changed = true;
+        onChange?.(d.spec.hinge);
       }
       if (ext && (floorY === null || Math.abs(h.y - floorY) < 1.5)) { show(d, d2 < 70 * 70); continue; }
       let vis = d2 < range * range;

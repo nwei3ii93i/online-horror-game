@@ -3,7 +3,7 @@ import { color, float, uniform } from 'three/tsl';
 import type { LightFixture, Room } from '../world/architecture/BuildingKit';
 import { MeshBuilder } from '../world/architecture/MeshBuilder';
 import type { MaterialLibrary } from '../materials/MaterialLibrary';
-import { LAYER_OWN_MASK } from '../render/PostFX';
+import { shadowCameraLayers } from '../render/PostFX';
 
 interface FixtureState {
   f: LightFixture;
@@ -27,13 +27,19 @@ export class LightPool {
   private states: FixtureState[] = [];
   private t = 0;
   private reassignTimer = 0;
-  private shadowsStale = false;
+  private stale = new Set<number>();
 
   /**
-   * Lamp shadows are static (rendered once per assignment). Call this when casters near the
-   * lamps changed: culling showed/hid furniture or a door swung.
+   * Lamp shadows are static (rendered once per assignment). Call this when a caster at p changed
+   * (culling showed/hid it, a door swung): every lamp whose range reaches it re-renders once.
    */
-  refreshShadows(): void { this.shadowsStale = true; }
+  refreshNear(p: THREE.Vector3, radius = 0): void {
+    this.assigned.forEach((s, i) => {
+      if (!s) return;
+      const r = this.lights[i].distance + radius;
+      if (this.lights[i].position.distanceToSquared(p) < r * r) this.stale.add(i);
+    });
+  }
 
   constructor(scene: THREE.Scene, fixtures: LightFixture[], rooms: Room[], materials: MaterialLibrary, size = 2, shadowSize = 512) {
     this.group.name = 'light-fixtures';
@@ -72,7 +78,7 @@ export class LightPool {
       l.castShadow = shadowSize > 0;
       l.shadow.mapSize.set(shadowSize, shadowSize);
       // indoor lamps: no trees or ground cover in the six cube faces
-      l.shadow.camera.layers.enable(LAYER_OWN_MASK);
+      shadowCameraLayers(l.shadow.camera.layers, { vegetation: false, indoor: true });
       l.shadow.bias = -0.002;
       l.shadow.camera.near = 0.08;
       l.shadow.camera.far = 12;
@@ -123,11 +129,11 @@ export class LightPool {
       }
       for (const i of free) if (this.assigned[i] && !near.includes(this.assigned[i]!)) { this.assigned[i] = null; this.lights[i].intensity = 0; this.lights[i].position.set(0, -500, 0); }
     }
-    if (this.shadowsStale) {
-      this.shadowsStale = false;
+    if (this.stale.size) {
       // only lamps near the viewer: further out their rooms are culled anyway, and a cube
       // shadow is six passes
-      this.assigned.forEach((s, i) => { if (s && s.f.position.distanceToSquared(cam) < 16 * 16) this.lights[i].shadow.needsUpdate = true; });
+      for (const i of this.stale) if (this.assigned[i] && this.lights[i].position.distanceToSquared(cam) < 16 * 16) this.lights[i].shadow.needsUpdate = true;
+      this.stale.clear();
     }
     this.assigned.forEach((s, i) => {
       if (!s) return;

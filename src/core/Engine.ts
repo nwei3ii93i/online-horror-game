@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { installWebGPUCompat } from '../render/webgpuCompat';
 import { Settings } from './Settings';
 import { Input } from './Input';
-import { PostFX, LAYER_VEGETATION } from '../render/PostFX';
+import { PostFX, LAYER_VEGETATION, LAYER_INDOOR } from '../render/PostFX';
 
 export interface System {
   /** Variable-rate update, once per rendered frame. */
@@ -41,6 +41,7 @@ export class Engine {
   constructor(readonly container: HTMLElement, readonly settings: Settings) {
     this.camera = new THREE.PerspectiveCamera(settings.values.fov, 1, 0.05, 900);
     this.camera.layers.enable(LAYER_VEGETATION);
+    this.camera.layers.enable(LAYER_INDOOR);
     this.camera.position.set(0, 1.7, 10);
     this.input = new Input(container);
   }

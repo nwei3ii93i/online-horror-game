@@ -6,7 +6,7 @@ import {
 import { CSMShadowNode } from 'three/addons/csm/CSMShadowNode.js';
 import { worldUniforms } from './WorldUniforms';
 import type { QualityProfile } from '../core/Settings';
-import { LAYER_VOLUMETRIC } from './PostFX';
+import { LAYER_VOLUMETRIC, shadowCameraLayers } from './PostFX';
 
 /**
  * Night sky, moon, ambient light and height fog. Everything is tuned to read as a
@@ -42,6 +42,8 @@ export class Atmosphere {
     this.moon.shadow.normalBias = 0.03;
     this.moon.shadow.camera.near = 1;
     this.moon.shadow.camera.far = 400;
+    // the CSM cascades clone this camera, layers included
+    shadowCameraLayers(this.moon.shadow.camera.layers, { vegetation: true, indoor: false });
     // the moon is NOT on the volumetric layer: near-field volumetrics are for the torch only (big perf win)
     scene.add(this.moon, this.moon.target);
 

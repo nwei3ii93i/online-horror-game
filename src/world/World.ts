@@ -8,7 +8,9 @@ import { buildGreenhouse, buildChapel, buildCemetery, buildHuntingStand } from '
 import { buildWorkshop, buildBarn, buildPumpHouse } from './buildings/Outbuildings';
 import { buildTunnels } from './buildings/Tunnels';
 import { buildCaretaker } from './buildings/Caretaker';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { worldUniforms } from '../render/WorldUniforms';
+import { LAYER_SHADOW_PROXY } from '../render/PostFX';
 import { buildVan, VanOutput } from './vehicles/Van';
 import { POI } from './Layout';
 
@@ -103,7 +105,7 @@ export class World {
     return this.rooms.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && p.y >= r.y0 - 0.3 && p.y < r.y1);
   }
 
-  private cullInfo: { b: BuildingOutput; box: THREE.Box3; casters: THREE.Mesh[]; shadows: boolean; interior: THREE.Mesh[]; interiorOn: boolean }[] | null = null;
+  private cullInfo: { b: BuildingOutput; box: THREE.Box3; proxies: THREE.Mesh[]; casters: THREE.Mesh[]; shadows: boolean; interior: THREE.Mesh[]; interiorOn: boolean }[] | null = null;
 
   /**
    * Meshes whose vertices all lie inside the building's rooms (wall finishes, floors, ceilings,
@@ -133,6 +135,54 @@ export class World {
   }
 
   /**
+   * A shadow pass only needs depth, so all of a building's plain opaque casters (one mesh per
+   * material, often 50–150) are merged into one position-only stand-in per face side that only
+   * shadow cameras see. Alpha-tested, transparent or vertex-animated casters stay as they are.
+   */
+  private static shadowProxies(b: BuildingOutput): { proxies: THREE.Mesh[]; rest: THREE.Mesh[] } {
+    b.group.updateMatrixWorld(true);
+    const inv = b.group.matrixWorld.clone().invert();
+    const bySide = new Map<THREE.Side, THREE.BufferGeometry[]>();
+    const rest: THREE.Mesh[] = [];
+    const sources: THREE.Mesh[] = [];
+    b.group.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh || !m.castShadow) return;
+      const mats = (Array.isArray(m.material) ? m.material : [m.material]) as (THREE.Material & Record<string, any>)[];
+      const side = mats[0].side;
+      const special = mats.some((mt) => mt.transparent || mt.alphaTest > 0 || mt.alphaTestNode || mt.opacityNode || mt.positionNode || mt.side !== side);
+      const pos = m.geometry.getAttribute('position') as THREE.BufferAttribute | undefined;
+      if (special || !pos || (m as any).isInstancedMesh || (m as any).isSkinnedMesh) { rest.push(m); return; }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', pos.clone());
+      const idx = m.geometry.getIndex();
+      if (idx) g.setIndex(idx.clone());
+      else g.setIndex([...Array(pos.count).keys()]);
+      g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld));
+      if (!bySide.has(side)) bySide.set(side, []);
+      bySide.get(side)!.push(g);
+      sources.push(m);
+    });
+    const proxies: THREE.Mesh[] = [];
+    for (const [side, geoms] of bySide) {
+      const merged = geoms.length === 1 ? geoms[0] : mergeGeometries(geoms, false);
+      if (!merged) { for (const m of sources) rest.push(m); return { proxies: [], rest }; }
+      merged.computeBoundingSphere();
+      merged.computeBoundingBox();
+      const mat = new THREE.MeshBasicNodeMaterial({ side, colorWrite: false });
+      const proxy = new THREE.Mesh(merged, mat);
+      proxy.name = `${b.id}:shadow`;
+      proxy.layers.set(LAYER_SHADOW_PROXY);
+      proxy.castShadow = true;
+      proxy.receiveShadow = false;
+      b.group.add(proxy);
+      proxies.push(proxy);
+    }
+    for (const m of sources) m.castShadow = false;
+    return { proxies, rest };
+  }
+
+  /**
    * Whole-building visibility: beyond ~120 m the fog has swallowed a building anyway, and the
    * tunnels are only drawn when the camera is below ground (they're buried everywhere else).
    */
@@ -141,9 +191,10 @@ export class World {
     let changed = false;
     if (!this.cullInfo) {
       this.cullInfo = this.buildings.map((b) => {
-        const casters: THREE.Mesh[] = [];
-        b.group.traverse((o) => { if ((o as THREE.Mesh).isMesh && o.castShadow) casters.push(o as THREE.Mesh); });
-        return { b, box: new THREE.Box3().setFromObject(b.group), casters, shadows: true, interior: World.interiorMeshes(b), interiorOn: true };
+        const box = new THREE.Box3().setFromObject(b.group);
+        const interior = World.interiorMeshes(b);
+        const { proxies, rest } = World.shadowProxies(b);
+        return { b, box, proxies, casters: rest, shadows: true, interior, interiorOn: true };
       });
     }
     for (const info of this.cullInfo) {
@@ -164,6 +215,7 @@ export class World {
       if (shadows !== info.shadows) {
         info.shadows = shadows;
         for (const m of info.casters) m.castShadow = shadows;
+        for (const m of info.proxies) m.visible = shadows;
         changed = true;
       }
     }
