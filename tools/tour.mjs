@@ -2,6 +2,7 @@
 // saves a screenshot at each. Usage:
 //   node tools/tour.mjs tour.json outdir [--url=http://localhost:5173/?quality=high] [--size=1280x720] [--settle=2500]
 // tour.json: [{ "name": "front", "cam": [x, y, z, yawDeg, pitchDeg] }, …]  (y = eye height, world space)
+//            or { "name": "sign", "anchor": "workshop_sign", "dist": 1.5, "dy": 0, "pitch": 0 } to face a building anchor
 import { chromium } from 'playwright';
 import { readFileSync, mkdirSync } from 'node:fs';
 import os from 'node:os';
@@ -15,7 +16,7 @@ const [w, h] = (opt.size || '1280x720').split('x').map(Number);
 const settle = Number(opt.settle || 2500);
 mkdirSync(outDir, { recursive: true });
 const base = opt.url || 'http://localhost:5173/?quality=high';
-const c0 = shots[0].cam.map((v) => v ?? 3).join(',');
+const c0 = (shots.find((s) => s.cam)?.cam ?? [0, 3, 0, 0, 0]).map((v) => v ?? 3).join(',');
 const url = `${base}${base.includes('?') ? '&' : '?'}frames=8&cam=${c0}`;
 const dir = process.env.SHOT_PROFILE || path.join(os.tmpdir(), 'waldegg-tour-profile');
 const browser = await chromium.launchPersistentContext(dir, {
@@ -33,7 +34,20 @@ await page.waitForFunction(() => window.__ready, null, { timeout: 900000, pollin
 console.log('loaded in', (Date.now() - t0) / 1000, 's');
 for (const s of shots) {
   // y = null → eye height above the terrain
-  await page.evaluate((c) => { if (c[1] == null) c[1] = window.__game.terrain.heightAt(c[0], c[2]) + 1.7; window.__game.setCamera(...c); }, s.cam);
+  if (s.anchor) {
+    // stand `dist` in front of the anchor (along its normal), looking at it
+    const ok = await page.evaluate((s) => {
+      const a = window.__game.world.buildings.flatMap((b) => b.anchors).find((x) => x.id === s.anchor);
+      if (!a) return false;
+      const d = s.dist ?? 1.2;
+      const x = a.pos.x + Math.sin(a.ry) * d, z = a.pos.z + Math.cos(a.ry) * d;
+      window.__game.setCamera(x, a.pos.y + (s.dy ?? 0), z, (a.ry * 180) / Math.PI, s.pitch ?? 0);
+      return true;
+    }, s);
+    if (!ok) { console.log(s.name, 'anchor not found'); continue; }
+  } else {
+    await page.evaluate((c) => { if (c[1] == null) c[1] = window.__game.terrain.heightAt(c[0], c[2]) + 1.7; window.__game.setCamera(...c); }, s.cam);
+  }
   if (s.eval) await page.evaluate(s.eval);
   await page.waitForTimeout(s.settle ?? settle);
   const info = await page.evaluate(() => { const i = window.__game.engine.renderer.info.render; return `${i.drawCalls} calls ${(i.triangles / 1e6).toFixed(2)}M tris`; });

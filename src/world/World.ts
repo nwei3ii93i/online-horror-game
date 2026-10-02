@@ -88,6 +88,11 @@ export class World {
     this.group.add(b.group);
   }
 
+  /** Add an object to a building's group (before the first cull, so interior classification sees it). */
+  attach(id: string, obj: THREE.Object3D): void {
+    this.buildings.find((b) => b.id === id)?.group.add(obj);
+  }
+
   applyInteriorMap(): void {
     const spans = this.buildings.flatMap((b) => b.spans);
     const { data, w, h } = rasteriseInteriorMap(spans);

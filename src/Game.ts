@@ -29,6 +29,7 @@ import { LightPool } from './gameplay/LightPool';
 import { Pickups } from './gameplay/Pickups';
 import { DocumentReader } from './ui/DocumentReader';
 import { MANOR_DOCS, placeDocuments } from './world/story/DocumentProps';
+import { buildEnvDecals } from './world/story/EnvDecals';
 import { buildStoryDressing } from './world/story/Dressing';
 import { AssetManager, ASSET_BASE } from './assets/AssetManager';
 import { MANOR } from './world/buildings/Manor';
@@ -126,6 +127,7 @@ export class Game {
     loading.set(0.8, 'Placing the estate');
     this.world = new World(this.physics, this.materials, terrain);
     this.world.build();
+    for (const { building, mesh } of buildEnvDecals(this.world.buildings)) this.world.attach(building, mesh);
     this.world.applyInteriorMap();
     scene.add(this.world.group);
     loading.set(0.82, 'Furnishing');
