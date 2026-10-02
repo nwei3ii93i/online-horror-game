@@ -1,0 +1,26 @@
+{
+  "name": "hollow-estate",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.21.0",
+    "three": "^0.186.1",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/three": "^0.186.0",
+    "@types/ws": "^8.18.2",
+    "playwright": "^1.63.0",
+    "tsx": "^4.23.15",
+    "typescript": "5.9",
+    "vite": "^8.3.2"
+  }
+}
