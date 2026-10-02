@@ -52,11 +52,10 @@ const SPECS: Spec[] = [
   // ---------------------------------------------------------------- cemetery
   ['wooden_bucket_01', 'ground', 45.75, 0, -97.35, 0.3, none],               // by the water trough
   ['watering_can_metal_01', 'ground', 44.45, 0, -97.4, -0.6, none],
-  ['dry_branches_medium_01', 'ground', 42.6, 0, -112.4, 0.4, none],          // compost corner
-  ['dry_branches_medium_01', 'ground', 43.3, 0, -113.0, 2.2, none],
+  ['dry_branches_medium_01', 'ground', 42.3, 0.12, -112.85, 0.4, none],      // on the compost heap
   ['nettle_plant', 'ground', 41.9, 0, -111.8, 0.8, none],
-  ['nettle_plant', 'ground', 43.9, 0, -113.25, 2.6, none],
-  ['fern_02', 'ground', 47.0, 0, -113.05, 0.2, none],
+  ['nettle_plant', 'ground', 44.35, 0, -113.3, 0, none],
+  ['fern_02', 'ground', 46.9, 0, -112.6, 0.2, none],
   ['fern_02', 'ground', 59.9, 0, -97.4, 1.9, none],
   ['moss_01', 'ground', 41.65, 0, -104.0, H, none],
   ['moss_01', 'ground', 55.1, 0, -113.35, 0.1, none],
@@ -69,7 +68,7 @@ const SPECS: Spec[] = [
   ['moss_01', 'ground', NAMELESS_CROSS.x - 0.9, 0, NAMELESS_CROSS.z + 2.3, 2.0, none],
 
   // ---------------------------------------------------------------- hunting stand (local frame, +z faces the pasture)
-  ['Lantern_01', 'stand', 0.45, 0.47, -0.55, 0.3, none],                     // on the bench
+  ['Lantern_01', 'stand', -0.2, 0.47, -0.55, 0.3, none],                     // on the bench
   ['can_rusted', 'stand', -0.2, 0.0, 0.1, 1.0, none],
   ['tree_stump_01', 'standGround', -2.6, 0, -3.4, 0.9],
   ['dry_branches_medium_01', 'standGround', 2.2, 0, -1.6, 2.1, none],

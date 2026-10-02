@@ -20,9 +20,9 @@ import {
  *    propped with timber (a short CROUCH stretch, 1.30 m), ending at a bricked-up face.
  *
  * Height: the ground above is ≈ 0 m, so with the floor at −2.05 the layout's nominal 2.15 m
- * cannot be met underground. The concrete tunnel gets 1.90 m clear (ceiling −0.15, 0.10 m slab
+ * cannot be met underground. The concrete tunnel gets 1.90 m clear (ceiling −0.15, 0.08 m slab
  * top just under the turf); where `heightAt` dips lower the ceiling steps down in sections (never
- * below 1.82 m). Next to the manor door a 1.4 m head chamber is raised to −0.02 so the door
+ * below 1.80 m; the standing capsule is 1.76 m). Next to the manor door a 1.4 m head chamber is raised to −0.02 so the door
  * leaf (top −0.08) clears it when it swings in; its concrete lid shows 0.1 m above ground.
  * The coal gallery is lower (crown 1.80 m, springing 1.20 m).
  *
@@ -44,7 +44,7 @@ export const TUNNEL = {
   F: svc.y,
   T: 0.25,
   /** Design ceiling of the concrete tunnel (1.90 m clear) and its slab. */
-  CEIL: svc.y + 1.9, SLAB: 0.1, MIN_CLEAR: 1.82,
+  CEIL: svc.y + 1.9, SLAB: 0.08, MIN_CLEAR: 1.8,
   /** Raised head chamber at the manor door. */
   HEAD_CEIL: svc.y + 2.03, HEAD_LEN: 1.4, HEAD_RECESS: 0.3,
   /** Coal gallery vault (above floor). */
@@ -393,7 +393,7 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
     mb.rod('black_soot', V(x, shTop + h, z), V(x, shTop + h + 0.008, z), 0.002, 0.002, 3);
   }
   mb.box('cardboard', sh.x0 + 0.24, shTop + 0.009, sh.z1 - 0.12, 0.05, 0.018, 0.035);
-  physics?.addBox({ cx: (sh.x0 + sh.x1) / 2, cy: sh.y + 0.015, cz: (sh.z0 + sh.z1) / 2, hx: (sh.x1 - sh.x0) / 2, hy: 0.03, hz: (sh.z1 - sh.z0) / 2, surface: 'wood' });
+  physics?.addBox({ cx: (sh.x0 + sh.x1) / 2, cy: sh.y + 0.015, cz: (sh.z0 + sh.z1) / 2, hx: (sh.x1 - sh.x0) / 2, hy: 0.015, hz: (sh.z1 - sh.z0) / 2, surface: 'wood' });
   kit.anchor('tunnel_shelf', (sh.x0 + sh.x1) / 2, shTop, (sh.z0 + sh.z1) / 2, Math.PI / 2, 'tunnel_north');
 
   // ------------------------------------------------------------------ lights (one bulb still works, barely)

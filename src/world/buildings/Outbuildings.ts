@@ -404,6 +404,16 @@ export const BARN = {
   TENNE_X0: -38.9, TENNE_X1: -35.1,
 } as const;
 
+/**
+ * Rack for Josef's fourteen numbered diesel cans along the north wall of the east bay:
+ * two tiers (top surfaces F+lower / F+upper), 4 + 3 cans per tier either side of the middle post.
+ */
+export const BARN_RACK = {
+  x0: -34.95, x1: -31.75, post: -33.35, z: BARN.Z0 + 0.5 + 0.03 + 0.27,
+  lower: 0.075, upper: 0.68,
+  cans: [-34.72, -34.34, -33.96, -33.58, -33.0, -32.55, -32.1],
+} as const;
+
 export function buildBarn(physics: Physics | undefined, materials: MaterialLibrary, heightAt: HeightFn): BuildingOutput {
   const Bn = BARN;
   defineMaterials(materials, {
@@ -630,9 +640,9 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
   scatterBlocks(mb, 'roof_tiles', -54.3, -37.4, -53.0, -36.6, F, 14, rng, [0.24, 0.02, 0.4]);
 
   // ------------------------------------------------------------------ east bay: the diesel can rack (14 cans, numbered by Josef)
-  const rx0 = -34.75, rx1 = -31.85, rz = BIZ0 + 0.27;
-  for (const y of [F + 0.06, F + 0.665]) mb.box(T, (rx0 + rx1) / 2, y, rz, rx1 - rx0, 0.03, 0.44, { uv: 'local' });
-  for (const x of [rx0 + 0.03, (rx0 + rx1) / 2, rx1 - 0.03]) mb.box(T, x, F + 0.6, rz, 0.06, 1.2, 0.42, { uv: 'local', uvRotate: true });
+  const R = BARN_RACK, rx0 = R.x0, rx1 = R.x1, rz = R.z;
+  for (const y of [F + R.lower - 0.015, F + R.upper - 0.015]) mb.box(T, (rx0 + rx1) / 2, y, rz, rx1 - rx0, 0.03, 0.44, { uv: 'local' });
+  for (const x of [rx0 + 0.03, R.post, rx1 - 0.03]) mb.box(T, x, F + 0.6, rz, 0.06, 1.2, 0.42, { uv: 'local', uvRotate: true });
   for (const y of [F + 0.02, F + 0.64]) for (const z of [rz - 0.19, rz + 0.19]) mb.box(T, (rx0 + rx1) / 2, y, z, rx1 - rx0, 0.04, 0.05);
   physics?.addBox({ cx: (rx0 + rx1) / 2, cy: F + 0.6, cz: rz, hx: (rx1 - rx0) / 2, hy: 0.6, hz: 0.22, surface: 'wood' });
   kit.anchor('barn_diesel_cans', (rx0 + rx1) / 2, F + 0.68, rz + 0.1, 0, 'barn_east');
@@ -680,6 +690,8 @@ export const PUMPHOUSE_FIT = {
   generator: { x: -29.12, z: -51.25, pallet: 0.12 },
   crate: { x: -29.1, z: -52.36 },
   stairVoid: { x0: -26.25, z0: -51.6, x1: -25.38, z1: -49.2 },
+  /** power_box_01 on the west wall (base of its back face above B) — the generator cable runs into it. */
+  switchBoxY: 1.1, switchBoxZ: -50.0,
 } as const;
 
 export function buildPumpHouse(physics: Physics | undefined, materials: MaterialLibrary, heightAt: HeightFn): BuildingOutput {
@@ -833,10 +845,10 @@ export function buildPumpHouse(physics: Physics | undefined, materials: Material
   }
   // Josef's 1993 generator cable: from the tunnel lintel along the ceiling to the switch box
   const cbl = 'rubber_black';
-  const boxZ = -50.0;
-  pipe(mb, cbl, [V(-28.2, -0.17, zw - 0.02), V(-28.2, -0.04, IZ1 - 0.1), V(-28.2, -0.04, boxZ), V(IX0 + 0.03, -0.04, boxZ), V(IX0 + 0.03, B + 1.72, boxZ)], 0.009, 5, 0.05);
+  const boxZ = PUMPHOUSE_FIT.switchBoxZ;
+  pipe(mb, cbl, [V(-28.2, -0.17, zw - 0.02), V(-28.2, -0.04, IZ1 - 0.1), V(-28.2, -0.04, boxZ), V(IX0 + 0.03, -0.04, boxZ), V(IX0 + 0.03, B + PUMPHOUSE_FIT.switchBoxY + 0.48, boxZ)], 0.009, 5, 0.05);
   for (let z = IZ1 - 0.3; z > boxZ; z -= 0.55) mb.box('rust_metal_int', -28.2, -0.025, z, 0.03, 0.02, 0.015);
-  pipe(mb, cbl, [V(IX0 + 0.05, B + 1.2, boxZ + 0.05), V(IX0 + 0.06, B + 0.6, boxZ - 0.2), V(G.x + 0.05, B + 0.62, G.z + 0.4)], 0.009, 5, 0.08);
+  pipe(mb, cbl, [V(IX0 + 0.05, B + PUMPHOUSE_FIT.switchBoxY + 0.05, boxZ + 0.05), V(IX0 + 0.06, B + 0.6, boxZ - 0.2), V(G.x + 0.05, B + 0.62, G.z + 0.4)], 0.009, 5, 0.08);
 
   // ------------------------------------------------------------------ ground floor fittings
   const tb = { x0: -29.35, x1: -28.3, z0: IZ0 + 0.02, z1: IZ0 + 0.62 };

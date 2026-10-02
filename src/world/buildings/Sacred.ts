@@ -514,7 +514,7 @@ function textBlock(lines: Line[], st: TextStyle): DrawFn {
     for (const l of lines) {
       const s = l.s ?? 1;
       let size = unit * s * 0.9;
-      const font = (sz: number) => `${st.weight ?? ''} ${sz.toFixed(1)}px ${st.font}`;
+      const font = (sz: number) => `${st.weight ? `${st.weight} ` : ''}${sz.toFixed(1)}px ${st.font}`;
       g.font = font(size);
       const mw = g.measureText(l.t).width;
       if (mw > w - 2 * padX) { size *= (w - 2 * padX) / mw; g.font = font(size); }
@@ -831,7 +831,7 @@ export function buildGreenhouse(physics: Physics | undefined, materials: Materia
 
   // ---------------------------------------------------------------- benches
   const bench = (b: typeof GH_NB) => {
-    const x0 = GH_BX0, x1 = GH_BX0 + b.sections * GH_SEC;
+    const x0 = GH_BX0;
     const top = F + GH_BENCH_TOP;
     for (let s = 0; s <= b.sections; s++) {
       const x = x0 + s * GH_SEC;
@@ -865,7 +865,6 @@ export function buildGreenhouse(physics: Physics | undefined, materials: Materia
       }
       physics?.addBox({ cx: (sx0 + sx1) / 2, cy: F + GH_BENCH_TOP / 2, cz: (b.z0 + b.z1) / 2, hx: GH_SEC / 2, hy: GH_BENCH_TOP / 2, hz: (b.z1 - b.z0) / 2, surface: 'wood' });
     }
-    void x1;
   };
   bench(GH_NB);
   bench(GH_SB);
@@ -1312,23 +1311,29 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
       mb.cylinder('candle', x, (onStep ? yS : F) + 0.0005, z, rng.range(0.012, 0.035), rng.range(0.01, 0.03), 0.004, 8, 'top');
     }
     const [lx, ly, lz] = stubs[5];
-    kit.light({ id: 'light:chapel_candle', position: V3(lx, ly + 0.004 + waxOf(5, true) + 0.03, lz), kind: 'candle', working: true, flicker: 0.6, intensity: 1, color: 0xffa040, room: 'chapel_nave' });
+    // no `room`: LightPool would hang a cord from that room's ceiling down to the candle. LightPool
+    // drops its point light 0.06 below the fixture, so the fixture sits 0.06 above the flame.
+    kit.light({ id: 'light:chapel_candle', position: V3(lx, ly + 0.004 + waxOf(5, true) + 0.022 + 0.06, lz), kind: 'candle', working: true, flicker: 0.6, intensity: 1, color: 0xffa040 });
   }
 
   // ---------------------------------------------------------------- exterior
   {
     const ry = (f: WallFrame) => -Math.atan2(f.dz, f.dx);
-    const band = (f: WallFrame, e0: number, e1: number, y: number, h: number, d: number, mat: string) => {
-      const len = f.len + e0 + e1, s = (f.len + e1 - e0) / 2;
-      const c = wallPoint(f, s, y, ht + d / 2);
-      mb.pushTRS(c[0], c[1], c[2], ry(f));
-      mb.box(mat, 0, 0, 0, len + d * 0.8, h, d, { skip: ['nz'] });
-      mb.pop();
+    const band = (f: WallFrame, e0: number, e1: number, y: number, h: number, d: number, mat: string, gap?: [number, number]) => {
+      const s0 = -e0 - d * 0.4, s1 = f.len + e1 + d * 0.4;
+      const parts: [number, number][] = gap ? [[s0, gap[0]], [gap[1], s1]] : [[s0, s1]];
+      for (const [a, b] of parts) {
+        const c = wallPoint(f, (a + b) / 2, y, ht + d / 2);
+        mb.pushTRS(c[0], c[1], c[2], ry(f));
+        mb.box(mat, 0, 0, 0, b - a, h, d, { skip: ['nz'] });
+        mb.pop();
+      }
     };
     for (const [f, e0, e1] of extWalls) {
-      band(f, e0, e1, E - 0.12, 0.24, 0.07, 'sacred_trim_ext');           // eaves cornice
-      band(f, e0, e1, E - 0.03, 0.08, 0.14, 'sacred_trim_ext');
-      band(f, e0, e1, F + 0.47, 0.06, 0.05, 'sacred_granite');           // socle ledge
+      band(f, e0, e1, E - 0.51, 0.22, 0.06, 'sacred_trim_ext');           // eaves cornice, tucked under the soffit
+      band(f, e0, e1, E - 0.65, 0.06, 0.03, 'sacred_trim_ext');
+      // socle ledge (interrupted by the door and its granite surround)
+      band(f, e0, e1, F + 0.47, 0.06, 0.05, 'sacred_granite', f === fS ? [doorO.at - doorO.width / 2 - 0.2, doorO.at + doorO.width / 2 + 0.2] : undefined);
     }
     // window surrounds (painted Faschen)
     for (const { wall, frame } of kit.frames) {
@@ -1349,8 +1354,8 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
     // corner lisenes at the front
     for (const sx of [-1, 1]) {
       const x = sx < 0 ? X0 : X1;
-      mb.box('sacred_trim_ext', x - sx * 0.2, (F + 0.5 + E - 0.24) / 2, Z1 + 0.015, 0.4, E - 0.24 - F - 0.5, 0.03, { skip: ['nz'] });
-      mb.box('sacred_trim_ext', x + sx * 0.015, (F + 0.5 + E - 0.24) / 2, Z1 - 0.2, 0.03, E - 0.24 - F - 0.5, 0.4, { skip: [sx < 0 ? 'px' : 'nx'] });
+      mb.box('sacred_trim_ext', x - sx * 0.2, (F + 0.5 + E - 0.68) / 2, Z1 + 0.015, 0.4, E - 0.68 - F - 0.5, 0.03, { skip: ['nz'] });
+      mb.box('sacred_trim_ext', x + sx * 0.015, (F + 0.5 + E - 0.68) / 2, Z1 - 0.2, 0.03, E - 0.68 - F - 0.5, 0.4, { skip: [sx < 0 ? 'px' : 'nx'] });
     }
     // granite door surround with the carved lintel
     for (const sx of [-1, 1]) mb.box('sacred_granite', CX + sx * 0.65, F + 1.15, Z1 + 0.015, 0.2, 2.3, 0.03, { skip: ['nz'] });
@@ -1389,7 +1394,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
   const Zs = Z1 + ohG;
   const cWN: number[] = [CX - rho, eY, CZ - rw], cNW: number[] = [CX - rw, eY, CZ - rho], cNE: number[] = [CX + rw, eY, CZ - rho], cEN: number[] = [CX + rho, eY, CZ - rw];
   const apex = [CX, rY, CZ];
-  const th = 0.26;
+  const th = 0.2;
   roofPlane(mb, physics, [[CX - rho, eY, Zs], cWN, apex, [CX, rY, Zs]], [-1, 0], pitch, th, 'roof_tiles', 'rough_timber', 'painted_wood_brown_ext');
   roofPlane(mb, physics, [cEN, [CX + rho, eY, Zs], [CX, rY, Zs], apex], [1, 0], pitch, th, 'roof_tiles', 'rough_timber', 'painted_wood_brown_ext');
   roofPlane(mb, physics, [cWN, cNW, apex], [-Math.SQRT1_2, -Math.SQRT1_2], pitch, th, 'roof_tiles', 'rough_timber', 'painted_wood_brown_ext');
@@ -1467,10 +1472,16 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
   kit.anchor('chapel_crypt_shrine', (IX0 + 0.75 + PX - PT / 2) / 2, CF, IZA + 0.3, 0, 'chapel_crypt');
 
   const group = mb.build(materials, { name: 'chapel' });
+  noSmallShadows(group);
   const ins = decals.build();
   if (ins) group.add(ins);
   levelsChanged();
   return kit.output(group);
+}
+
+/** Candles, flames, votive glasses and soot never need to cast shadows (and must not block the candle light). */
+function noSmallShadows(group: THREE.Group): void {
+  group.traverse((o) => { if ((o as THREE.Mesh).isMesh && /:(sacred_flame|sacred_red_glass|candle|black_soot)$/.test(o.name)) o.castShadow = false; });
 }
 
 /** Thin wall with one opening (turret boarding) – geometry only, no colliders. */
@@ -1736,7 +1747,6 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
   const env = ENV_TEXT.gravestones;
   const anna = env.find((g) => g.id === 'stone_anna')!;
   const marie = env.find((g) => g.id === 'cross_marie')!;
-  const nameless = env.find((g) => g.id === 'cross_nameless')!;
   smallStone(ctx, 60.0, rowN + 0.1, 0.05, { id: anna.id, kind: 'small_stone', shape: 'flat', mat: 'sacred_sandstone', w: 0.46, h: 0.5, lines: anna.lines, wear: 0.65, mound: true }, true);
   ironCross(ctx, 55.55, rowN + 0.15, -0.04, { id: marie.id, kind: 'iron_cross', lines: marie.lines, small: true }, true);
   // candidate plots (stone at the north end, grave towards the south)
@@ -1745,7 +1755,8 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
   for (const x of [55.55, 57.05, 58.55, 59.95]) for (const z of rows) plots.push([x, z]);
   for (const x of [42.1, 43.6, 45.1]) for (const z of [-112.95, ...rows]) plots.push([x, z]);
   for (const x of [49.4, 50.9, 52.4, 53.9]) for (const z of [-101.4, -98.9]) plots.push([x, z]);
-  const keep = plots.filter(([x, z]) => !(x < 42.5 && (z === -112.95 || z === -110.4)) && !(x > 45 && x < 46 && z === -100.0) && !(x > 56.5 && x < 59 && z === -110.4));
+  // keep clear: compost corner, the lane from the west wicket, the water trough, the space in front of the family tomb
+  const keep = plots.filter(([x, z]) => !(x < 42.5 && z === -112.95) && !(x < 46 && z === -110.4) && !(x > 45 && x < 46 && z === -100.0) && !(x > 56.5 && x < 59 && z === -110.4));
   rng.fork('plots').shuffle(keep);
   FILLER_GRAVES.forEach((g, i) => {
     const [x, z] = keep[i];
@@ -1755,7 +1766,7 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
     else woodenCross(ctx, x + rng.range(-0.08, 0.08), z, ry, g);
   });
   // the nameless cross under the three spruces, outside the wall
-  namelessCross(ctx, NAMELESS_CROSS.x, NAMELESS_CROSS.z, NAMELESS_CROSS.ry, nameless.lines);
+  namelessCross(ctx, NAMELESS_CROSS.x, NAMELESS_CROSS.z, NAMELESS_CROSS.ry);   // ENV_TEXT 'cross_nameless': no lines
 
   // ---------------------------------------------------------------- water trough with hand pump, compost corner
   {
@@ -1767,11 +1778,14 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
     mb.box('sacred_granite', -0.46, (top + b) / 2, 0, 0.08, top - b, 0.34, { skip: ['ny'] });
     mb.box('sacred_granite', 0.46, (top + b) / 2, 0, 0.08, top - b, 0.34, { skip: ['ny'] });
     quadToward(mb, 'sacred_water', [-0.42, top - 0.12, -0.17], [0.42, top - 0.12, -0.17], [0.42, top - 0.12, 0.17], [-0.42, top - 0.12, 0.17], [0, 1, 0]);
-    mb.cylinder('iron_black', 0.3, top, 0.32, 0.05, 0.045, 0.9, 10);
-    mb.rod('iron_black', V3(0.3, top + 0.7, 0.32), V3(0.3, top + 0.6, 0.05), 0.02);
-    mb.rod('iron_black', V3(0.3, top + 0.85, 0.32), V3(0.75, top + 1.0, 0.32), 0.018);
+    // cast-iron hand pump beside the trough, spout over the water
+    mb.cylinder('iron_black', 0.62, b, 0.05, 0.055, 0.045, top + 0.95 - b, 10);
+    sphere(mb, 'iron_black', 0.62, top + 0.97, 0.05, 0.06, 8, 4);
+    mb.rod('iron_black', V3(0.62, top + 0.62, 0.05), V3(0.36, top + 0.5, 0.05), 0.022);
+    mb.rod('iron_black', V3(0.62, top + 0.85, 0.05), V3(0.62, top + 1.0, -0.42), 0.016);
     mb.pop();
     physics?.addBox({ cx: x, cy: (top + b) / 2, cz: z, hx: 0.5, hy: (top - b) / 2, hz: 0.25, surface: 'stone' });
+    physics?.addBox({ cx: x + 0.62, cy: (top + 0.95 + b) / 2, cz: z + 0.05, hx: 0.06, hy: (top + 0.95 - b) / 2, hz: 0.06, surface: 'metal' });
     // compost corner (north-west): plank pen, soil heap, old wreaths
     const cx = C.x0 + wt + 0.75, cz = C.z0 + wt + 0.65, cg = heightAt(cx, cz);
     for (const [px, pz, sx, sz] of [[cx, cz + 0.55, 1.4, 0.04], [cx + 0.7, cz, 0.04, 1.1]] as const) {
@@ -1790,6 +1804,7 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
   }
 
   const group = mb.build(materials, { name: 'cemetery' });
+  noSmallShadows(group);
   const ins = decals.build();
   if (ins) group.add(ins);
   levelsChanged();
@@ -2078,8 +2093,8 @@ function familyTomb(ctx: GraveCtx, x: number, z: number): void {
 }
 
 /** Josef's grave: two spruce battens, no name, his hat, and candles that are still being lit. */
-function namelessCross(ctx: GraveCtx, x: number, z: number, ry: number, lines: string[]): void {
-  const { mb, rng } = ctx;
+function namelessCross(ctx: GraveCtx, x: number, z: number, ry: number): void {
+  const { mb } = ctx;
   const g = ctx.h(x, z);
   const H = 1.12;
   const m = frameMatrix(x, g, z, ry, -0.03, 0.02);
@@ -2095,7 +2110,6 @@ function namelessCross(ctx: GraveCtx, x: number, z: number, ry: number, lines: s
   mb.pop();
   mb.pop();
   obb(ctx.physics, m, [0, H / 2, 0.02], [0.26, H / 2, 0.05], 'wood');
-  void lines;
   // the mound of earth in front
   const s = Math.sin(ry), c = Math.cos(ry);
   const W = (lx: number, lz: number): P2 => [x + lx * c + lz * s, z - lx * s + lz * c];
@@ -2107,7 +2121,6 @@ function namelessCross(ctx: GraveCtx, x: number, z: number, ry: number, lines: s
     [-0.52, 1.1, { wax: 0.002, soot: true, red: true }], [0.42, 1.55, { tipped: true }], [-0.16, 0.14, { wax: 0.02, soot: true }],
   ];
   for (const [lx, lz, o] of lights) { const [px, pz] = W(lx, lz); graveLight(mb, px, ctx.h(px, pz) - 0.005, pz, o); }
-  void rng;
 }
 
 // ===================================================================================
@@ -2169,13 +2182,12 @@ export function buildHuntingStand(physics: Physics | undefined, materials: Mater
   // ---------------------------------------------------------------- cabin
   const t = 0.035, c = 0.75 - t / 2;
   const boards = { left: 'hs_boards_int', right: 'hs_boards', cap: 'hs_boards', surface: 'wood', skirting: false, y0: YF, t } as const;
-  const fFront = kit.wall({ ...boards, a: LW(-c, c), b: LW(c, c), y1: YF + 2.0, ext0: t / 2, ext1: t / 2, windows: [], openings: [{ at: c, width: 1.15, bottom: 0.95, top: 1.42, kind: 'window' }] });
+  kit.wall({ ...boards, a: LW(-c, c), b: LW(c, c), y1: YF + 2.0, ext0: t / 2, ext1: t / 2, openings: [{ at: c, width: 1.15, bottom: 0.95, top: 1.42, kind: 'window' }] });
   kit.wall({ ...boards, a: LW(c, c), b: LW(c, -c), y1: YF + 1.75, openings: [{ at: c - 0.2, width: 0.7, bottom: 0.95, top: 1.4, kind: 'window' }] });
   const doorO: Opening = { at: c - 0.3, width: 0.62, bottom: 0, top: 1.55, kind: 'door' };
   const fBack = kit.wall({ ...boards, a: LW(c, -c), b: LW(-c, -c), y1: YF + 1.75, ext0: t / 2, ext1: t / 2, doors: [{ o: doorO, frame: 'rough_timber_ext', architrave: false }] });
   kit.wall({ ...boards, a: LW(-c, -c), b: LW(-c, c), y1: YF + 1.75, openings: [{ at: c + 0.2, width: 0.7, bottom: 0.95, top: 1.4, kind: 'window' }] });
-  void fFront;
-  kit.doorInWall('door:hunting_stand_front', fBack, doorO, { style: 'ledged', mat: 'rough_timber_ext', handle: 'ring', handleMat: 'iron_black', seed: 62 }, 1, -1, { sound: 'wood', open: 0.2 });
+  kit.doorInWall('door:hunting_stand_front', fBack, doorO, { style: 'ledged', mat: 'rough_timber_ext', handle: 'ring', handleMat: 'iron_black', seed: 62 }, -1, -1, { sound: 'wood', open: 0.2 });
   // side gables under the shed roof
   for (const sx of [-1, 1]) {
     for (const side of [-1, 1]) {
@@ -2200,9 +2212,9 @@ export function buildHuntingStand(physics: Physics | undefined, materials: Mater
   flap(0, 0.77, 0, 1.2);
   flap(0.77, 0.2, PI / 2, 0.75);
   flap(-0.77, 0.2, -PI / 2, 0.75);
-  // bench, gun rest, a nail with a hook
-  mb.box('rough_timber', 0, HF + 0.45, -0.55, 1.3, 0.035, 0.32, { uv: 'local' });
-  for (const x of [-0.5, 0.5]) mb.box('rough_timber', x, HF + 0.22, -0.55, 0.05, 0.44, 0.28);
+  // bench (left half of the back wall – the door swings into the right half), gun rest, a nail
+  mb.box('rough_timber', -0.36, HF + 0.45, -0.55, 0.64, 0.035, 0.32, { uv: 'local' });
+  for (const x of [-0.62, -0.1]) mb.box('rough_timber', x, HF + 0.22, -0.55, 0.05, 0.44, 0.28);
   mb.box('rough_timber', 0, HF + 0.9, 0.6, 1.3, 0.03, 0.22, { uv: 'local' });
   for (const x of [-0.55, 0.55]) mb.beam('rough_timber', V3(x, HF + 0.6, c - t / 2 - 0.01), V3(x, HF + 0.88, 0.52), 0.04, 0.04);
   for (const x of [-0.6, 0.6]) mb.box('rough_timber', x, HF + 0.9, 0.0, 0.18, 0.03, 0.9, { uv: 'local' });
@@ -2215,7 +2227,7 @@ export function buildHuntingStand(physics: Physics | undefined, materials: Mater
     const pitch = Math.atan2(0.25, 1.5);
     const rm = new THREE.Matrix4().multiplyMatrices(SM, new THREE.Matrix4().compose(V3(0, HF + 1.875 + 0.02, 0), new THREE.Quaternion().setFromEuler(new THREE.Euler(-pitch, 0, 0)), V3(1, 1, 1)));
     obb(physics, rm, [0, 0, 0], [1.05, 0.04, 1.08], 'metal');
-    obb(physics, SM, [0, HF + 0.45, -0.55], [0.65, 0.02, 0.16], 'wood');
+    obb(physics, SM, [-0.36, HF + 0.45, -0.55], [0.32, 0.02, 0.16], 'wood');
     obb(physics, SM, [0, HF + 0.9, 0.6], [0.65, 0.02, 0.11], 'wood');
   }
 

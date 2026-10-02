@@ -3,7 +3,7 @@ import { float, mix, texture, uv } from 'three/tsl';
 import { BuildingKit, BuildingOutput, InteriorSpan, KitWall } from '../architecture/BuildingKit';
 import { buildSlab, buildWindow, WindowOpts } from '../architecture/Elements';
 import { buildRoof, buildChimney, RoofInfo } from '../architecture/Roofs';
-import { wallFrame, Opening, WallFrame, FaceSpec } from '../architecture/Walls';
+import { wallFrame, buildSkirting, Opening, WallFrame, FaceSpec } from '../architecture/Walls';
 import { MeshBuilder, BoxMats } from '../architecture/MeshBuilder';
 import { balustrade } from './Manor';
 import { BUILDINGS, PATHS, POI, Rect, smoothPolyline } from '../Layout';
@@ -462,7 +462,7 @@ type OpMap = Map<string, { f: WallFrame; o: Opening; ext: boolean; kind: 'window
  * Wall split into segments at `cuts` (distances from a) so each segment's inner face takes the
  * finish of the room behind it. Openings are assigned to the segment containing their centre.
  */
-function segWall(kit: BuildingKit, ops: OpMap, base: Omit<KitWall, 'a' | 'b' | 'windows' | 'doors' | 'ext0' | 'ext1'>, a: [number, number], b: [number, number], cuts: number[], ext: [number, number], windows: WinOp[], doors: DoorOp[], exterior: boolean): void {
+function segWall(kit: BuildingKit, ops: OpMap, base: Omit<KitWall, 'a' | 'b' | 'windows' | 'doors' | 'ext0' | 'ext1'>, a: [number, number], b: [number, number], cuts: number[], ext: [number, number], windows: WinOp[], doors: DoorOp[], exterior: boolean, skirtFloor?: number): void {
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const dx = (b[0] - a[0]) / len, dz = (b[1] - a[1]) / len;
   const stops = [0, ...cuts, len];
@@ -471,9 +471,19 @@ function segWall(kit: BuildingKit, ops: OpMap, base: Omit<KitWall, 'a' | 'b' | '
     const inSeg = (o: Opening) => o.at >= s0 && o.at < s1;
     const w = windows.filter((x) => inSeg(x.o)).map((x) => ({ o: { ...x.o, at: x.o.at - s0 }, opts: x.opts }));
     const d = doors.filter((x) => inSeg(x.o)).map((x) => ({ o: { ...x.o, at: x.o.at - s0 }, frame: x.frame }));
-    const f = kit.wall({ ...base, a: [a[0] + dx * s0, a[1] + dz * s0], b: [a[0] + dx * s1, a[1] + dz * s1], ext0: i === 0 ? ext[0] : 0, ext1: i === stops.length - 2 ? ext[1] : 0, windows: w, doors: d });
+    const pa: [number, number] = [a[0] + dx * s0, a[1] + dz * s0], pb: [number, number] = [a[0] + dx * s1, a[1] + dz * s1];
+    const f = kit.wall({ ...base, a: pa, b: pb, ext0: i === 0 ? ext[0] : 0, ext1: i === stops.length - 2 ? ext[1] : 0, windows: w, doors: d, ...(skirtFloor !== undefined ? { skirting: false } : {}) });
     for (const x of w) if (x.o.id) ops.set(x.o.id, { f, o: x.o, ext: exterior, kind: 'window' });
     for (const x of d) if (x.o.id) ops.set(x.o.id, { f, o: x.o, ext: exterior, kind: 'door' });
+    // exterior walls start below the floor slab: lay their skirting at the real floor level
+    if (skirtFloor !== undefined) {
+      const off = -(base.t / 2 + 0.15);
+      const r = kit.roomAt(pa[0] + dx * (s1 - s0) / 2 + dz * off * -1, pa[1] + dz * (s1 - s0) / 2 + dx * off, skirtFloor + 0.5);
+      if (r?.skirting) {
+        const shift = skirtFloor - base.y0;
+        buildSkirting(kit.mb, { a: pa, b: pb, y0: skirtFloor, y1: base.y1, t: base.t, openings: d.map((x) => ({ ...x.o, bottom: x.o.bottom - shift, top: x.o.top - shift })) }, 'left', r.skirting);
+      }
+    }
   }
 }
 
@@ -481,7 +491,7 @@ function buildWalls(kit: BuildingKit): OpMap {
   const ops: OpMap = new Map();
   const yC = { y0: C0, y1: CC }, yG = { y0: CC, y1: Gc }, yA = { y0: Gc, y1: C.EAVE };
   const extC = { ...yC, t: T, cap: 'stone_wall_int', surface: 'stone', noTop: true, right: { mat: 'stone_wall' }, skirting: false };
-  const extG = { ...yG, t: T, cap: 'ct_plaster_ext', surface: 'stone', noTop: true, right: 'ext' as const };
+  const extG = { ...yG, t: T, cap: 'ct_whitewash', surface: 'stone', noTop: true, right: 'ext' as const };
   const extA = { ...yA, t: T, cap: 'ct_plaster_ext', surface: 'stone', noTop: false, right: { mat: 'ct_plaster_ext' }, skirting: false };
   const e2: [number, number] = [T / 2, T / 2];
   const sill = 1.3 - CC, head = 2.45 - CC;
@@ -494,35 +504,30 @@ function buildWalls(kit: BuildingKit): OpMap {
   // exterior walls run clockwise (seen from above) so their RIGHT side is outside
   // south (front, west → east)
   const sA: [number, number] = [WX0, WZ1], sB: [number, number] = [WX1, WZ1];
-  segWall(kit, ops, extC, sA, sB, [], e2, [], [], true);
-  // crawl-space opening (hands and knees) in the cellar's south wall → under the porch
+  // crawl-space opening (hands and knees, 0.75 m) in the cellar's south wall → under the porch
   const crawlO: Opening = { id: 'crawl', at: C.CRAWL.x0 + 1.25 - WX0, width: 0.8, bottom: C.CRAWL.y0 - C0, top: C.CRAWL.y1 - C0, kind: 'hole' };
-  void crawlO;
+  segWall(kit, ops, { ...extC, openings: [crawlO] }, sA, sB, [], e2, [], [], true);
   segWall(kit, ops, extG, sA, sB, [HX - WX0, KX - WX0], e2,
     [win('w_living_s', 28.6 - WX0), win('w_bed_s', 33.75 - WX0)],
-    [door('d_front', 31.36 - WX0, 0.95, 2.05)], true);
+    [door('d_front', 31.36 - WX0, 0.95, 2.05)], true, G0);
   segWall(kit, ops, extA, sA, sB, [], e2, [], [], true);
   // east (south → north)
   const eA: [number, number] = [WX1, WZ1], eB: [number, number] = [WX1, WZ0];
   segWall(kit, ops, extC, eA, eB, [WZ1 - MZ], e2, [], [], true);
-  segWall(kit, ops, extG, eA, eB, [WZ1 - MZ], e2, [], [], true);
+  segWall(kit, ops, extG, eA, eB, [WZ1 - MZ], e2, [], [], true, G0);
   segWall(kit, ops, extA, eA, eB, [], e2, [], [], true);
   // north (east → west)
   const nA: [number, number] = [WX1, WZ0], nB: [number, number] = [WX0, WZ0];
   segWall(kit, ops, extC, nA, nB, [], e2, [], [], true);
   segWall(kit, ops, extG, nA, nB, [WX1 - KX], e2,
     [win('w_kitchen_n', WX1 - 29.0), { o: { id: 'w_larder', at: WX1 - 33.15, width: 0.45, bottom: 1.55 - CC, top: 2.1 - CC, kind: 'window' }, opts: { style: 'single', sillOut: null, frameMat: 'painted_wood_white_ext', muntins: false, broken: 0 } }],
-    [door('d_back', WX1 - 30.9, 0.95, 2.0)], true);
+    [door('d_back', WX1 - 30.9, 0.95, 2.0)], true, G0);
   segWall(kit, ops, extA, nA, nB, [], e2, [], [], true);
   // west (north → south)
   const wA: [number, number] = [WX0, WZ0], wB: [number, number] = [WX0, WZ1];
   segWall(kit, ops, extC, wA, wB, [MZ - WZ0], e2, [], [], true);
-  segWall(kit, ops, extG, wA, wB, [MZ - WZ0], e2, [win('w_living_w', 6.0 - WZ0)], [], true);
+  segWall(kit, ops, extG, wA, wB, [MZ - WZ0], e2, [win('w_living_w', 6.0 - WZ0)], [], true, G0);
   segWall(kit, ops, extA, wA, wB, [], e2, [], [], true);
-
-  // the cellar south wall carries the crawl hole: rebuild is not possible after the fact, so the
-  // C-level south wall above was built without it – replace it here by a split wall instead.
-  // (kept simple: the hole is cut by a second, short wall overlay below)
 
   // ---- interior partitions (ground floor; sit on the floor like the manor's)
   const iw = (a: [number, number], b: [number, number], t: number, doors: { id: string; at: number; w: number; h?: number }[]) =>
@@ -623,27 +628,29 @@ function buildStairsAndVoids(mb: MeshBuilder, physics: Physics | undefined): voi
   // timber balustrade along the open side of the stairwell (ground floor) and linings of the void
   balustrade(mb, physics, [[STAIR_VOID.x0, 2.55], [STAIR_VOID.x0, STAIR_VOID.z1]], G0, 'rough_timber', 0.95);
   mb.box('rough_timber', STAIR_VOID.x0 + 0.012, (CC + G0) / 2, (STAIR_VOID.z0 + STAIR_VOID.z1) / 2, 0.025, G0 - CC, STAIR_VOID.z1 - STAIR_VOID.z0, { uv: 'local' });
-  mb.box('rough_timber', (STAIR_VOID.x0 + STAIR_VOID.x1) / 2, (CC + G0) / 2, STAIR_VOID.z0 + 0.012, STAIR_VOID.x1 - STAIR_VOID.x0, G0 - CC, 0.025, { uv: 'local' });
+  mb.box('rough_timber', (STAIR_VOID.x0 + STAIR_VOID.x1) / 2, (CC + G0 - 0.05) / 2, STAIR_VOID.z0 + 0.012, STAIR_VOID.x1 - STAIR_VOID.x0, G0 - 0.05 - CC, 0.025, { uv: 'local' });
 
   // ladder-stair (Bodenstiege) from the kitchen up through the hatch, rising south along the west wall
   const lw = 0.6, steps = 13, run = 0.18;
-  stair(mb, physics, { x: IX0 + 0.04 + lw / 2, z: HATCH.z1 - steps * run, y: G0, dir: Math.PI, width: lw, rise: A0 - G0, steps, run, tread: 'furniture_oak', riser: null, stringer: 'furniture_oak', surface: 'wood_old', rails: [1] });
+  // (dir = π flips local x: rail −1 is the open east side)
+  stair(mb, physics, { x: IX0 + 0.04 + lw / 2, z: HATCH.z1 - steps * run, y: G0, dir: Math.PI, width: lw, rise: A0 - G0, steps, run, tread: 'furniture_oak', riser: null, stringer: 'furniture_oak', surface: 'wood_old', rails: [-1] });
   // hatch linings (between kitchen ceiling and attic floor) and the rail round the hatch in the attic
   mb.box('rough_timber', HATCH.x1 - 0.012, (Gc + A0) / 2, (HATCH.z0 + HATCH.z1) / 2, 0.025, A0 - Gc, HATCH.z1 - HATCH.z0, { uv: 'local' });
   mb.box('rough_timber', (HATCH.x0 + HATCH.x1) / 2, (Gc + A0) / 2, HATCH.z0 + 0.012, HATCH.x1 - HATCH.x0, A0 - Gc, 0.025, { uv: 'local' });
   balustrade(mb, physics, [[HATCH.x0 + 0.02, HATCH.z0 - 0.04], [HATCH.x1 + 0.04, HATCH.z0 - 0.04], [HATCH.x1 + 0.04, HATCH.z1]], A0, 'rough_timber', 0.9);
-  // the hatch lid, flipped open and resting against the rail post
-  mb.pushTRS(HATCH.x1 + 0.1, A0, HATCH.z0 + 0.95, 0, 1, 1, 1, 0, -1.38);
-  mb.box('rough_timber', 0.4, 0.03, 0, 0.8, 0.04, 1.9, { uv: 'local' });
-  mb.box('rough_timber', 0.4, -0.01, -0.6, 0.7, 0.03, 0.08, { uv: 'local' });
-  mb.box('rough_timber', 0.4, -0.01, 0.6, 0.7, 0.03, 0.08, { uv: 'local' });
+  // the hatch lid, flipped over and lying on the boards beside the rail (battens up)
+  mb.pushTRS(HATCH.x1 + 0.55, A0, (HATCH.z0 + HATCH.z1) / 2 + 0.05, 0.06);
+  mb.box('rough_timber', 0, 0.02, 0, 0.8, 0.04, 1.9, { uv: 'local' });
+  for (const z of [-0.65, 0, 0.65]) mb.box('rough_timber', 0, 0.055, z, 0.7, 0.03, 0.09, { uv: 'local' });
+  mb.box('ct_iron', -0.38, 0.045, -0.5, 0.05, 0.01, 0.12);
+  mb.box('ct_iron', -0.38, 0.045, 0.5, 0.05, 0.01, 0.12);
   mb.pop();
 
   // steps up to the crawl-space opening in the cellar (crouch here, crawl through)
   const sx0 = C.CRAWL.x0 + 0.85, sx1 = sx0 + 0.8;
   mb.boxMinMax('ct_granite_int', sx0, C0 - 0.05, 6.9, sx1, C0 + 0.275, IZ1);
   mb.boxMinMax('ct_granite_int', sx0, C0 + 0.27, 7.2, sx1, C.CRAWL.y0, IZ1);
-  physics?.addBox({ cx: (sx0 + sx1) / 2, cy: C0 + 0.1375, cz: (6.9 + IZ1) / 2, hx: 0.4, hy: 0.1375 + 0.05, hz: (IZ1 - 6.9) / 2, surface: 'stone' });
+  physics?.addBox({ cx: (sx0 + sx1) / 2, cy: C0 + 0.1125, cz: (6.9 + IZ1) / 2, hx: 0.4, hy: 0.1625, hz: (IZ1 - 6.9) / 2, surface: 'stone' });
   physics?.addBox({ cx: (sx0 + sx1) / 2, cy: (C0 + 0.275 + C.CRAWL.y0) / 2, cz: (7.2 + IZ1) / 2, hx: 0.4, hy: (C.CRAWL.y0 - C0 - 0.275) / 2, hz: (IZ1 - 7.2) / 2, surface: 'stone' });
 }
 
@@ -748,7 +755,7 @@ function buildChimneyStack(mb: MeshBuilder, physics: Physics | undefined, ridgeY
   mb.pushTRS(x + 0.05, C0, zf + 0.32);
   mb.lathe('black_soot', [[0.0, 0.045], [0.1, 0.035], [0.2, 0.012], [0.27, 0.0]], 12);
   mb.pop();
-  mb.quad('black_soot', [x - 0.16, C0 + 0.002, zf], [x + 0.2, C0 + 0.002, zf], [x + 0.25, C0 + 0.002, zf + 0.2], [x - 0.2, C0 + 0.002, zf + 0.25], [0, 1, 0]);
+  quadN(mb, 'black_soot', [x - 0.16, C0 + 0.002, zf], [x + 0.2, C0 + 0.002, zf], [x + 0.25, C0 + 0.002, zf + 0.2], [x - 0.2, C0 + 0.002, zf + 0.25], [0, 1, 0]);
   // soot scoop lying next to it
   mb.pushTRS(x - 0.32, C0 + 0.01, zf + 0.35, 0.5);
   mb.box('rust_metal_int', 0, 0, 0, 0.16, 0.006, 0.2);
@@ -773,7 +780,6 @@ function buildExterior(mb: MeshBuilder, physics: Physics | undefined, ops: OpMap
     while (y < C.EAVE - 0.2) {
       const h = 0.3, long = k % 2 === 0;
       const lx = long ? 0.42 : 0.24, lz = long ? 0.24 : 0.42;
-      if (cz === C.Z1 && cx === C.X0 && y > 3.3) { /* under the eaves – fine */ }
       mb.box('ct_granite', cx - sxn * lx / 2 + sxn * 0.012, y + h / 2, cz + szn * 0.012, lx + 0.024, h - 0.02, 0.024, { skip: [szn > 0 ? 'nz' : 'pz'], uv: 'local' });
       mb.box('ct_granite', cx + sxn * 0.012, y + h / 2, cz - szn * lz / 2 + szn * 0.012, 0.024, h - 0.02, lz + 0.024, { skip: [sxn > 0 ? 'nx' : 'px'], uv: 'local' });
       y += h; k++;
@@ -818,7 +824,12 @@ function buildExterior(mb: MeshBuilder, physics: Physics | undefined, ops: OpMap
     mb.rod('rust_metal', V(x, gy - 0.02, zGutter), V(x, gy - 0.35, zWall), 0.045, 0.045, 8);
     mb.rod('rust_metal', V(x, gy - 0.35, zWall), V(x, yEnd + 0.15, zWall), 0.045, 0.045, 8);
     mb.rod('rust_metal', V(x, yEnd + 0.15, zWall), V(x, yEnd, zShoe), 0.045, 0.045, 8);
-    for (let y = yEnd + 0.5; y < gy - 0.5; y += 1.1) mb.box('rust_metal', x, y, (zWall + Math.sign(zWall - zGutter) * 0) + Math.sign(zGutter - zWall) * -0.0, 0.11, 0.025, 0.11);
+    // pipe clips into the wall
+    const face = zWall > (C.Z0 + C.Z1) / 2 ? C.Z1 : C.Z0;
+    for (let y = yEnd + 0.5; y < gy - 0.5; y += 1.1) {
+      mb.box('rust_metal', x, y, (face + zWall) / 2, 0.02, 0.025, Math.abs(zWall - face));
+      mb.box('rust_metal', x, y, zWall, 0.11, 0.03, 0.11, { skip: ['py', 'ny'] });
+    }
   };
   pipeDown(C.X0 + 0.15, C.Z1 + C.OH + 0.09, C.Z1 + 0.11, 1.0, C.Z1 + 0.35);      // over the rain barrel
   pipeDown(C.X1 - 0.15, C.Z1 + C.OH + 0.09, C.Z1 + 0.11, 0.14, C.Z1 + 0.35);
@@ -893,8 +904,9 @@ function buildKitchen(kit: BuildingKit, physics: Physics | undefined): void {
   }
   // charred scraps of newspaper by the stove door
   for (let i = 0; i < 4; i++) {
-    const x = st.x - 0.3 + rng.range(-0.15, 0.2), z = st.z - 0.42 - rng.range(0, 0.18), r = rng.range(0.025, 0.05), a = rng.float() * 6;
-    mb.quad('black_soot', [x - r, G0 + 0.003, z], [x, G0 + 0.003, z - r * Math.cos(a)], [x + r, G0 + 0.003, z], [x, G0 + 0.003, z + r], [0, 1, 0]);
+    // the fire door is on the stove's local −x = world +x side (stove faces north)
+    const x = st.x + 0.3 + rng.range(-0.2, 0.15), z = st.z - 0.42 - rng.range(0, 0.18), r = rng.range(0.025, 0.05);
+    quadN(mb, 'black_soot', [x - r, G0 + 0.003, z], [x, G0 + 0.003, z - r * rng.range(0.6, 1.2)], [x + r, G0 + 0.003, z], [x, G0 + 0.003, z + r], [0, 1, 0]);
   }
   physics?.addBox({ cx: wb.x, cy: G0 + 0.29, cz: wb.z, hx: wb.w / 2, hy: 0.29, hz: wb.d / 2, surface: 'wood' });
 
@@ -934,12 +946,6 @@ function buildKitchen(kit: BuildingKit, physics: Physics | undefined): void {
   mb.pop();
   // calendar nail
   mb.box('ct_iron', S.calendar.x, S.calendar.y + 0.16, S.calendar.z + 0.008, 0.006, 0.006, 0.016);
-
-  // ---- bucket bench by the back door: enamel water jug and basin on a low shelf
-  // (props supply the bucket; here only a wall rack with a ladle)
-  mb.box('furniture_wood', 31.6, 1.95, IZ0 + 0.1, 0.5, 0.025, 0.2, { uv: 'local' });
-  mb.box('furniture_wood', 31.4, 1.88, IZ0 + 0.03, 0.025, 0.12, 0.05);
-  mb.box('furniture_wood', 31.8, 1.88, IZ0 + 0.03, 0.025, 0.12, 0.05);
 }
 
 /** Café curtain on a brass rod in a ground-floor window (opening centre along `axis`). */
@@ -1316,7 +1322,7 @@ function buildGateAndWalls(gm: MeshBuilder, physics: Physics | undefined, height
       const h = Math.min(0.46, pillarTop - y);
       const jx = rng.range(-0.008, 0.008), jz = rng.range(-0.008, 0.008);
       gm.box(granite, px + jx, y + h / 2, jz, 0.6, h - 0.014, 0.6, { uvOffset: [k * 0.37, k * 0.71] });
-      gm.box('ct_cellar_wash', px, y + h - 0.007, 0, 0.57, 0.016, 0.57, { skip: ['py', 'ny'] });
+      gm.box('concrete', px, y + h - 0.007, 0, 0.57, 0.016, 0.57, { skip: ['py', 'ny'] });
       y += h; k++;
     }
     gm.box(granite, px, pillarTop + 0.05, 0, 0.74, 0.1, 0.74);
@@ -1360,39 +1366,42 @@ function buildGateAndWalls(gm: MeshBuilder, physics: Physics | undefined, height
         // dog bars in the bottom band
         if (ax + 0.0625 < 1.95) gm.box(iron, s * (ax + 0.0625), yb + 0.47, 0, 0.014, 0.78, 0.014);
       }
-      // C-scrolls in the arch band
-      for (const cx of [0.55, 1.05, 1.5]) {
-        const x0 = s * cx, ybase = yb + 1.5;
-        const span = arch(x0) - 0.06;
-        const r0 = Math.min(0.11, (span - 1.48) * 0.5 + 0.05);
+      // pairs of C-scrolls (spirals curling outwards) in the band under the arch
+      for (const cx of [0.6, 1.1, 1.55]) {
+        const x0 = s * cx, yc = yb + 1.48 + Math.min(0.12, (arch(x0) - 1.48) * 0.5 + 0.04);
+        const r0 = Math.min(0.1, (arch(x0) - 1.48) * 0.42 + 0.03);
         for (const m of [-1, 1]) {
           const pts: THREE.Vector3[] = [];
-          for (let k = 0; k <= 14; k++) {
-            const a = (k / 14) * Math.PI * 1.6;
-            const rr = r0 * (1 - k / 22);
-            pts.push(V(x0 + m * (rr - Math.cos(a) * rr) * 0.9, ybase + 0.02 + rr + Math.sin(a) * rr * m * -1 * -1, 0));
+          for (let k = 0; k <= 16; k++) {
+            const a = (k / 16) * Math.PI * 1.7;
+            const rr = r0 * (1 - k / 26);
+            // start at the bottom (touching the rail), curl up and outwards
+            pts.push(V(x0 + m * Math.sin(a) * rr, yc - Math.cos(a) * rr, 0));
           }
           gm.tube(iron, pts, pts.map(() => 0.007), 5);
         }
       }
-      // rust streaks: slightly sagging leaf → a few bars bent
     });
   }
   // chain round both latch stiles and the padlock
   const ych = yb + 1.0;
+  const LOOP = 11;
   const links: THREE.Vector3[] = [];
-  for (let k = 0; k < 11; k++) {
-    const a = (k / 11) * Math.PI * 2;
+  for (let k = 0; k < LOOP; k++) {
+    // loop round both latch stiles (they sit at x = ±0.03, 0.05 wide)
+    const a = (k / LOOP) * Math.PI * 2;
     links.push(V(Math.cos(a) * 0.1, ych + Math.sin(a * 2) * 0.01, Math.sin(a) * 0.055));
   }
-  for (let k = 1; k <= 4; k++) links.push(V(0.02 * k, ych - k * 0.045, 0.06 + k * 0.004));
+  // tail hanging down on the outer (road) side to the padlock
+  for (let k = 1; k <= 4; k++) links.push(V(0.012 * k, ych - 0.012 - k * 0.042, 0.062 + k * 0.003));
   links.forEach((p, i) => {
-    const q = links[(i + 1) % links.length], prev = links[(i - 1 + links.length) % links.length];
-    const t = new THREE.Vector3().subVectors(i < 11 ? q : p.clone().sub(prev).add(p), i < 11 ? p : p).normalize();
-    if (t.lengthSq() < 1e-6) t.set(1, 0, 0);
+    const next = i < LOOP ? links[(i + 1) % LOOP] : i + 1 < links.length ? links[i + 1] : p.clone().add(V(0.012, -0.042, 0.003));
+    const t = new THREE.Vector3().subVectors(next, p);
+    if (t.lengthSq() < 1e-8) t.set(1, 0, 0);
+    t.normalize();
     const up = Math.abs(t.y) > 0.9 ? V(1, 0, 0) : V(0, 1, 0);
     const n = new THREE.Vector3().crossVectors(up, t).normalize();
-    if (i % 2) n.cross(t).normalize();
+    if (i % 2) n.cross(t).normalize();                       // every other link turned 90°
     const b = new THREE.Vector3().crossVectors(t, n).normalize();
     gm.push(new THREE.Matrix4().makeBasis(t, n, b).setPosition(p));
     gm.box(iron, 0, 0.011, 0, 0.05, 0.007, 0.007);
@@ -1491,7 +1500,7 @@ function buildGateAndWalls(gm: MeshBuilder, physics: Physics | undefined, height
 /** Height profile of the boundary wall (distance d from the pillar), 0 = gone. */
 function wallHeight(s: 1 | -1, d: number): number {
   const full = 0.85;
-  if (s > 0 && d > 3.9 && d < 5.3) return 0.1;                          // collapsed breach (the way in)
+  if (s > 0 && d > 3.9 && d < 5.9) return 0.1;                          // collapsed breach (the way in)
   const fadeStart = s > 0 ? 7.5 : 8.2, fadeEnd = s > 0 ? 12.4 : 12.9;
   if (d <= fadeStart) return full;
   const t = Math.min(1, (d - fadeStart) / (fadeEnd - fadeStart));
@@ -1550,28 +1559,31 @@ function buildMailbox(gm: MeshBuilder, kit: BuildingKit, heightAt: (x: number, z
   gm.pushTRS(0, y0 + 0.012, MB_D / 2, 0, 1, 1, 1, 1.75, 0);
   gm.box(rm, 0, (MB_H - 0.09) / 2, 0.004, MB_W - 0.006, MB_H - 0.09, t);
   gm.pop();
-  // name plates: carved LINDNER board (old) and the Dymo tape HRUBÝ under it
-  gm.box('furniture_oak', -MB_W / 2 - 0.003, y0 + 0.26, 0.0, 0.006, 0.05, 0.2);
-  gm.box('rubber_black', -MB_W / 2 - 0.004, y0 + 0.2, 0.0, 0.004, 0.018, 0.11);
+  // name plates on the side that faces people coming up the road: carved LINDNER board (old)
+  // and the Dymo tape HRUBÝ under it
+  gm.box('furniture_oak', MB_W / 2 + 0.003, y0 + 0.26, 0.0, 0.006, 0.05, 0.2);
+  gm.box('rubber_black', MB_W / 2 + 0.002, y0 + 0.2, 0.0, 0.004, 0.018, 0.11);
   gm.pop();
   const pose = mailboxNotePose(heightAt);
   kit.anchor('road_mailbox', pose.x, pose.y, pose.z, pose.rot);
-  kit.anchor('gate_sign', ...(() => { const [x, z] = frameToWorld(F, 2.35, 0.32); return [x, heightAt(x, z) + 1.45, z] as [number, number, number]; })(), F.yaw);
+  const [gx, gz] = frameToWorld(F, 2.35, 0.32);
+  const [px, pz] = frameToWorld(F, 2.35, 0);
+  kit.anchor('gate_sign', gx, heightAt(px, pz) + 1.45, gz, F.yaw);
 
-  // label textures (browser only): faces point along the box's local −x (side facing the gate)
-  const sideYaw = yaw - Math.PI / 2;
+  // label textures (browser only): plates face the box's local +x (down the road)
+  const sideYaw = yaw + Math.PI / 2;
   const P0 = (lx: number, ly: number, lz: number): [number, number, number] => {
     const c = Math.cos(yaw), s = Math.sin(yaw);
     return [wx + lx * c + lz * s, g + ly, wz - lx * s + lz * c];
   };
-  const [ax, ay, az] = P0(-MB_W / 2 - 0.0065, y0 + 0.26, 0);
+  const [ax, ay, az] = P0(MB_W / 2 + 0.0065, y0 + 0.26, 0);
   placeDecal(group, canvasMesh(0.2, 0.05, 1400, (c, W, H) => {
     c.fillStyle = '#6a4e32'; c.fillRect(0, 0, W, H);
     c.fillStyle = 'rgba(30,18,8,0.85)'; c.textAlign = 'center'; c.font = `bold ${Math.round(H * 0.62)}px Georgia, serif`;
     c.fillText('LINDNER', W / 2, H * 0.74);
     c.fillStyle = 'rgba(200,170,120,0.25)'; c.fillText('LINDNER', W / 2 + 1, H * 0.74 + 1);
   }, { exterior: true, rough: 0.8 }), ax, ay, az, sideYaw);
-  const [bx, by, bz] = P0(-MB_W / 2 - 0.0065, y0 + 0.2, 0);
+  const [bx, by, bz] = P0(MB_W / 2 + 0.0045, y0 + 0.2, 0);
   placeDecal(group, canvasMesh(0.11, 0.018, 2400, (c, W, H) => {
     c.fillStyle = '#121212'; c.fillRect(0, 0, W, H);
     c.fillStyle = '#e8e8e8'; c.textAlign = 'center'; c.font = `bold ${Math.round(H * 0.72)}px "Arial Narrow", Arial, sans-serif`;
@@ -1704,17 +1716,20 @@ function buildWoodshed(sm: MeshBuilder, kit: BuildingKit, physics: Physics | und
   for (const dz of [-0.3, 0.3]) for (const s of [-1, 1]) {
     sm.beam(wood, V(sx + s * 0.32, gs - 0.05, sz + dz), V(sx - s * 0.12, gs + 0.95, sz + dz), 0.06, 0.06, V(0, 0, 1));
   }
-  sm.box(wood, sx + 0.1, gs + 0.36, sz, 0.05, 0.05, 0.7, { uv: 'local' });
-  sm.withColor([0.85, 0.82, 0.78], () => sm.pushTRS(sx + 0.1, gs + 0.86, sz, Math.PI / 2, 1, 1, 1, 0, 0));
-  sm.cylinder('ct_bark_ext', 0, 0, 0, 0.0, 0.0, 0.0, 3, 'none');
-  sm.pop();
-  sm.pushTRS(sx + 0.1, gs + 0.85, sz, 0, 1, 1, 1, 0, Math.PI / 2);
-  sm.cylinder('ct_bark_ext', 0, -0.7, 0, 0.11, 0.11, 1.4, 10, 'both', 'ct_firewood_end_ext');
-  sm.pop();
-  frameBox(physics, F, sx, gs + 0.45, sz, 0.4, 0.45, 0.38, 0, 'wood');
+  // the legs cross at ~0.68 m; braces tie the two X frames together
+  for (const bx of [sx - 0.14, sx + 0.14]) sm.box(wood, bx, gs + 0.36, sz, 0.05, 0.05, 0.66, { uv: 'local' });
+  // a spruce pole lying in the fork, half sawn through
+  sm.withColor([0.85, 0.82, 0.78], () => {
+    sm.pushTRS(sx, gs + 0.84, sz, 0, 1, 1, 1, Math.PI / 2, 0);
+    sm.cylinder('ct_bark_ext', 0, -0.75, 0, 0.11, 0.1, 1.5, 10, 'both', 'ct_firewood_end_ext');
+    sm.pop();
+  });
+  sm.box('ct_soot_ext', sx, gs + 0.92, sz + 0.42, 0.24, 0.05, 0.004);
+  frameBox(physics, F, sx, gs + 0.47, sz, 0.36, 0.47, 0.75, 0, 'wood');
   sm.pop();
 
-  kit.anchor('woodshed_block', ...frameToWorld(F, cb.lx, cb.lz).flatMap((v, i) => (i === 0 ? [v, gb - 0.05 + cb.h] : [v])) as [number, number, number], F.yaw);
+  const [bx, bz] = frameToWorld(F, cb.lx, cb.lz);
+  kit.anchor('woodshed_block', bx, gb - 0.05 + cb.h, bz, F.yaw);
 
   // interior span under the roof (rotated rectangle → strips on the 0.25 m interior grid)
   const corners = [[-W2, zB - 0.1], [W2, zB - 0.1], [W2, 0.5], [-W2, 0.5]].map(([lx, lz]) => frameToWorld(F, lx, lz));
