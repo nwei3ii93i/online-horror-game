@@ -9,6 +9,7 @@ import type { Interaction, InteractionContext } from './Interaction';
 import type { WorldBridge } from './WorldBridge';
 import { EventBus } from '../core/Events';
 import { markIndoor } from '../render/PostFX';
+import { buildShadowProxies } from '../render/ShadowProxy';
 
 export interface DoorEvents extends Record<string, unknown> {
   creak: { id: string; position: THREE.Vector3; speed: number; kind: string };
@@ -30,6 +31,8 @@ interface Door {
   creaked: boolean;
   /** Casts shadows (only near the viewer). */
   cast: boolean;
+  /** Depth-only stand-in of the leaf, plus parts that can't be merged (glass etc.). */
+  shadow: { proxies: THREE.Mesh[]; rest: THREE.Mesh[] };
 }
 
 const _q = new THREE.Quaternion();
@@ -70,6 +73,8 @@ export class Doors {
     pivot.add(leaf);
     leaf.traverse((o) => { o.matrixAutoUpdate = false; (o as THREE.Mesh).updateMatrix?.(); });
     this.group.add(pivot);
+    // one shadow draw per leaf instead of one per material (wood, panels, brass, iron…)
+    const shadow = buildShadowProxies(leaf, spec.id);
 
     const R = this.physics.R;
     const w = spec.leaf.width, h = spec.leaf.height, t = spec.leaf.thickness ?? 0.045;
@@ -80,7 +85,7 @@ export class Doors {
     );
     this.physics.surfaces.set(col.handle, spec.sound === 'metal' ? 'metal' : 'wood');
     const initial = spec.open ?? 0;
-    const door: Door = { spec, pivot, body, collider: col, angle: initial, target: initial, vel: 0, locked: !!spec.locked, blockedTime: 0, creaked: false, cast: true };
+    const door: Door = { spec, pivot, body, collider: col, angle: initial, target: initial, vel: 0, locked: !!spec.locked, blockedTime: 0, creaked: false, cast: true, shadow };
     this.apply(door);
     this.doors.set(spec.id, door);
     this.byCollider.set(col.handle, door);
@@ -212,7 +217,8 @@ export class Doors {
       const cast = d2 < (ext ? 35 * 35 : 14 * 14);
       if (cast !== d.cast) {
         d.cast = cast;
-        d.pivot.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.castShadow = cast; });
+        for (const m of d.shadow.proxies) m.visible = cast;
+        for (const m of d.shadow.rest) m.castShadow = cast;
         changed = true;
         onChange?.(d.spec.hinge);
       }

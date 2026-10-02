@@ -21,15 +21,17 @@ export const LAYER_SHADOW_PROXY = 12;
 
 /** Furniture, inner doors and dressing inside buildings: torch and lamps see them, the moon doesn't. */
 export const LAYER_INDOOR = 13;
+/** Shadow stand-ins of indoor casters (inner doors). */
+export const LAYER_SHADOW_PROXY_INDOOR = 14;
 
 /** Layer mask for a shadow camera: buildings via their proxies, vegetation / indoor casters optional. */
 export function shadowCameraLayers(layers: { mask: number }, o: { vegetation: boolean; indoor: boolean }): void {
-  layers.mask = 1 | (1 << LAYER_SHADOW_PROXY) | (1 << LAYER_OWN_MASK) | (o.vegetation ? 1 << LAYER_VEGETATION : 0) | (o.indoor ? 1 << LAYER_INDOOR : 0);
+  layers.mask = 1 | (1 << LAYER_SHADOW_PROXY) | (1 << LAYER_OWN_MASK) | (o.vegetation ? 1 << LAYER_VEGETATION : 0) | (o.indoor ? (1 << LAYER_INDOOR) | (1 << LAYER_SHADOW_PROXY_INDOOR) : 0);
 }
 
-/** Move every mesh under obj onto the indoor layer. */
+/** Move every mesh under obj onto the indoor layer (shadow stand-ins onto the indoor proxy layer). */
 export function markIndoor(obj: { traverse(cb: (o: any) => void): void }): void {
-  obj.traverse((o) => { if (o.isMesh) o.layers.set(LAYER_INDOOR); });
+  obj.traverse((o) => { if (o.isMesh) o.layers.set(o.userData.shadowProxy ? LAYER_SHADOW_PROXY_INDOOR : LAYER_INDOOR); });
 }
 
 export interface PostFXOptions {
