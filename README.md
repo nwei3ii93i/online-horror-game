@@ -58,6 +58,7 @@ the folder the game falls back to its procedural materials.
 | `?vol=0&ao=0&taa=0&bloom=0` | toggle individual post effects |
 | `?exposure=1.4` | override exposure |
 | `?nophoto` / `?noprops` | procedural materials only / no furniture (comparison, debugging) |
+| `?dynres=1` | dynamic resolution (drops render scale to hold 60 fps; off by default) |
 
 You start next to the group's van on the service road below the estate. Example:
 `http://localhost:5173/?quality=medium&cam=4,1.7,4,8,3` starts in the courtyard looking at
