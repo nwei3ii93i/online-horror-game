@@ -310,18 +310,24 @@ function roofPlane(mb: MeshBuilder, physics: Physics | undefined, pts: number[][
     const a = pts[0], b = pts[1];
     quadToward(mb, fascia, [a[0], a[1] - vThick - 0.04, a[2]], [b[0], b[1] - vThick - 0.04, b[2]], [b[0], b[1] + 0.02, b[2]], [a[0], a[1] + 0.02, a[2]], [dx, 0, dz]);
   }
-  if (physics) {
-    const ex = [ux, 0, uz], ey = n, ez = cross(ex, ey);
-    let s0 = Infinity, s1 = -Infinity, t0 = Infinity, t1 = -Infinity;
-    for (const p of pts) {
-      const d = sub(p, pts[0]);
-      const s = dot(d, ex), t = dot(d, ez);
-      s0 = Math.min(s0, s); s1 = Math.max(s1, s); t0 = Math.min(t0, t); t1 = Math.max(t1, t);
-    }
-    const c = [0, 1, 2].map((k) => pts[0][k] + ex[k] * (s0 + s1) / 2 + ez[k] * (t0 + t1) / 2 - ey[k] * vThick / 2);
-    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(V3(ex[0], ex[1], ex[2]), V3(ey[0], ey[1], ey[2]), V3(ez[0], ez[1], ez[2])));
-    physics.addBox({ cx: c[0], cy: c[1], cz: c[2], hx: (s1 - s0) / 2, hy: vThick / 2, hz: (t1 - t0) / 2, q: { x: q.x, y: q.y, z: q.z, w: q.w }, surface: 'tile' });
+  roofCollider(physics, pts, down, pitch, th, 'tile');
+}
+
+/** Oriented box covering a (planar) roof polygon, hanging `th` below its top surface. */
+function roofCollider(physics: Physics | undefined, pts: number[][], down: P2, pitch: number, th: number, surface: string): void {
+  if (!physics) return;
+  const cp = Math.cos(pitch), sp = Math.sin(pitch), vThick = th / cp;
+  const [dx, dz] = down;
+  const ex = [-dz, 0, dx], ey = [dx * sp, cp, dz * sp], ez = cross(ex, ey);
+  let s0 = Infinity, s1 = -Infinity, t0 = Infinity, t1 = -Infinity;
+  for (const p of pts) {
+    const d = sub(p, pts[0]);
+    const s = dot(d, ex), t = dot(d, ez);
+    s0 = Math.min(s0, s); s1 = Math.max(s1, s); t0 = Math.min(t0, t); t1 = Math.max(t1, t);
   }
+  const c = [0, 1, 2].map((k) => pts[0][k] + (ex[k] * (s0 + s1)) / 2 + (ez[k] * (t0 + t1)) / 2 - (ey[k] * vThick) / 2);
+  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(V3(ex[0], ex[1], ex[2]), V3(ey[0], ey[1], ey[2]), V3(ez[0], ez[1], ez[2])));
+  physics.addBox({ cx: c[0], cy: c[1], cz: c[2], hx: Math.max(0.01, (s1 - s0) / 2), hy: Math.max(0.01, vThick / 2), hz: Math.max(0.01, (t1 - t0) / 2), q: { x: q.x, y: q.y, z: q.z, w: q.w }, surface });
 }
 
 /** Half-round ridge / hip tiles along a line. */
@@ -777,12 +783,9 @@ export function buildGreenhouse(physics: Physics | undefined, materials: Materia
           const hingeA = P(x0, t1, off), hingeB = P(x1, t1, off);
           const down = sub(P(x0, t0, off), hingeA);
           const len = Math.hypot(down[0], down[1], down[2]);
-          const d0 = down.map((v) => v / len);
-          // rotate the down-slope direction upward about the x axis by ang
+          // swing the down-slope direction out of the roof plane (towards its normal) by ang
           const ca = Math.cos(ang), sa = Math.sin(ang);
-          const dRot = [0, d0[1] * ca + d0[2] * sa * side * -1 * -1, d0[2] * ca - d0[1] * sa];
-          const nl = Math.hypot(dRot[1], dRot[2]);
-          const dv = [0, dRot[1] / nl, dRot[2] / nl];
+          const dv = [0, 1, 2].map((k) => (down[k] / len) * ca + n[k] * sa);
           const c0 = [hingeA[0], hingeA[1] + dv[1] * len, hingeA[2] + dv[2] * len];
           const c1 = [hingeB[0], hingeB[1] + dv[1] * len, hingeB[2] + dv[2] * len];
           pane('glass', c0, c1, hingeB, hingeA, n, 0.15);
@@ -803,7 +806,7 @@ export function buildGreenhouse(physics: Physics | undefined, materials: Materia
       const a = P(GH_BED.x0 - 0.3, t, 0.06), b = P(xb, t, 0.06);
       mb.beam('rough_timber_ext', V3(a[0], a[1], a[2]), V3(b[0], b[1], b[2]), 0.04, 0.02);
     }
-    roofPlane(mb, physics, [[xa - 0.05, EH, zw], [xb + 0.05, EH, zw], [xb + 0.05, RH, zc], [xa - 0.05, RH, zc]].map((q) => [q[0], q[1] + 0.03, q[2]]), [0, side], pitch, 0.02, 'glass', null, null);
+    roofCollider(physics, [[xa - 0.05, EH + 0.04, zw], [xb + 0.05, EH + 0.04, zw], [xb + 0.05, RH + 0.04, zc], [xa - 0.05, RH + 0.04, zc]], [0, side], pitch, 0.06, 'glass');
     gutter(mb, 'rust_metal', V3(GH.x0 - 0.05, EH - 0.03, zw + side * 0.1), V3(GH.x1 + 0.05, EH - 0.03, zw + side * 0.1));
   }
   // steel trusses
@@ -899,14 +902,14 @@ export function buildGreenhouse(physics: Physics | undefined, materials: Materia
     // lettuce row
     for (let i = 0; i < 4; i++) lettuce(mb, rng, B.x0 + 0.3 + i * 0.36, soil, B.z1 - 0.95);
     // seedlings in the trays
-    for (const t of GREENHOUSE_TRAYS) seedlings(mb, rng, t.x, F + t.y + 0.05, t.z, 0.18);
+    for (const t of GREENHOUSE_TRAYS) seedlings(mb, rng, t.x, F + t.y + 0.05, t.z, 0.085, 14);
   }
 
   // ---------------------------------------------------------------- what died in the pots
   for (const pot of GREENHOUSE_POTS) {
     const y = F + pot.y + 0.19;
     if (pot.state === 'dead') deadPlant(mb, rng, pot.x, y, pot.z);
-    else if (pot.state === 'sprout') seedlings(mb, rng, pot.x, y, pot.z, 0.09);
+    else if (pot.state === 'sprout') seedlings(mb, rng, pot.x, y, pot.z, 0.08, 6);
   }
   // dead vines up the south glazing, tied with string to the bars
   for (const x of [22.4, 25.4, 28.3]) {
@@ -934,14 +937,12 @@ export function buildGreenhouse(physics: Physics | undefined, materials: Materia
   }
 
   kit.span({ x0: IX0, z0: IZ0, x1: IX1, z1: IZ1, floorY: F, ceil: (x, z) => roofY(z) - 0.03 });
-  void x0Unused;
   const group = mb.build(materials, { name: 'greenhouse' });
   // translucent whitewash / plastic must not block the sun
   group.traverse((o) => { if ((o as THREE.Mesh).isMesh && /gh_whitewash|gh_plastic/.test(o.name)) o.castShadow = false; });
   levelsChanged();
   return kit.output(group);
 }
-const x0Unused = 0;
 
 /** Tomato plant on a stake: zig-zag stem, compound leaves, trusses of fruit. */
 function tomato(mb: MeshBuilder, rng: RNG, x: number, y: number, z: number): void {
@@ -984,10 +985,9 @@ function lettuce(mb: MeshBuilder, rng: RNG, x: number, y: number, z: number): vo
   }
 }
 
-function seedlings(mb: MeshBuilder, rng: RNG, x: number, y: number, z: number, r: number): void {
-  const n = r > 0.12 ? 12 : 5;
+function seedlings(mb: MeshBuilder, rng: RNG, x: number, y: number, z: number, r: number, n: number): void {
   for (let i = 0; i < n; i++) {
-    const sx = x + rng.range(-r * 0.8, r * 0.8), sz = z + rng.range(-r * 0.8, r * 0.8), h = rng.range(0.03, 0.06);
+    const sx = x + rng.range(-r, r), sz = z + rng.range(-r, r), h = rng.range(0.03, 0.06);
     mb.box('gh_stem', sx, y + h / 2, sz, 0.004, h, 0.004);
     const a = rng.float() * PI;
     const dx = Math.cos(a) * 0.016, dz = Math.sin(a) * 0.016;
@@ -1044,19 +1044,19 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
 
   // ---------------------------------------------------------------- vault profiles
   const SPRING = F + 3.25, CROWN = F + 4.15;
-  const seg = (half: number, rise: number, spring: number) => {
+  const segArc = (half: number, rise: number, spring: number) => {
     const R = (half * half + rise * rise) / (2 * rise);
     return (d: number) => spring + Math.sqrt(Math.max(0, R * R - Math.min(d, half) ** 2)) - (R - rise);
   };
-  const naveV = seg(ri, CROWN - SPRING, SPRING);
+  const naveV = segArc(ri, CROWN - SPRING, SPRING);
   const vaultAt = (x: number, z: number) => naveV(z >= CZ ? Math.abs(x - CX) : Math.hypot(x - CX, z - CZ));
-  const PX = 52.3 - CH.x0 + X0, PT = 0.25;            // crypt partition (stair compartment to the east)
+  const PX = X0 + 4.3, PT = 0.25;                      // crypt partition (stair compartment to the east)
   const cryptHalf = (PX - PT / 2 - IX0) / 2, cryptMid = (PX - PT / 2 + IX0) / 2;
   const CSPRING = CF + 1.6, CCROWN = F - 0.35;
-  const cryptV = seg(cryptHalf, CCROWN - CSPRING, CSPRING);
+  const cryptV = segArc(cryptHalf, CCROWN - CSPRING, CSPRING);
 
   // ---------------------------------------------------------------- rooms
-  const SZ0 = -108.4 - Z1 + Z1, SZ1 = -105.4;          // stair: bottom (north) .. top (south)
+  const SZ0 = Z1 - 4.4, SZ1 = Z1 - 1.4;                // crypt stair: bottom (north) .. top (south)
   const stairVoid = { x0: PX + PT / 2, z0: SZ0, x1: IX1, z1: SZ1 };
   const intFace = { mat: 'sacred_whitewash_int', dado: { mat: 'sacred_dado_int', h: F + 1.1 - (F - 0.3) } };
   kit.room({ id: 'chapel_nave', location: 'chapel', x0: IX0, z0: IZA, x1: IX1, z1: IZ1, y0: F, y1: CROWN, floor: 'sacred_floor', ceiling: null, voids: [stairVoid], wall: intFace, skirting: null, env: 'hall', floorSurface: 'stone', slab: 0.3 });
@@ -1080,7 +1080,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
   const lenD = Math.hypot(pNE[0] - pE1[0], pNE[1] - pE1[1]);
   const winApse = (seed: number) => ({ o: { at: lenD / 2, width: 0.5, bottom: F + 2.0 - yU0, top: F + 3.0 - yU0, kind: 'window' as const }, opts: { style: 'single' as const, exterior: 1 as const, broken: 0.15, sillIn: 'sacred_floor', sillOut: 'sacred_granite', frameMat: 'painted_wood_white_ext', muntins: false, seed } });
   const doorO: Opening = { at: CX - pSW[0], width: 1.1, bottom: F - yU0, top: F + 2.3 - yU0, kind: 'door' };
-  const WIN_Z = -107.3 - Z1 + Z1;
+  const WIN_Z = Z1 - 3.3;
   const fS = kit.wall({ ...upper, a: pSW, b: pSE, ext0: ht, ext1: ht, doors: [{ o: doorO, frame: 'rough_timber' }] });
   const fE = kit.wall({ ...upper, a: pSE, b: pE1, ext0: ht, ext1: em, windows: [winSide(pSE[1] - WIN_Z, 31)] });
   const fNE = kit.wall({ ...upper, a: pE1, b: pNE, ext0: em, ext1: em, windows: [winApse(32)] });
@@ -1098,7 +1098,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
   kit.wall({ ...lower, a: pW1, b: pSW, ext0: em, ext1: ht, left: 'stone_wall_int' });
   kit.wall({ a: [IX1, IZA - ht], b: [IX0, IZA - ht], y0: CF, y1: yU0, t: T, left: 'stone_wall_int', right: null, cap: 'stone_wall', noTop: true, skirting: false, surface: 'stone' });
   // partition between crypt and stair, with the crypt door
-  const cryptDoor: Opening = { at: IZ1 - (-109.4 - Z1 + Z1), width: 0.85, bottom: 0, top: 1.95, kind: 'door' };
+  const cryptDoor: Opening = { at: IZ1 - (Z1 - 5.4), width: 0.85, bottom: 0, top: 1.95, kind: 'door' };
   const fP = kit.wall({ a: [PX, IZ1], b: [PX, IZA], y0: CF, y1: yU0, t: PT, left: 'stone_wall_int', right: 'stone_wall_int', cap: 'stone_wall_int', noTop: true, skirting: false, surface: 'stone', doors: [{ o: cryptDoor, frame: 'rough_timber' }] });
 
   // ---------------------------------------------------------------- doors
@@ -1160,7 +1160,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
       mb.withColor([0.85 + rng.float() * 0.15, 0.85 + rng.float() * 0.15, 0.85 + rng.float() * 0.15], () => {
         mb.box('sacred_crypt_floor', sx, y - 0.03, z + 0.01, sw, 0.06, run + 0.03, { uvOffset: [i * 0.37, i * 0.21] });
       });
-      mb.box('stone_wall_int', sx, (CF + y - 0.06) / 2, z, sw - 0.01, y - 0.06 - CF, run, { skip: ['py', 'nz'] });
+      mb.box('stone_wall_int', sx, (CF + y - 0.06) / 2, z, sw - 0.01, y - 0.06 - CF, run, { skip: ['py', 'pz'] });
     }
     const len = SZ1 - SZ0, ang = Math.atan2(F - CF, len);
     const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(ang, PI, 0, 'YXZ'));
@@ -1201,7 +1201,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
         mb.box('sacred_crypt_plate', NX + 0.005, yc, zc, 0.02, (y1 - y0) * 0.6, 0.05);
         mb.box('sacred_crypt_plate', NX + 0.005, yc + (y1 - y0) * 0.1, zc, 0.02, 0.05, 0.22);
         for (const dz of [-0.85, 0.85]) for (const dy of [-0.18, 0.18]) {
-          mb.pushTRS(NX + 0.002, yc + dy * (y1 - y0) / 0.5 * 0.5, zc + dz, 0, 1, 1, 1, 0, PI / 2);
+          mb.pushTRS(NX + 0.002, yc + dy * (y1 - y0), zc + dz, 0, 1, 1, 1, 0, -PI / 2);
           mb.cylinder('rust_metal', 0, 0, 0, 0.02, 0.016, 0.012, 8);
           mb.pop();
         }
@@ -1235,7 +1235,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
 
   // ---------------------------------------------------------------- nave furnishing
   // altar step (predella)
-  const STEP = 0.16, stepZ = -109.6 - Z1 + Z1;
+  const STEP = 0.16, stepZ = Z1 - 5.6;
   mb.box('furniture_oak', CX, F + STEP / 2, (IZN + stepZ) / 2, 3.1, STEP, stepZ - IZN, { skip: ['ny'], uv: 'local', uvRotate: true });
   physics?.addBox({ cx: CX, cy: F + STEP / 2, cz: (IZN + stepZ) / 2, hx: 1.55, hy: STEP / 2, hz: (stepZ - IZN) / 2, surface: 'wood' });
   {
@@ -1270,7 +1270,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
     crucifix(mb, CX, F + 1.22, rz + 0.06, 1.05, 0, 'furniture_wood');
   }
   // two pews on the west side of the aisle
-  for (const zs of [-106.3 - Z1 + Z1, -107.45 - Z1 + Z1]) pew(mb, physics, IX0 + 0.06, CX - 0.6, F, zs);
+  for (const zs of [Z1 - 2.3, Z1 - 3.45]) pew(mb, physics, IX0 + 0.06, CX - 0.6, F, zs);
   // offering box on the south wall, west of the door
   {
     const x = CX - 1.4, y = F + 1.1, z = IZ1 - 0.12;
@@ -1288,7 +1288,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
   mb.pop();
   // votive picture on the east wall, a card tucked into its frame
   {
-    const x = IX1, y = F + 1.75, z = -109.25 - Z1 + Z1, w = 0.5, h = 0.68;
+    const x = IX1, y = F + 1.75, z = Z1 - 5.25, w = 0.5, h = 0.68;
     mb.box('furniture_wood', x - 0.02, y, z, 0.04, h + 0.1, w + 0.1);
     mb.box('sacred_gold', x - 0.045, y, z, 0.012, h + 0.02, w + 0.02);
     const right = V3(0, 0, 1), up = V3(0, 1, 0);
@@ -1303,13 +1303,15 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
       [CX - 0.62, yS, stepZ - 0.1, true, false], [CX - 0.4, yS, stepZ - 0.08, false, true], [CX + 0.38, yS, stepZ - 0.12, true, false], [CX + 0.6, yS, stepZ - 0.07, false, false],
       [CX - 0.22, F, stepZ + 0.25, false, true], [CX + 0.05, F, stepZ + 0.3, true, true], [CX + 0.27, F, stepZ + 0.22, false, false],
     ];
-    stubs.forEach(([x, y, z, red, lit], i) => graveLight(mb, x, y, z, { red, lit, wax: lit ? 0.025 + (i % 3) * 0.008 : 0.006, soot: !lit || i % 2 === 0 }));
+    const waxOf = (i: number, lit: boolean) => (lit ? 0.025 + (i % 3) * 0.008 : 0.006);
+    stubs.forEach(([x, y, z, red, lit], i) => graveLight(mb, x, y, z, { red, lit, wax: waxOf(i, lit), soot: !lit || i % 2 === 0 }));
     for (let i = 0; i < 14; i++) {
       const onStep = i < 8;
       const x = CX + rng.range(-0.8, 0.8), z = onStep ? stepZ - rng.range(0.03, 0.25) : stepZ + rng.range(0.1, 0.5);
       mb.cylinder('candle', x, (onStep ? yS : F) + 0.0005, z, rng.range(0.012, 0.035), rng.range(0.01, 0.03), 0.004, 8, 'top');
     }
-    kit.light({ id: 'light:chapel_candle', position: V3(CX + 0.05, F + 0.004 + 0.025 + 0.008 + 0.03, stepZ + 0.3), kind: 'candle', working: true, flicker: 0.6, intensity: 1, color: 0xffa040, room: 'chapel_nave' });
+    const [lx, ly, lz] = stubs[5];
+    kit.light({ id: 'light:chapel_candle', position: V3(lx, ly + 0.004 + waxOf(5, true) + 0.03, lz), kind: 'candle', working: true, flicker: 0.6, intensity: 1, color: 0xffa040, room: 'chapel_nave' });
   }
 
   // ---------------------------------------------------------------- exterior
@@ -1404,7 +1406,8 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
   // gutters round the eaves
   {
     const gy = eY - th / Math.cos(pitch) - 0.02, go = 0.09;
-    const ring: number[][] = [[CX - rho - go, gy, Zs], [cWN[0] - go, gy, cWN[2] + go * t22], [cNW[0] - go * t22, gy, cNW[2] - go], [cNE[0] + go * t22, gy, cNE[2] - go], [cEN[0] + go, gy, cEN[2] + go * t22], [CX + rho + go, gy, Zs]];
+    const k = (rho + go) / rho, off = (c: number[]) => [CX + (c[0] - CX) * k, gy, CZ + (c[2] - CZ) * k];
+    const ring: number[][] = [[CX - rho - go, gy, Zs], off(cWN), off(cNW), off(cNE), off(cEN), [CX + rho + go, gy, Zs]];
     for (let i = 0; i < ring.length - 1; i++) gutter(mb, 'rust_metal', V3(ring[i][0], ring[i][1], ring[i][2]), V3(ring[i + 1][0], ring[i + 1][1], ring[i + 1][2]));
     for (const s of [-1, 1]) {
       const x = CX + s * (rho + go), z = Zs - 0.1;
@@ -1460,7 +1463,7 @@ export function buildChapel(physics: Physics | undefined, materials: MaterialLib
   kit.span({ x0: IX0, z0: IZA, x1: IX1, z1: IZ1, floorY: CF, ceil: (x, z) => vaultAt(x, z) });
   kit.span({ x0: CX - 1.7, z0: IZN, x1: CX + 1.7, z1: IZA, floorY: F, ceil: (x, z) => vaultAt(x, z) });
   kit.anchor('chapel_altar', CX, F + STEP, stepZ, 0, 'chapel_nave');
-  kit.anchor('chapel_crypt_shrine', 50.6, CF, IZA + 0.3, 0, 'chapel_crypt');
+  kit.anchor('chapel_crypt_shrine', (IX0 + 0.75 + PX - PT / 2) / 2, CF, IZA + 0.3, 0, 'chapel_crypt');
 
   const group = mb.build(materials, { name: 'chapel' });
   const ins = decals.build();
@@ -1702,7 +1705,7 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
   pillar(wW, WICKET.z0 - 0.225, 0.45, 1.25);
   pillar(wW, WICKET.z1 + 0.225, 0.45, 1.25);
   const gw = (GATE.x1 - GATE.x0) / 2 - 0.02;
-  ironLeaf(mb, physics, GATE.x0 + 0.01, Math.min(gp0, gp1) + 0.06, wS, 1.75, gw, 1.18, 0);
+  ironLeaf(mb, physics, GATE.x0 + 0.01, Math.min(gp0, gp1) + 0.06, wS, 1.6, gw, 1.18, 0);
   ironLeaf(mb, physics, GATE.x1 - 0.01, Math.min(gp0, gp1) + 0.06, wS, PI - 0.35, gw, 1.18, 1);
   ironLeaf(mb, physics, wW, heightAt(wW + 0.3, WICKET.z0) + 0.05, WICKET.z0 + 0.02, -0.12, WICKET.z1 - WICKET.z0 - 0.04, 0.95, 2);
   // stepping stones from the gate to the chapel
@@ -1728,7 +1731,7 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
   const ctx: GraveCtx = { mb, physics, decals, h: heightAt, rng };
   // the Lindner family tomb against the north wall, Anna and Marie beside it
   const tombX = 57.85, rowN = C.z0 + wt + 0.35;
-  familyTomb(ctx, tombX, rowN + 0.05);
+  familyTomb(ctx, tombX, C.z0 + wt + 0.02);
   const env = ENV_TEXT.gravestones;
   const anna = env.find((g) => g.id === 'stone_anna')!;
   const marie = env.find((g) => g.id === 'cross_marie')!;
@@ -1741,7 +1744,7 @@ export function buildCemetery(physics: Physics | undefined, materials: MaterialL
   for (const x of [55.55, 57.05, 58.55, 59.95]) for (const z of rows) plots.push([x, z]);
   for (const x of [42.1, 43.6, 45.1]) for (const z of [-112.95, ...rows]) plots.push([x, z]);
   for (const x of [49.4, 50.9, 52.4, 53.9]) for (const z of [-101.4, -98.9]) plots.push([x, z]);
-  const keep = plots.filter(([x, z]) => !(x < 42.5 && (z === -112.95 || z === -110.4)) && !(x > 45 && x < 46 && z === -100.0));
+  const keep = plots.filter(([x, z]) => !(x < 42.5 && (z === -112.95 || z === -110.4)) && !(x > 45 && x < 46 && z === -100.0) && !(x > 56.5 && x < 59 && z === -110.4));
   rng.fork('plots').shuffle(keep);
   FILLER_GRAVES.forEach((g, i) => {
     const [x, z] = keep[i];
@@ -1843,7 +1846,8 @@ function smallStone(ctx: GraveCtx, x: number, z: number, ry: number, g: GraveDef
   let m: THREE.Matrix4;
   if (g.fallen) {
     // toppled forwards onto the grave, inscription down
-    m = new THREE.Matrix4().compose(V3(x, gr.max + st / 2 + bh - 0.02, z + 0.25), new THREE.Quaternion().setFromEuler(new THREE.Euler(PI / 2 - 0.04, ry + 0.2, 0.03, 'YXZ')), V3(1, 1, 1));
+    const lie = rectRange(ctx.h, x - sw / 2, z + 0.25, x + sw / 2, z + 0.25 + sh, 0.2);
+    m = new THREE.Matrix4().compose(V3(x, (lie.min + lie.max) / 2 + st / 2 - 0.015, z + 0.25), new THREE.Quaternion().setFromEuler(new THREE.Euler(PI / 2 - 0.04, ry + 0.2, 0.03, 'YXZ')), V3(1, 1, 1));
     mb.box(mat, x, base + 0.02, z, sw + 0.14, 0.16, st + 0.16, { skip: ['ny'] });                       // the base it fell from
   } else m = frameMatrix(x, base, z, ry, -lean, leanSide * (lean ? 0.5 : 0));
   mb.push(m);
@@ -1879,7 +1883,7 @@ function smallStone(ctx: GraveCtx, x: number, z: number, ry: number, g: GraveDef
   }
   mb.pop();
   // inscription
-  if (g.lines.length) {
+  if (g.lines.length && !g.fallen) {
     const ph = Math.min(rh * 0.82, g.lines.length * 0.085 + 0.05);
     const cy = y0 + rh - 0.04 - ph / 2;
     const dark = mat === 'sacred_granite_dark';
@@ -2049,10 +2053,10 @@ function familyTomb(ctx: GraveCtx, x: number, z: number): void {
   mb.box(G, 0, 2.4, 0.25, 0.12, 0.6, 0.1);                                      // cross on top
   mb.box(G, 0, 2.5, 0.25, 0.4, 0.11, 0.1);
   // grave lantern on the socle
-  mb.box('iron_black', -0.85, 0.4, 0.45, 0.14, 0.02, 0.14);
-  mb.cylinder('glass', -0.85, 0.41, 0.45, 0.06, 0.06, 0.14, 4, 'none');
-  mb.box('iron_black', -0.85, 0.56, 0.45, 0.17, 0.03, 0.17);
-  graveLight(mb, -0.85, 0.41, 0.45, { wax: 0.02, soot: true });
+  mb.box('iron_black', -0.7, 0.32, 0.49, 0.14, 0.02, 0.14);
+  mb.cylinder('glass', -0.7, 0.33, 0.49, 0.085, 0.085, 0.14, 4, 'none');
+  mb.box('iron_black', -0.7, 0.485, 0.49, 0.17, 0.03, 0.17);
+  graveLight(mb, -0.7, 0.33, 0.49, { wax: 0.02, soot: true });
   mb.pop();
   // gilded inscription; the last name cut more sharply than the others
   const L = tomb.lines;
@@ -2226,15 +2230,15 @@ export function buildHuntingStand(physics: Physics | undefined, materials: Mater
     const rise = HF - yb, n = Math.max(6, Math.round(rise / 0.26)), run = len / n, sh = rise / n, zb = top - len;
     mb.push(SM);
     for (const s of [-1, 1]) {
-      mb.beam('hs_boards', V3(sx + s * 0.33, yb - 0.1, zb - 0.05), V3(sx + s * 0.33, HF + 0.02, top + 0.02), 0.05, 0.16, V3(1, 0, 0));
+      mb.beam('hs_boards', V3(sx + s * 0.33, yb - 0.1, zb - 0.05), V3(sx + s * 0.33, HF + 0.02, top + 0.02), 0.05, 0.16);
       // handrail on posts
-      mb.beam('rough_timber_ext', V3(sx + s * 0.36, yb + 0.95, zb), V3(sx + s * 0.36, HF + 0.95, top), 0.045, 0.045, V3(1, 0, 0));
+      mb.beam('rough_timber_ext', V3(sx + s * 0.36, yb + 0.95, zb), V3(sx + s * 0.36, HF + 0.95, top), 0.045, 0.045);
       mb.box('rough_timber_ext', sx + s * 0.36, yb + 0.47, zb, 0.06, 1.0, 0.06);
       mb.box('rough_timber_ext', sx + s * 0.36, HF + 0.47, top + 0.05, 0.06, 0.95, 0.06);
     }
     for (let i = 0; i < n - 1; i++) {
       const y = yb + (i + 1) * sh, z = zb + (i + 1) * run;
-      mb.box('hs_boards', sx, y - 0.017, z - 0.06, 0.62, 0.035, 0.2, { uv: 'local', uvOffset: [i * 0.3, 0] });
+      mb.box('hs_boards', sx, y - 0.017, z + 0.06, 0.62, 0.035, 0.2, { uv: 'local', uvOffset: [i * 0.3, 0] });
     }
     // landing rails beside the door
     mb.beam('rough_timber_ext', V3(-0.8, HF + 0.95, -1.15), V3(sx - 0.36, HF + 0.95, -1.15), 0.045, 0.045);

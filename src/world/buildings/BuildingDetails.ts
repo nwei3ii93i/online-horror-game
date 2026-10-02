@@ -171,6 +171,45 @@ export function scatterBlocks(mb: MeshBuilder, mat: string, x0: number, z0: numb
   }
 }
 
+// ------------------------------------------------------------------ wall & floor details
+/** Irregular flat patch on a wall plane (exposed brick in render, soot, damp). */
+export function wallPatch(mb: MeshBuilder, mat: string, c: THREE.Vector3, n: THREE.Vector3, rw: number, rh: number, rng: RNG, segs = 12): void {
+  const u = new THREE.Vector3(-n.z, 0, n.x).normalize();
+  const up = new THREE.Vector3(0, 1, 0);
+  const pts: number[][] = [];
+  const ph = [rng.range(0, 6.28), rng.range(0, 6.28), rng.range(0, 6.28)];
+  for (let k = 0; k < segs; k++) {
+    const a = (k / segs) * Math.PI * 2;
+    const r = 1 + 0.18 * Math.sin(a * 2 + ph[0]) + 0.12 * Math.sin(a * 3 + ph[1]) + 0.07 * Math.sin(a * 5 + ph[2]);
+    const p = c.clone().addScaledVector(u, Math.cos(a) * rw * r).addScaledVector(up, Math.sin(a) * rh * r);
+    pts.push([p.x, p.y, p.z]);
+  }
+  const cc = [c.x, c.y, c.z];
+  // orient each fan triangle toward n
+  for (let k = 0; k < segs; k++) {
+    const a = pts[k], b = pts[(k + 1) % segs];
+    const e1 = [a[0] - cc[0], a[1] - cc[1], a[2] - cc[2]], e2 = [b[0] - cc[0], b[1] - cc[1], b[2] - cc[2]];
+    const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    if (cr[0] * n.x + cr[1] * n.y + cr[2] * n.z >= 0) mb.tri(mat, cc, a, b); else mb.tri(mat, cc, b, a);
+  }
+}
+
+/** Floor drain: cast-iron grate over a dark sump. */
+export function drainGrate(mb: MeshBuilder, x: number, y: number, z: number, s = 0.3): void {
+  mb.quad('black_soot', [x - s / 2, y - 0.03, z + s / 2], [x + s / 2, y - 0.03, z + s / 2], [x + s / 2, y - 0.03, z - s / 2], [x - s / 2, y - 0.03, z - s / 2], [0, 1, 0]);
+  mb.box('iron_black', x, y + 0.003, z - s / 2 + 0.012, s, 0.012, 0.024, { skip: ['ny'] });
+  mb.box('iron_black', x, y + 0.003, z + s / 2 - 0.012, s, 0.012, 0.024, { skip: ['ny'] });
+  for (let k = 0; k < 7; k++) mb.box('iron_black', x - s / 2 + 0.03 + k * ((s - 0.06) / 6), y + 0.003, z, 0.012, 0.012, s - 0.048, { skip: ['ny'] });
+}
+
+/** Quad whose winding is flipped if needed so its front face looks along n. */
+export function orientedQuad(mb: MeshBuilder, mat: string, a: number[], b: number[], c: number[], d: number[], n: number[], uvs?: number[][]): void {
+  const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+  if (cr[0] * n[0] + cr[1] * n[1] + cr[2] * n[2] < 0) mb.quad(mat, a, d, c, b, n, uvs ? [uvs[0], uvs[3], uvs[2], uvs[1]] : undefined);
+  else mb.quad(mat, a, b, c, d, n, uvs);
+}
+
 // ------------------------------------------------------------------ railings & stairs
 /** Steel pipe railing along a polyline; colliders per segment. */
 export function pipeRailing(mb: MeshBuilder, physics: Physics | undefined, pts: [number, number][], y: number, mat: string, h = 1.0, r = 0.021): void {

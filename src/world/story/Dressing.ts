@@ -113,6 +113,16 @@ export function buildStoryDressing(materials: MaterialLibrary, physics: Physics 
   mb.box('mattress', 0, 0, 0, 0.4, 0.09, 0.6);
   mb.pop();
   mb.pop();
+  // bricks of the walled-up opening lie on the BOILER side: it was pushed out from within
+  const rng = new RNG(1991);
+  for (let i = 0; i < 34; i++) {
+    const t = rng.float();
+    const x = -7.0 + Math.pow(t, 1.6) * 1.9 + rng.range(-0.1, 0.1), z = -25.7 + rng.range(-0.8, 0.8) * (0.4 + t);
+    const y = B0 + 0.035 + (i < 8 && t < 0.3 ? 0.07 * (i % 2) : 0);
+    mb.pushTRS(x, y, z, rng.range(0, Math.PI), 1, 1, 1, rng.range(-0.12, 0.12), rng.range(-0.1, 0.1));
+    mb.box(i % 5 === 0 ? 'stone_wall_int' : 'brick_int', 0, 0, 0, i % 7 === 0 ? 0.12 : 0.25, 0.065, 0.12);
+    mb.pop();
+  }
   group.add(mb.build(materials, { name: 'mattress' }));
   physics?.addBox({ cx: -9.6, cy: B0 + 0.08, cz: -27.0, hx: 0.96, hy: 0.08, hz: 0.43, ry: 0.06, surface: 'fabric' });
   return group;

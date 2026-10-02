@@ -9,7 +9,7 @@ import type { MaterialLibrary } from '../../materials/MaterialLibrary';
 import { RNG } from '../../core/Random';
 import {
   V, defineMaterials, TUNNEL_MATS, spanFromInner, leafOpening, pipe, flange, puddle, heap, scatterBlocks,
-  pipeRailing, timberRailing, ladderStair, voidEdges, boardRun, hayBale, leaningWheel, cartWheel,
+  pipeRailing, timberRailing, ladderStair, voidEdges, boardRun, hayBale, leaningWheel, cartWheel, wallPatch, drainGrate,
 } from './BuildingDetails';
 
 /**
@@ -100,28 +100,6 @@ function groundRange(heightAt: HeightFn, r: Rect4, margin = 0.5): { min: number;
   return { min, max };
 }
 
-/** Irregular flat patch on a wall plane (exposed brick in render, soot, damp). */
-function wallPatch(mb: MeshBuilder, mat: string, c: THREE.Vector3, n: THREE.Vector3, rw: number, rh: number, rng: RNG, segs = 12): void {
-  const u = new THREE.Vector3(-n.z, 0, n.x).normalize();
-  const up = new THREE.Vector3(0, 1, 0);
-  const pts: number[][] = [];
-  const ph = [rng.range(0, 6.28), rng.range(0, 6.28), rng.range(0, 6.28)];
-  for (let k = 0; k < segs; k++) {
-    const a = (k / segs) * Math.PI * 2;
-    const r = 1 + 0.18 * Math.sin(a * 2 + ph[0]) + 0.12 * Math.sin(a * 3 + ph[1]) + 0.07 * Math.sin(a * 5 + ph[2]);
-    const p = c.clone().addScaledVector(u, Math.cos(a) * rw * r).addScaledVector(up, Math.sin(a) * rh * r);
-    pts.push([p.x, p.y, p.z]);
-  }
-  const cc = [c.x, c.y, c.z];
-  // orient each fan triangle toward n
-  for (let k = 0; k < segs; k++) {
-    const a = pts[k], b = pts[(k + 1) % segs];
-    const e1 = [a[0] - cc[0], a[1] - cc[1], a[2] - cc[2]], e2 = [b[0] - cc[0], b[1] - cc[1], b[2] - cc[2]];
-    const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
-    if (cr[0] * n.x + cr[1] * n.y + cr[2] * n.z >= 0) mb.tri(mat, cc, a, b); else mb.tri(mat, cc, b, a);
-  }
-}
-
 /** Downpipe from a gutter end into the wall and down to a shoe at the ground. */
 function downpipe(mb: MeshBuilder, gx: number, gy: number, gz: number, wx: number, wz: number, ground: number, mat = 'rust_metal'): void {
   pipe(mb, mat, [V(gx, gy, gz), V(gx, gy - 0.25, gz), V(wx, gy - 0.6, wz), V(wx, ground + 0.32, wz), V(wx + (wx - gx) * 0.0, ground + 0.08, wz + Math.sign(gz - wz) * 0.22)], 0.045, 8);
@@ -165,14 +143,6 @@ function hipRafters(mb: MeshBuilder, roof: RoofInfo, r: { x0: number; z0: number
     const b = V(rx, roof.innerHeight(rx, cz) - size * 0.7, cz);
     mb.beam(mat, a, b, size * 0.6, size, V(0, 1, 0));
   }
-}
-
-/** Floor drain: cast-iron grate over a dark sump. */
-function drainGrate(mb: MeshBuilder, x: number, y: number, z: number, s = 0.3): void {
-  mb.quad('black_soot', [x - s / 2, y - 0.03, z + s / 2], [x + s / 2, y - 0.03, z + s / 2], [x + s / 2, y - 0.03, z - s / 2], [x - s / 2, y - 0.03, z - s / 2], [0, 1, 0]);
-  mb.box('iron_black', x, y + 0.003, z - s / 2 + 0.012, s, 0.012, 0.024, { skip: ['ny'] });
-  mb.box('iron_black', x, y + 0.003, z + s / 2 - 0.012, s, 0.012, 0.024, { skip: ['ny'] });
-  for (let k = 0; k < 7; k++) mb.box('iron_black', x - s / 2 + 0.03 + k * ((s - 0.06) / 6), y + 0.003, z, 0.012, 0.012, s - 0.048, { skip: ['ny'] });
 }
 
 // =============================================================================================
@@ -852,19 +822,19 @@ export function buildPumpHouse(physics: Physics | undefined, materials: Material
   drainGrate(mb, -27.75, B, -50.4, 0.25);
   // pipes arriving from the tunnel: water main (riser to the vessel) and the cut heating loop (blind flanges)
   const xin = -26.77, xout = -26.95, zw = Ph.Z1;
-  pipe(mb, 'rust_metal_int', [V(xin, B + 0.4, zw + 0.1), V(xin, B + 0.4, -49.15), V(xin, -0.12, -49.15), V(xin, -0.12, -51.8), V(wk.x, -0.12, -51.8), V(wk.x, -0.12, wk.z), V(wk.x, wk.y + 1.49, wk.z)], 0.06, 10);
+  pipe(mb, 'rust_metal_int', [V(xin, B + 0.4, zw - 0.02), V(xin, B + 0.4, -49.15), V(xin, -0.12, -49.15), V(xin, -0.12, -51.8), V(wk.x, -0.12, -51.8), V(wk.x, -0.12, wk.z), V(wk.x, wk.y + 1.49, wk.z)], 0.06, 10);
   flange(mb, 'rust_metal_int', V(xin, B + 1.0, -49.15), V(0, 1, 0), 0.1);
   mb.rod('iron_black', V(xin, B + 1.0, -49.15), V(xin + 0.18, B + 1.0, -49.15), 0.012, 0.012, 5);
   flange(mb, 'iron_black', V(xin + 0.19, B + 1.0, -49.15), V(1, 0, 0), 0.09, 0.012);
   for (const x of [xin, xout]) {
-    mb.rod('pipe_lagging', V(x, B + 1.5, zw + 0.1), V(x, B + 1.5, IZ1 - 0.2), 0.075, 0.075, 10);
+    mb.rod('pipe_lagging', V(x, B + 1.5, zw - 0.02), V(x, B + 1.5, IZ1 - 0.2), 0.075, 0.075, 10);
     flange(mb, 'rust_metal_int', V(x, B + 1.5, IZ1 - 0.2), V(0, 0, 1), 0.085, 0.02);
     flange(mb, 'rust_metal_int', V(x, B + 1.5, IZ1 - 0.23), V(0, 0, 1), 0.085, 0.02);
   }
   // Josef's 1993 generator cable: from the tunnel lintel along the ceiling to the switch box
   const cbl = 'rubber_black';
   const boxZ = -50.0;
-  pipe(mb, cbl, [V(-28.2, -0.17, zw + 0.05), V(-28.2, -0.04, IZ1 - 0.1), V(-28.2, -0.04, boxZ), V(IX0 + 0.03, -0.04, boxZ), V(IX0 + 0.03, B + 1.72, boxZ)], 0.009, 5, 0.05);
+  pipe(mb, cbl, [V(-28.2, -0.17, zw - 0.02), V(-28.2, -0.04, IZ1 - 0.1), V(-28.2, -0.04, boxZ), V(IX0 + 0.03, -0.04, boxZ), V(IX0 + 0.03, B + 1.72, boxZ)], 0.009, 5, 0.05);
   for (let z = IZ1 - 0.3; z > boxZ; z -= 0.55) mb.box('rust_metal_int', -28.2, -0.025, z, 0.03, 0.02, 0.015);
   pipe(mb, cbl, [V(IX0 + 0.05, B + 1.2, boxZ + 0.05), V(IX0 + 0.06, B + 0.6, boxZ - 0.2), V(G.x + 0.05, B + 0.62, G.z + 0.4)], 0.009, 5, 0.08);
 

@@ -147,7 +147,7 @@ export const MANOR_PROPS: P[] = [
   ['old_tyre', -4.2, B0 + 0.3, -16.3, 0, { tiltX: H, collider: 'none' }],
   ['wooden_crate_02', -6.0, B0, -16.2, 0.1],
   // boiler cellar: the jar shelf lies on THIS side of the sealed wall – pushed from within
-  ['steel_frame_shelves_01', -6.25, B0 + 0.27, -25.6, H + 0.2, { tiltX: -H }],
+  ['steel_frame_shelves_01', -5.9, B0 + 0.27, -27.15, H + 0.35, { tiltX: -H }],
   ['Lantern_01', -4.0, B0, -23.0, 0.7, none],
   // sealed room
   ['treasure_chest', -11.75, B0, -23.0, H],
@@ -189,6 +189,32 @@ export const MANOR_PROPS: P[] = [
   ['Rockingchair_01', 3.8, A0, -24.0, 2.6],
   ['wicker_basket_01', -2.4, A0, -24.2, 0.1, none],
 ];
+
+/** Board heights (top surfaces) of wooden_bookshelf_worn, measured from the scan. */
+const BOOKSHELF_BOARDS = [0.1, 0.4, 0.68, 0.96, 1.28, 1.66];
+
+/** Fill a wooden_bookshelf_worn at (x, y, z, ry) with encyclopedia sets, leaving gaps. */
+function shelfBooks(x: number, y: number, z: number, ry: number, seed: number, fill = 0.7): P[] {
+  const out: P[] = [];
+  let r = seed;
+  const rnd = () => ((r = (r * 16807) % 2147483647) / 2147483647);
+  const c = Math.cos(ry), s = Math.sin(ry);
+  for (const by of BOOKSHELF_BOARDS) {
+    for (const lx of [-0.33, 0.3]) {
+      if (rnd() > fill) continue;
+      const ox = lx + (rnd() - 0.5) * 0.06, oz = 0.02;
+      out.push(['book_encyclopedia_set_01', x + ox * c + oz * s, y + by + 0.003, z - ox * s + oz * c, ry + (rnd() - 0.5) * 0.06, { collider: 'none', castShadow: false }]);
+    }
+  }
+  return out;
+}
+
+MANOR_PROPS.push(
+  ...shelfBooks(9.0, G0, -20.77, 0, 11),
+  ...shelfBooks(10.62, G0, -20.77, 0, 23, 0.6),
+  ...shelfBooks(5.0, G0, -20.77, 0, 37, 0.55),
+  ...shelfBooks(-12.15, G0, -21.0, H, 51, 0.5),
+);
 
 /** Ids to preload. */
 export const MANOR_PROP_IDS = [...new Set(MANOR_PROPS.map((p) => p[0]))];
