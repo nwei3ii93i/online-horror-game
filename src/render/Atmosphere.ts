@@ -69,8 +69,8 @@ export class Atmosphere {
     const moonDir = this.moonDirU;
     const sky = Fn(() => {
       const up = clamp(dir.y, -0.2, 1);
-      // base gradient: luminous haze at horizon (fog + distant light pollution), dark zenith
-      const horizon = vec3(this.fogColor).mul(1.15);
+      // horizon = exactly the fog colour for this direction, so fully fogged objects melt into the sky
+      const horizon = this.fogColorFor(dir);
       const zenith = vec3(0.012, 0.016, 0.026);
       const col = mix(horizon, zenith, smoothstep(-0.02, 0.55, up)).toVar();
       // clouds: domain-warped fractal noise on a plane
@@ -97,7 +97,7 @@ export class Atmosphere {
       // lightning illuminates the cloud deck
       col.addAssign(vec3(0.5, 0.55, 0.65).mul(worldUniforms.lightning).mul(cloud.add(0.2)).mul(smoothstep(-0.05, 0.3, up)));
       // horizon blend into fog (no visible horizon line in fog)
-      col.assign(mix(col, vec3(this.fogColor), smoothstep(0.12, -0.02, up)));
+      col.assign(mix(col, horizon, smoothstep(0.12, -0.02, up)));
       return col.mul(this.skyBrightness);
     });
     mat.colorNode = sky();
@@ -106,6 +106,14 @@ export class Atmosphere {
     mesh.renderOrder = -10;
     mesh.name = 'sky';
     return mesh;
+  }
+
+  /** In-scattered colour of the fog along a view direction (moon glow, lightning). */
+  fogColorFor(v: any): any {
+    const md = max(dot(v, this.moonDirU), 0);
+    const glow = pow(md, 6).mul(0.45).add(pow(md, 2).mul(0.1));
+    const c = mix(vec3(this.fogColor), vec3(this.moonGlowColor), glow);
+    return c.add(vec3(0.3, 0.33, 0.4).mul(worldUniforms.lightning).mul(0.25));
   }
 
   private setupFog(): void {
@@ -128,13 +136,7 @@ export class Atmosphere {
       f = f.mul(mix(float(1), float(0.25), W.indoorAt()));
       return clamp(f, 0, 1);
     });
-    const fogCol = Fn(() => {
-      const v = normalize(positionWorld.sub(cameraPosition));
-      const md = max(dot(v, this.moonDirU), 0);
-      const glow = pow(md, 6).mul(0.6).add(pow(md, 2).mul(0.15));
-      const c = mix(vec3(this.fogColor), vec3(this.moonGlowColor), glow);
-      return c.add(vec3(0.3, 0.33, 0.4).mul(W.lightning).mul(0.25));
-    });
+    const fogCol = Fn(() => this.fogColorFor(normalize(positionWorld.sub(cameraPosition))));
     this.scene.fogNode = fog(fogCol(), fogFactor());
   }
 

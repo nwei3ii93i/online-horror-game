@@ -75,7 +75,7 @@ const sampleAtlas3D = (tex: THREE.DataTexture, p: any) => {
  */
 export class Volumetrics {
   readonly mesh: THREE.Mesh;
-  readonly density: any = uniform(0.006);
+  readonly density: any = uniform(0.009);
   readonly groundFog: any = uniform(0.014);
   readonly drift: any = uniform(new THREE.Vector3(0.35, 0.02, 0.12));
   private t: any = uniform(0);
@@ -85,6 +85,8 @@ export class Volumetrics {
     const noise = createFogNoise(64);
     const mat = new THREE.VolumeNodeMaterial();
     mat.steps = steps;
+    // the scene fog must not be applied on top of the in-scattering (it would add a uniform veil)
+    mat.fog = false;
     // temporal jitter (works with TRAA) to hide step banding
     mat.offsetNode = fract(interleavedGradientNoise(screenCoordinate).add(this.t.mul(0.618)));
     const W = worldUniforms;
@@ -102,7 +104,8 @@ export class Volumetrics {
       const dist = p.sub(cameraPosition).length();
       const near = smoothstep(0.5, 1.8, dist);
       // spherical falloff well inside the box so its faces never show up as hard edges
-      const far = float(1).sub(smoothstep(12.0, 25.0, dist));
+      // near-field only (torch beams, window shafts); distance haze is the analytic height fog
+      const far = float(1).sub(smoothstep(5.0, 15.0, dist));
       return vec3(clamp(this.density.mul(noiseD.mul(1.3).add(0.25)).add(ground.mul(noiseD.add(0.3))), 0, 0.5).mul(indoorFade).mul(rain).mul(near).mul(far));
     }) as any;
     this.material = mat;

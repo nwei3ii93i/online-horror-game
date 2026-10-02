@@ -81,6 +81,7 @@ export class PostFX {
       (this as any).sceneDepthNode = depth;
       const blurred = gaussianBlur(vp, uniform(0.65), 3);
       lit = vec4(lit.rgb.add(blurred.rgb.mul(this.volumetricIntensity)), 1);
+      if (new URLSearchParams(location.search).has('volonly')) lit = vec4(blurred.rgb.mul(8), 1);
     }
 
     let aa: any = lit;
