@@ -26,6 +26,7 @@ import { Interaction } from './gameplay/Interaction';
 import { Doors } from './gameplay/Doors';
 import { LocalWorldBridge, WorldBridge } from './gameplay/WorldBridge';
 import { LightPool } from './gameplay/LightPool';
+import { Pickups } from './gameplay/Pickups';
 import { DocumentReader } from './ui/DocumentReader';
 import { MANOR_DOCS, placeDocuments } from './world/story/DocumentProps';
 import { buildStoryDressing } from './world/story/Dressing';
@@ -154,6 +155,12 @@ export class Game {
     this.reader = new DocumentReader(document.body);
     this.reader.onClose = () => { this.readerClosedAt = performance.now(); };
     this.docMeshes = placeDocuments([...MANOR_DOCS, ...SACRED_DOCS, ...OUTBUILDING_DOCS], this.physics, this.interaction, (d) => this.reader.open(d));
+    const pickups = new Pickups(this.physics, this.interaction, (item) => {
+      this.inventory.add(item);
+      this.audio.play('key_pickup', { volume: 0.8 });
+    });
+    pickups.addKeys(this.world.buildings.flatMap((b) => b.anchors));
+    scene.add(pickups.group);
     const dressing = buildStoryDressing(this.materials, this.physics);
     scene.add(this.docMeshes, dressing);
     this.interiorGroups.push(dressing);
