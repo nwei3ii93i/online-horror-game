@@ -117,6 +117,8 @@ export class Flashlight {
     const I = this.intensity * k * this.flicker;
     // never toggle .visible: changing the light count recompiles every material
     this.light.intensity = I;
+    // ...but a dark torch needn't render its shadow map
+    this.light.shadow.autoUpdate = I > 0.5;
     if (this.bounceValid) {
       // inverse-square falloff of the torch onto the surface, re-emitted diffusely
       const d = this.bounceDist;

@@ -136,7 +136,9 @@ export class World {
    * Whole-building visibility: beyond ~120 m the fog has swallowed a building anyway, and the
    * tunnels are only drawn when the camera is below ground (they're buried everywhere else).
    */
-  cull(cam: THREE.Vector3): void {
+  /** Returns true when anything that casts or receives lamp shadows changed visibility. */
+  cull(cam: THREE.Vector3): boolean {
+    let changed = false;
     if (!this.cullInfo) {
       this.cullInfo = this.buildings.map((b) => {
         const casters: THREE.Mesh[] = [];
@@ -147,13 +149,14 @@ export class World {
     for (const info of this.cullInfo) {
       const { b, box } = info;
       const d = box.distanceToPoint(cam);
-      if (b.id === 'tunnels') b.group.visible = cam.y < 0.3 && d < 70;
-      else b.group.visible = d < (b.id === 'manor' ? 220 : 95);
+      const vis = b.id === 'tunnels' ? cam.y < 0.3 && d < 70 : d < (b.id === 'manor' ? 220 : 95);
+      if (vis !== b.group.visible) { b.group.visible = vis; changed = true; }
       // interiors only from close by (through windows / doors) – or from inside, of course
       const interiorOn = d < 14;
       if (interiorOn !== info.interiorOn) {
         info.interiorOn = interiorOn;
         for (const m of info.interior) m.visible = interiorOn;
+        changed = true;
       }
       // a building's moon shadow only reads close by; beyond that every caster is a wasted draw
       // call per shadow cascade (the torch never reaches that far either)
@@ -161,8 +164,10 @@ export class World {
       if (shadows !== info.shadows) {
         info.shadows = shadows;
         for (const m of info.casters) m.castShadow = shadows;
+        changed = true;
       }
     }
+    return changed;
   }
 
   get doorSpecs() { return this.buildings.flatMap((b) => b.doors); }

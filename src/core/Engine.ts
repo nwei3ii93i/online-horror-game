@@ -2,7 +2,7 @@ import * as THREE from 'three/webgpu';
 import { installWebGPUCompat } from '../render/webgpuCompat';
 import { Settings } from './Settings';
 import { Input } from './Input';
-import { PostFX } from '../render/PostFX';
+import { PostFX, LAYER_VEGETATION } from '../render/PostFX';
 
 export interface System {
   /** Variable-rate update, once per rendered frame. */
@@ -40,6 +40,7 @@ export class Engine {
 
   constructor(readonly container: HTMLElement, readonly settings: Settings) {
     this.camera = new THREE.PerspectiveCamera(settings.values.fov, 1, 0.05, 900);
+    this.camera.layers.enable(LAYER_VEGETATION);
     this.camera.position.set(0, 1.7, 10);
     this.input = new Input(container);
   }
@@ -120,7 +121,8 @@ export class Engine {
 
   /** Dynamic resolution: fraction of the profile's render scale currently used (0.55 … 1). */
   dynScale = 1;
-  dynamicResolution = true;
+  /** Off by default: resizing every target hitches, and the softer image read as blur. */
+  dynamicResolution = false;
   private dynTime = -3; // ignore the first seconds (shader warm-up, streaming)
   private dynFrames = 0;
   private dynHold = 0;

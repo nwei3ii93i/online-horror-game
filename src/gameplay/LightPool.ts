@@ -3,6 +3,7 @@ import { color, float, uniform } from 'three/tsl';
 import type { LightFixture, Room } from '../world/architecture/BuildingKit';
 import { MeshBuilder } from '../world/architecture/MeshBuilder';
 import type { MaterialLibrary } from '../materials/MaterialLibrary';
+import { LAYER_OWN_MASK } from '../render/PostFX';
 
 interface FixtureState {
   f: LightFixture;
@@ -26,6 +27,13 @@ export class LightPool {
   private states: FixtureState[] = [];
   private t = 0;
   private reassignTimer = 0;
+  private shadowsStale = false;
+
+  /**
+   * Lamp shadows are static (rendered once per assignment). Call this when casters near the
+   * lamps changed: culling showed/hid furniture or a door swung.
+   */
+  refreshShadows(): void { this.shadowsStale = true; }
 
   constructor(scene: THREE.Scene, fixtures: LightFixture[], rooms: Room[], materials: MaterialLibrary, size = 2, shadowSize = 512) {
     this.group.name = 'light-fixtures';
@@ -63,6 +71,8 @@ export class LightPool {
       const l = new THREE.PointLight(0xffc98a, 0, 9, 2);
       l.castShadow = shadowSize > 0;
       l.shadow.mapSize.set(shadowSize, shadowSize);
+      // indoor lamps: no trees or ground cover in the six cube faces
+      l.shadow.camera.layers.enable(LAYER_OWN_MASK);
       l.shadow.bias = -0.002;
       l.shadow.camera.near = 0.08;
       l.shadow.camera.far = 12;
@@ -112,6 +122,12 @@ export class LightPool {
         l.shadow.needsUpdate = true;
       }
       for (const i of free) if (this.assigned[i] && !near.includes(this.assigned[i]!)) { this.assigned[i] = null; this.lights[i].intensity = 0; this.lights[i].position.set(0, -500, 0); }
+    }
+    if (this.shadowsStale) {
+      this.shadowsStale = false;
+      // only lamps near the viewer: further out their rooms are culled anyway, and a cube
+      // shadow is six passes
+      this.assigned.forEach((s, i) => { if (s && s.f.position.distanceToSquared(cam) < 16 * 16) this.lights[i].shadow.needsUpdate = true; });
     }
     this.assigned.forEach((s, i) => {
       if (!s) return;

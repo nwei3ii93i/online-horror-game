@@ -9,6 +9,7 @@ import { CARETAKER_GROUNDS_BLOCKERS } from '../buildings/Caretaker';
 import type { TextureStore } from '../../materials/TextureStore';
 import type { Physics } from '../../physics/Physics';
 import { GROUP } from '../../physics/Physics';
+import { LAYER_VEGETATION } from '../../render/PostFX';
 import { TreeModel, Slot, genSpruce, genBeech, genBirch, genSnag, genSapling, genOak, drawSilhouettes } from './TreeGen';
 import { barkMaterial, foliageMaterial } from './VegMaterials';
 import type { VegTextureSet } from './VegTextures';
@@ -184,6 +185,7 @@ export class Forest {
           mesh.castShadow = li === 0;
           mesh.receiveShadow = true;
           mesh.name = `tree_${mi}_${li}_${slot}`;
+          mesh.layers.set(LAYER_VEGETATION);
           this.group.add(mesh);
           slots.push({ mesh });
         }

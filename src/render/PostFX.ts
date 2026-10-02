@@ -12,6 +12,10 @@ import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
 import type { QualityProfile } from '../core/Settings';
 
 export const LAYER_VOLUMETRIC = 10;
+/** Trees and ground cover: seen by the camera, the moon and the torch, but not by the lamps' cube shadows. */
+export const LAYER_VEGETATION = 11;
+/** Marker bit: a shadow camera with it keeps its own layer mask instead of inheriting the view camera's. */
+export const LAYER_OWN_MASK = 30;
 
 export interface PostFXOptions {
   quality: QualityProfile;

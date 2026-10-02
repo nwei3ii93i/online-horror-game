@@ -9,6 +9,7 @@ import type { TextureStore } from '../../materials/TextureStore';
 import type { MaterialLibrary } from '../../materials/MaterialLibrary';
 import type { Physics } from '../../physics/Physics';
 import { foliageMaterial, barkMaterial } from './VegMaterials';
+import { LAYER_VEGETATION } from '../../render/PostFX';
 import { CARETAKER_GROUNDS_BLOCKERS } from '../buildings/Caretaker';
 import type { VegTextureSet } from './VegTextures';
 
@@ -190,6 +191,7 @@ export class GroundCover {
         m.castShadow = shadow;
         m.receiveShadow = true;
         m.name = `gc_${kind}_${slot}`;
+        m.layers.set(LAYER_VEGETATION);
         this.group.add(m);
         meshes.push(m);
       }

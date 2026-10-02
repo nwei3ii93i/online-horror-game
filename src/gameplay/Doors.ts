@@ -27,6 +27,8 @@ interface Door {
   locked: boolean;
   blockedTime: number;
   creaked: boolean;
+  /** Casts shadows (only near the viewer). */
+  cast: boolean;
 }
 
 const _q = new THREE.Quaternion();
@@ -77,7 +79,7 @@ export class Doors {
     );
     this.physics.surfaces.set(col.handle, spec.sound === 'metal' ? 'metal' : 'wood');
     const initial = spec.open ?? 0;
-    const door: Door = { spec, pivot, body, collider: col, angle: initial, target: initial, vel: 0, locked: !!spec.locked, blockedTime: 0, creaked: false };
+    const door: Door = { spec, pivot, body, collider: col, angle: initial, target: initial, vel: 0, locked: !!spec.locked, blockedTime: 0, creaked: false, cast: true };
     this.apply(door);
     this.doors.set(spec.id, door);
     this.byCollider.set(col.handle, door);
@@ -139,7 +141,11 @@ export class Doors {
     return dx * dx + dz * dz < 0.33 * 0.33;
   }
 
+  /** True while any leaf is swinging (shadow maps that see it need re-rendering). */
+  moving = false;
+
   update(dt: number): void {
+    this.moving = false;
     for (const d of this.doors.values()) {
       const diff = d.target - d.angle;
       if (Math.abs(diff) < 0.0005 && Math.abs(d.vel) < 0.001) {
@@ -159,6 +165,7 @@ export class Doors {
         continue;
       }
       d.blockedTime = 0;
+      this.moving = true;
       const was = d.angle;
       d.angle = next;
       if (!d.creaked && Math.abs(d.vel) > 0.15) {
@@ -177,12 +184,23 @@ export class Doors {
    * Hide leaves the camera cannot see: beyond `range`, or (camera indoors at floor `floorY`)
    * more than a storey away. Saves a draw call per part and per shadow pass.
    */
-  cull(cam: THREE.Vector3, range: number, floorY: number | null, groundAt?: (x: number, z: number) => number): void {
+  /** Returns true when any leaf changed visibility. */
+  cull(cam: THREE.Vector3, range: number, floorY: number | null, groundAt?: (x: number, z: number) => number): boolean {
+    let changed = false;
+    const show = (d: { pivot: THREE.Object3D }, v: boolean) => { if (d.pivot.visible !== v) { d.pivot.visible = v; changed = true; } };
     for (const d of this.doors.values()) {
       const h = d.spec.hinge;
       const dx = h.x - cam.x, dz = h.z - cam.z, d2 = dx * dx + dz * dz;
       // entrance doors stay visible from afar (they read from the courtyard / garden)
-      if (EXTERIOR_DOOR.test(d.spec.id) && (floorY === null || Math.abs(h.y - floorY) < 1.5)) { d.pivot.visible = d2 < 70 * 70; continue; }
+      // a leaf's shadow only matters close by (each caster costs a draw per shadow pass)
+      const ext = EXTERIOR_DOOR.test(d.spec.id);
+      const cast = d2 < (ext ? 35 * 35 : 14 * 14);
+      if (cast !== d.cast) {
+        d.cast = cast;
+        d.pivot.traverse((o) => { if ((o as THREE.Mesh).isMesh) o.castShadow = cast; });
+        changed = true;
+      }
+      if (ext && (floorY === null || Math.abs(h.y - floorY) < 1.5)) { show(d, d2 < 70 * 70); continue; }
       let vis = d2 < range * range;
       if (vis && d2 > 25) {
         if (floorY !== null) vis = h.y > floorY - 1.2 && h.y < floorY + 2.8;
@@ -192,8 +210,9 @@ export class Doors {
           vis = h.y > g - 0.6 && h.y < g + 1.6;
         }
       }
-      d.pivot.visible = vis;
+      show(d, vis);
     }
+    return changed;
   }
 
   isDoorCollider(handle: number): boolean { return this.byCollider.has(handle); }

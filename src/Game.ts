@@ -290,7 +290,7 @@ export class Game {
         if (this.propCullTimer <= 0) {
           this.propCullTimer = 0.2;
           const c = e.camera.position;
-          this.world.cull(c);
+          let changed = this.world.cull(c);
           const room = this.world.roomAt(c);
           const floorY = room ? room.y0 : null;
           const nearRect = (r: Rect) => {
@@ -300,13 +300,14 @@ export class Game {
           // each building's dressing is only visible through its windows from close by
           for (const b of this.propSets) {
             const near = b.rect ? nearRect(b.rect) : true;
-            b.placer.group.visible = near;
-            if (near) b.placer.cull(c, b.range, floorY);
+            if (b.placer.group.visible !== near) { b.placer.group.visible = near; changed = true; }
+            if (near && b.placer.cull(c, b.range, floorY)) changed = true;
           }
           const nearManor = nearRect(BUILDINGS.manor);
           for (const g of this.interiorGroups) g.visible = nearManor;
           for (const d of this.docMeshes.children) d.visible = d.position.distanceToSquared(c) < 20 * 20;
-          this.doors.cull(c, 24, floorY, (x, z) => this.terrain.heightAt(x, z));
+          if (this.doors.cull(c, 24, floorY, (x, z) => this.terrain.heightAt(x, z))) changed = true;
+          if (changed || this.doors.moving) this.lamps.refreshShadows();
         }
         worldUniforms.windTime.value += dt;
         this.updateAudio(dt);
@@ -407,6 +408,7 @@ export class Game {
     if (cam || a.has('nohud')) this.hud.el.style.display = 'none';
     if (a.has('wet')) worldUniforms.wetness.value = Number(a.get('wet'));
     if (a.has('noflash')) this.flashlight.on = false;
+    if (a.get('dynres') === '1') this.engine.dynamicResolution = true;
     if (a.get('dynres') === '0' || a.has('frames')) this.engine.dynamicResolution = false;
     if (a.has('exposure')) this.engine.renderer.toneMappingExposure = Number(a.get('exposure'));
     if (a.has('moon')) this.atmosphere.moon.intensity = Number(a.get('moon'));
