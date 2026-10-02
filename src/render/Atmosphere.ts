@@ -113,7 +113,17 @@ export class Atmosphere {
    * distant tree crowns above the horizon don't glow brighter than the sky behind them.
    */
   fogColorFor(v: any): any {
-    return mix(this.horizonColorFor(v), vec3(0.012, 0.016, 0.026), smoothstep(-0.02, 0.55, v.y).mul(0.9));
+    // the sky's *average* colour along v: gradient + the cloud deck (cloud noise averaged out by
+    // the coverage). If fog were brighter than the cloudy sky, fogged crowns would glow as pale
+    // ghosts above dark trunk "posts" – fog and sky must agree at every elevation.
+    const up = clamp(v.y, -0.2, 1);
+    const horizon = this.horizonColorFor(v);
+    let c: any = mix(horizon, vec3(0.012, 0.016, 0.026), smoothstep(-0.02, 0.55, up));
+    const md = max(dot(v, this.moonDirU), 0);
+    const cloudLit = vec3(this.moonGlowColor).mul(pow(md, 4).mul(0.9).add(0.12));
+    const cloudCol = mix(vec3(this.fogColor).mul(0.75), cloudLit, 0.25);
+    c = mix(c, cloudCol, this.cloudCover.mul(0.8).mul(smoothstep(-0.03, 0.12, up)));
+    return mix(c, horizon, smoothstep(0.12, -0.02, up));
   }
 
   /** In-scattered colour at the horizon along a view direction (moon glow, lightning). */
