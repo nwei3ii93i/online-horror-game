@@ -237,7 +237,8 @@ export class Forest {
       }
     }
     for (const lods of this.lods) for (const l of lods) {
-      for (const s of l.slots) s.mesh.count = l.count;
+      // an empty instanced mesh still costs a full render-object update per pass: hide it
+      for (const s of l.slots) { s.mesh.count = l.count; s.mesh.visible = l.count > 0; }
       l.attr.needsUpdate = true;
       l.attr.clearUpdateRanges();
       l.attr.addUpdateRange(0, l.count * 16);
@@ -265,7 +266,7 @@ export class Forest {
 
   /** Make every instanced mesh drawable once so the renderer can compile all pipelines up front. */
   prepareWarmup(on: boolean): void {
-    for (const lods of this.lods) for (const l of lods) for (const s of l.slots) s.mesh.count = on ? 1 : l.count;
+    for (const lods of this.lods) for (const l of lods) for (const s of l.slots) { s.mesh.count = on ? 1 : l.count; s.mesh.visible = on || l.count > 0; }
     if (!on) this.lastPos.set(1e9, 0, 0);
   }
 

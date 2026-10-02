@@ -285,7 +285,7 @@ export class GroundCover {
       }
     }
     for (const V of this.variants) {
-      for (const m of V.meshes) m.count = V.count;
+      for (const m of V.meshes) { m.count = V.count; m.visible = V.count > 0; }
       V.attr.needsUpdate = true;
       V.attr.clearUpdateRanges();
       V.attr.addUpdateRange(0, V.count * 16);
@@ -314,7 +314,7 @@ export class GroundCover {
   }
 
   prepareWarmup(on: boolean): void {
-    for (const v of this.variants) for (const m of v.meshes) m.count = on ? 1 : v.count;
+    for (const v of this.variants) for (const m of v.meshes) { m.count = on ? 1 : v.count; m.visible = on || v.count > 0; }
     if (!on) this.lastPos.set(1e9, 0, 0);
   }
 }
