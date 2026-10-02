@@ -5,6 +5,7 @@ import { MANOR } from '../buildings/Manor';
 import { MeshBuilder } from '../architecture/MeshBuilder';
 import type { MaterialLibrary } from '../../materials/MaterialLibrary';
 import type { Physics } from '../../physics/Physics';
+import { GROUP } from '../../physics/Physics';
 import { worldUniforms } from '../../render/WorldUniforms';
 import { RNG } from '../../core/Random';
 
@@ -123,6 +124,27 @@ export function buildStoryDressing(materials: MaterialLibrary, physics: Physics 
     mb.box(i % 5 === 0 ? 'stone_wall_int' : 'brick_int', 0, 0, 0, i % 7 === 0 ? 0.12 : 0.25, 0.065, 0.12);
     mb.pop();
   }
+  // the old coal boiler Josef lit in November 1987, flue into the chimney, pipes along the wall
+  {
+    const bx = -5.2, bz = -23.35, by = B0;
+    mb.cylinder('rust_metal_int', bx, by, bz, 0.46, 0.46, 1.35, 20, 'top');
+    mb.cylinder('rust_metal_int', bx, by + 1.35, bz, 0.46, 0.3, 0.18, 20, 'top');
+    mb.box('black_soot', bx, by + 0.08, bz, 1.05, 0.16, 1.05);                         // plinth
+    mb.box('iron_black', bx, by + 0.55, bz + 0.45, 0.34, 0.3, 0.05);                    // firebox door
+    mb.box('iron_black', bx, by + 0.18, bz + 0.45, 0.4, 0.12, 0.05);                    // ash door
+    mb.pushTRS(bx + 0.22, by + 1.0, bz + 0.43, 0, 1, 1, 1, Math.PI / 2, 0);
+    mb.cylinder('brass', 0, 0, 0, 0.06, 0.06, 0.03, 14, 'both');                         // pressure gauge
+    mb.pop();
+    const flue = [new THREE.Vector3(bx, by + 1.5, bz), new THREE.Vector3(bx, by + 2.15, bz), new THREE.Vector3(-6.0, by + 2.3, -22.55)];
+    mb.tube('rust_metal_int', flue, [0.11, 0.11, 0.11], 12);
+    for (const [y, r] of [[by + 2.3, 0.045], [by + 2.42, 0.035]] as const) {
+      mb.rod('rust_metal_int', new THREE.Vector3(-6.9, y, -22.48), new THREE.Vector3(-3.25, y, -22.48), r, r, 8);
+    }
+    mb.rod('rust_metal_int', new THREE.Vector3(bx + 0.35, by + 1.2, bz), new THREE.Vector3(bx + 0.35, by + 2.3, -22.5), 0.04, 0.04, 8);
+    // coal on the floor, a shovel's worth of fresh ash in front of the door
+    for (let i = 0; i < 14; i++) mb.box('black_soot', bx - 0.9 + rng.range(-0.3, 0.3), by + 0.03, bz + 0.9 + rng.range(-0.3, 0.3), rng.range(0.05, 0.12), rng.range(0.03, 0.06), rng.range(0.05, 0.1));
+  }
+  physics?.addCylinder(-5.2, B0 + 0.75, -23.35, 0.5, 0.75, 'metal', GROUP.STATIC);
   group.add(mb.build(materials, { name: 'mattress' }));
   physics?.addBox({ cx: -9.6, cy: B0 + 0.08, cz: -27.0, hx: 0.96, hy: 0.08, hz: 0.43, ry: 0.06, surface: 'fabric' });
   return group;

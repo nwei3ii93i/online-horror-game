@@ -94,7 +94,9 @@ export class Forest {
         // forest density: thins near open land, gaps & clumps from noise
         const clump = noise.perlin(x * 0.025 + 3, z * 0.025 + 7, P, P);
         let dens = (1 - open) * (1 - clear) * (0.62 + clump * 0.45);
-        if (open > 0.15 && open < 0.7) dens += 0.12 * (1 - Math.abs(open - 0.4) * 3); // ragged edge with young trees
+        // forest mantle (Waldmantel): a dense belt of young, low-branched trees where the stand meets
+        // open land – otherwise the edge reads as rows of bare trunks under fogged-out crowns
+        if (open > 0.05 && open < 0.7) dens += 0.3 * Math.max(0, 1 - Math.abs(open - 0.28) * 3);
         if (rng.float() > dens) continue;
         let blocked = false;
         for (const b of block) if (rectDist(b.r, x, z) < b.m) { blocked = true; break; }
@@ -106,7 +108,7 @@ export class Forest {
         let kind: 'spruce' | 'beech' | 'birch' | 'snag' | 'sapling' | 'youngSpruce';
         const r = rng.float();
         if (beetle > 0.42 && r < 0.6) kind = 'snag';
-        else if (open > 0.25) kind = r < 0.35 ? 'birch' : r < 0.6 ? 'youngSpruce' : r < 0.85 ? 'sapling' : 'spruce';
+        else if (open > 0.07) kind = r < 0.2 ? 'birch' : r < 0.72 ? 'youngSpruce' : r < 0.88 ? 'sapling' : 'spruce';
         else if (beechStand > 0.15) kind = r < 0.7 ? 'beech' : r < 0.85 ? 'spruce' : r < 0.95 ? 'sapling' : 'birch';
         else kind = r < 0.78 ? 'spruce' : r < 0.86 ? 'beech' : r < 0.92 ? 'snag' : r < 0.97 ? 'sapling' : 'birch';
         const model = this.pickModel(rng, kind);
