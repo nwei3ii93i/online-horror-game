@@ -344,15 +344,19 @@ export class Game {
   }
 
   /** URL-driven automation for screenshots / tests: ?cam=x,y,z,yawDeg,pitchDeg&noclip&wet=0.8 */
+  /** Debug / tour helper: put the eye at (x, y, z) world space, yaw/pitch in degrees. */
+  setCamera(x: number, y: number, z: number, yawDeg: number, pitchDeg = 0, noclip = true): void {
+    this.player.noclip = noclip;
+    this.player.teleport(x, y - this.player.eyeHeight, z, (yawDeg * Math.PI) / 180);
+    this.player.pitch = (pitchDeg * Math.PI) / 180;
+  }
+
   private applyAutomation(): void {
     const a = this.opts.automation;
     const cam = a.get('cam');
     if (cam) {
       const [x, y, z, yaw, pitch] = cam.split(',').map(Number);
-      // cam y is the eye height in world space
-      this.player.noclip = !a.has('walk');
-      this.player.teleport(x, y - this.player.eyeHeight, z, (yaw * Math.PI) / 180);
-      this.player.pitch = ((pitch || 0) * Math.PI) / 180;
+      this.setCamera(x, y, z, yaw, pitch, !a.has('walk'));
     }
     if (a.has('noclip')) this.player.noclip = true;
     if (cam || a.has('nohud')) this.hud.el.style.display = 'none';
