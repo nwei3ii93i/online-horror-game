@@ -104,7 +104,34 @@ export class World {
     return this.rooms.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && p.y >= r.y0 - 0.3 && p.y < r.y1);
   }
 
-  private cullInfo: { b: BuildingOutput; box: THREE.Box3; proxies: THREE.Mesh[]; casters: THREE.Mesh[]; shadows: boolean; interior: THREE.Mesh[]; interiorOn: boolean }[] | null = null;
+  private cullInfo: { b: BuildingOutput; box: THREE.Box3; proxies: THREE.Mesh[]; casters: THREE.Mesh[]; shadows: boolean; interior: THREE.Mesh[]; interiorOn: boolean; details: THREE.Mesh[]; detailsOn: boolean }[] | null = null;
+
+  /**
+   * Exterior meshes with little surface in total (a material used only for handles, hinges,
+   * brackets, small signs…): a few pixels from afar, but a draw call each.
+   */
+  private static detailMeshes(b: BuildingOutput, exclude: Set<THREE.Mesh>): THREE.Mesh[] {
+    const out: THREE.Mesh[] = [];
+    const a = new THREE.Vector3(), c = new THREE.Vector3(), d = new THREE.Vector3();
+    b.group.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh || exclude.has(m) || m.userData.shadowProxy) return;
+      const pos = m.geometry.getAttribute('position');
+      if (!pos) return;
+      const idx = m.geometry.getIndex();
+      const n = idx ? idx.count : pos.count;
+      let area = 0;
+      for (let i = 0; i + 2 < n && area < 2; i += 3) {
+        const i0 = idx ? idx.getX(i) : i, i1 = idx ? idx.getX(i + 1) : i + 1, i2 = idx ? idx.getX(i + 2) : i + 2;
+        a.fromBufferAttribute(pos, i0).applyMatrix4(m.matrixWorld);
+        c.fromBufferAttribute(pos, i1).applyMatrix4(m.matrixWorld).sub(a);
+        d.fromBufferAttribute(pos, i2).applyMatrix4(m.matrixWorld).sub(a);
+        area += c.cross(d).length() / 2;
+      }
+      if (area < 2) out.push(m);
+    });
+    return out;
+  }
 
   /**
    * Meshes whose vertices all lie inside the building's rooms (wall finishes, floors, ceilings,
@@ -145,7 +172,8 @@ export class World {
         const box = new THREE.Box3().setFromObject(b.group);
         const interior = World.interiorMeshes(b);
         const { proxies, rest } = buildShadowProxies(b.group, b.id);
-        return { b, box, proxies, casters: rest, shadows: true, interior, interiorOn: true };
+        const details = World.detailMeshes(b, new Set(interior));
+        return { b, box, proxies, casters: rest, shadows: true, interior, interiorOn: true, details, detailsOn: true };
       });
     }
     for (const info of this.cullInfo) {
@@ -159,6 +187,11 @@ export class World {
         info.interiorOn = interiorOn;
         for (const m of info.interior) m.visible = interiorOn;
         changed = true;
+      }
+      const detailsOn = d < 35;
+      if (detailsOn !== info.detailsOn) {
+        info.detailsOn = detailsOn;
+        for (const m of info.details) m.visible = detailsOn;
       }
       // a building's moon shadow only reads close by; beyond that every caster is a wasted draw
       // call per shadow cascade (the torch never reaches that far either)
