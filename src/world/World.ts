@@ -7,6 +7,7 @@ import { buildManor } from './buildings/Manor';
 import { buildGreenhouse, buildChapel, buildCemetery, buildHuntingStand } from './buildings/Sacred';
 import { buildWorkshop, buildBarn, buildPumpHouse } from './buildings/Outbuildings';
 import { buildTunnels } from './buildings/Tunnels';
+import { buildCaretaker } from './buildings/Caretaker';
 import { worldUniforms } from '../render/WorldUniforms';
 import { buildVan, VanOutput } from './vehicles/Van';
 import { POI } from './Layout';
@@ -73,6 +74,7 @@ export class World {
     this.add(buildBarn(this.physics, this.materials, h));
     this.add(buildPumpHouse(this.physics, this.materials, h));
     this.add(buildTunnels(this.physics, this.materials, h));
+    this.add(buildCaretaker(this.physics, this.materials, h));
     if (World.withVan) {
       const v = POI.van;
       this.van = buildVan(this.materials, this.physics, v.x, v.z, v.heading, (x, z) => this.terrain.heightAt(x, z));

@@ -5,6 +5,7 @@ import { Noise } from '../../materials/texgen/noise';
 import type { TerrainData } from '../TerrainData';
 import { BUILDINGS, CEMETERY, GARDEN, COURTYARD, WORLD_HALF, POI, rectDist, grow, Rect } from '../Layout';
 import { CEMETERY_SPRUCES } from '../buildings/Sacred';
+import { CARETAKER_GROUNDS_BLOCKERS } from '../buildings/Caretaker';
 import type { TextureStore } from '../../materials/TextureStore';
 import type { Physics } from '../../physics/Physics';
 import { GROUP } from '../../physics/Physics';
@@ -25,6 +26,7 @@ function blockers(): { r: Rect; m: number }[] {
   const out: { r: Rect; m: number }[] = [];
   for (const b of Object.values(BUILDINGS)) out.push({ r: b, m: 4 });
   out.push({ r: CEMETERY, m: 1.5 }, { r: COURTYARD, m: 3 }, { r: GARDEN, m: -2 });
+  for (const r of CARETAKER_GROUNDS_BLOCKERS) out.push({ r, m: 1.5 }); // gate walls, woodshed
   const hs = POI.huntingStand;
   out.push({ r: { x0: hs.x - 2.5, z0: hs.z - 2.5, x1: hs.x + 2.5, z1: hs.z + 2.5 }, m: 1.5 });
   return out;

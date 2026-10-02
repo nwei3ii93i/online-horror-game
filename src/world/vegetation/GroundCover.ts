@@ -9,6 +9,7 @@ import type { TextureStore } from '../../materials/TextureStore';
 import type { MaterialLibrary } from '../../materials/MaterialLibrary';
 import type { Physics } from '../../physics/Physics';
 import { foliageMaterial, barkMaterial } from './VegMaterials';
+import { CARETAKER_GROUNDS_BLOCKERS } from '../buildings/Caretaker';
 import type { VegTextureSet } from './VegTextures';
 
 const CELL = 16;
@@ -212,7 +213,8 @@ export class GroundCover {
   private scatter(): void {
     const noise = new Noise(9191);
     const P = 4096;
-    const block: { r: Rect; m: number }[] = [...Object.values(BUILDINGS).map((r) => ({ r, m: 1.5 })), { r: COURTYARD, m: 0 }, { r: CEMETERY, m: 0.5 }];
+    const block: { r: Rect; m: number }[] = [...Object.values(BUILDINGS).map((r) => ({ r, m: 1.5 })), { r: COURTYARD, m: 0 }, { r: CEMETERY, m: 0.5 },
+      ...CARETAKER_GROUNDS_BLOCKERS.map((r) => ({ r, m: 0.4 }))];
     const up = new THREE.Vector3(0, 1, 0);
     const n = { x: 0, y: 0, z: 0 };
     for (let cz = 0; cz < NC; cz++) for (let cx = 0; cx < NC; cx++) {

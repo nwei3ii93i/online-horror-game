@@ -38,6 +38,8 @@ import { SACRED_PROP_IDS, placeSacredProps } from './world/props/SacredProps';
 import { SACRED_DOCS } from './world/story/SacredDocs';
 import { OUTBUILDING_PROP_IDS, placeOutbuildingProps } from './world/props/OutbuildingProps';
 import { OUTBUILDING_DOCS } from './world/story/OutbuildingDocs';
+import { CARETAKER_PROP_IDS, caretakerProps } from './world/props/CaretakerProps';
+import { caretakerDocs } from './world/story/CaretakerDocs';
 
 const VAN_CARGO = ['metal_tool_chest', 'cardboard_box_01', 'Lantern_01'];
 
@@ -101,7 +103,7 @@ export class Game {
     await this.assets.init();
     const photos = this.opts.automation.has('nophoto') ? {} : this.assets.manifest.textures;
     const texP = this.textures.loadAll((d, t, id) => loading.set(0.05 + 0.6 * (d / t), `Preparing materials (${id})`), photos, ASSET_BASE);
-    const propsP = this.opts.automation.has('noprops') ? Promise.resolve() : this.assets.preload([...MANOR_PROP_IDS, ...SACRED_PROP_IDS, ...OUTBUILDING_PROP_IDS, ...VAN_CARGO]);
+    const propsP = this.opts.automation.has('noprops') ? Promise.resolve() : this.assets.preload([...MANOR_PROP_IDS, ...SACRED_PROP_IDS, ...OUTBUILDING_PROP_IDS, ...CARETAKER_PROP_IDS, ...VAN_CARGO]);
     const terrainP = TerrainData.generateAsync(this.opts.seed);
     const physP = this.physics.init();
     this.audio = new AudioEngine({ masterVolume: this.settings.values.masterVolume });
@@ -148,13 +150,18 @@ export class Game {
     placeOutbuildingProps(outbuildings);
     scene.add(outbuildings.group);
     this.propSets.push({ placer: outbuildings, rect: null, range: 28 });
+    // caretaker's house, gate, mailbox and woodshed
+    const caretaker = new PropPlacer(this.assets, this.physics);
+    for (const [id, x, y, z, ry = 0, o = {}] of caretakerProps((x, z) => terrain.heightAt(x, z))) caretaker.place(id, x, y, z, ry, o);
+    scene.add(caretaker.group);
+    this.propSets.push({ placer: caretaker, rect: null, range: 26 });
     this.interaction = new Interaction(this.physics);
     this.doors = new Doors(this.physics, this.materials, this.interaction, this.bridge);
     for (const d of this.world.doorSpecs) this.doors.add(d);
     scene.add(this.doors.group);
     this.reader = new DocumentReader(document.body);
     this.reader.onClose = () => { this.readerClosedAt = performance.now(); };
-    this.docMeshes = placeDocuments([...MANOR_DOCS, ...SACRED_DOCS, ...OUTBUILDING_DOCS], this.physics, this.interaction, (d) => this.reader.open(d));
+    this.docMeshes = placeDocuments([...MANOR_DOCS, ...SACRED_DOCS, ...OUTBUILDING_DOCS, ...caretakerDocs((x, z) => terrain.heightAt(x, z))], this.physics, this.interaction, (d) => this.reader.open(d));
     const pickups = new Pickups(this.physics, this.interaction, (item) => {
       this.inventory.add(item);
       this.audio.play('key_pickup', { volume: 0.8 });
