@@ -1,5 +1,38 @@
 import * as THREE from 'three/webgpu';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/**
+ * Scans often come as dozens of meshes (one per book, per screw…). Bake them into one mesh
+ * per material in the model's root space – a placed prop then costs one draw call per material.
+ */
+function flatten(root: THREE.Object3D): THREE.Group {
+  root.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const byMat = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  root.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh || Array.isArray(m.material)) return;
+    const g = m.geometry.clone();
+    g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld));
+    let list = byMat.get(m.material);
+    if (!list) byMat.set(m.material, (list = []));
+    list.push(g);
+  });
+  const out = new THREE.Group();
+  out.name = root.name;
+  for (const [mat, geoms] of byMat) {
+    // merging needs identical attribute sets: keep only those every part has
+    const names = Object.keys(geoms[0].attributes).filter((n) => geoms.every((g) => g.getAttribute(n)));
+    for (const g of geoms) for (const n of Object.keys(g.attributes)) if (!names.includes(n)) g.deleteAttribute(n);
+    const indexed = geoms.every((g) => g.index);
+    const parts = indexed ? geoms : geoms.map((g) => (g.index ? g.toNonIndexed() : g));
+    const merged = parts.length === 1 ? parts[0] : mergeGeometries(parts, false);
+    if (!merged) { for (const g of parts) out.add(new THREE.Mesh(g, mat)); continue; }
+    out.add(new THREE.Mesh(merged, mat));
+  }
+  return out;
+}
 
 /**
  * Loads the CC0 photoscanned assets fetched by tools/fetch-assets.mjs
@@ -35,7 +68,7 @@ export class AssetManager {
     if (!p) {
       p = this.hasModel(id)
         ? this.gltf.loadAsync(`${BASE}models/${id}.glb`).then((g) => {
-          const root = g.scene;
+          const root = flatten(g.scene);
           root.traverse((o) => {
             const m = o as THREE.Mesh;
             if (m.isMesh) {
