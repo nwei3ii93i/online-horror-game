@@ -176,8 +176,9 @@ function generatorNote(seed: number): DrawFn {
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     const fs = h * 0.15;
     g.font = `600 ${fs.toFixed(1)}px ${FONT_PENCIL}`;
-    const fitTo = (s: string, max: number) => { const m = g.measureText(s).width; if (m > max) g.font = `600 ${(fs * max / m).toFixed(1)}px ${FONT_PENCIL}`; };
-    fitTo(`${a} —`, w * 0.86);
+    // both lines in one size, fitted to the longer one
+    const m = Math.max(g.measureText(`${a} —`).width, g.measureText(`2 x${b}`).width);
+    if (m > w * 0.86) g.font = `600 ${(fs * (w * 0.86) / m).toFixed(1)}px ${FONT_PENCIL}`;
     g.fillText(`${a} —`, w * 0.07, h * 0.36);
     g.fillText(`2 x${b}`, w * 0.07, h * 0.56);
     // the copy, big and round, underlined twice
