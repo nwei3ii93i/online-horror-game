@@ -98,7 +98,34 @@ export class World {
     return this.rooms.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && p.y >= r.y0 - 0.3 && p.y < r.y1);
   }
 
-  private cullInfo: { b: BuildingOutput; box: THREE.Box3; casters: THREE.Mesh[]; shadows: boolean }[] | null = null;
+  private cullInfo: { b: BuildingOutput; box: THREE.Box3; casters: THREE.Mesh[]; shadows: boolean; interior: THREE.Mesh[]; interiorOn: boolean }[] | null = null;
+
+  /**
+   * Meshes whose vertices all lie inside the building's rooms (wall finishes, floors, ceilings,
+   * stairs, fittings): invisible from outside except through windows from close by.
+   */
+  private static interiorMeshes(b: BuildingOutput): THREE.Mesh[] {
+    const rooms = b.rooms;
+    if (!rooms.length) return [];
+    const out: THREE.Mesh[] = [];
+    const v = new THREE.Vector3();
+    b.group.updateMatrixWorld(true);
+    b.group.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      const pos = m.geometry.getAttribute('position');
+      if (!pos) return;
+      let outside = 0;
+      const step = Math.max(1, Math.floor(pos.count / 4000));
+      for (let i = 0; i < pos.count; i += step) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld);
+        const inside = rooms.some((r) => v.x > r.x0 - 0.02 && v.x < r.x1 + 0.02 && v.z > r.z0 - 0.02 && v.z < r.z1 + 0.02 && v.y > r.y0 - 0.45 && v.y < r.y1 + 0.45);
+        if (!inside && ++outside > 2) return;
+      }
+      out.push(m);
+    });
+    return out;
+  }
 
   /**
    * Whole-building visibility: beyond ~120 m the fog has swallowed a building anyway, and the
@@ -109,14 +136,20 @@ export class World {
       this.cullInfo = this.buildings.map((b) => {
         const casters: THREE.Mesh[] = [];
         b.group.traverse((o) => { if ((o as THREE.Mesh).isMesh && o.castShadow) casters.push(o as THREE.Mesh); });
-        return { b, box: new THREE.Box3().setFromObject(b.group), casters, shadows: true };
+        return { b, box: new THREE.Box3().setFromObject(b.group), casters, shadows: true, interior: World.interiorMeshes(b), interiorOn: true };
       });
     }
     for (const info of this.cullInfo) {
       const { b, box } = info;
       const d = box.distanceToPoint(cam);
       if (b.id === 'tunnels') b.group.visible = cam.y < 0.3 && d < 70;
-      else b.group.visible = d < (b.id === 'manor' ? 220 : 125);
+      else b.group.visible = d < (b.id === 'manor' ? 220 : 95);
+      // interiors only from close by (through windows / doors) – or from inside, of course
+      const interiorOn = d < 14;
+      if (interiorOn !== info.interiorOn) {
+        info.interiorOn = interiorOn;
+        for (const m of info.interior) m.visible = interiorOn;
+      }
       // a building's moon shadow only reads close by; beyond that every caster is a wasted draw
       // call per shadow cascade (the torch never reaches that far either)
       const shadows = d < (b.id === 'manor' ? 60 : 40);
