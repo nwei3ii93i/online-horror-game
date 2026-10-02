@@ -39,11 +39,18 @@ function blockers(): { r: Rect; m: number }[] {
  * billboards) and written into shared instanced meshes. Trunk colliders exist only
  * around the player.
  */
+const SCALE_IDX = [0, 1, 2, 4, 5, 6, 8, 9, 10];
+
 export class Forest {
   readonly group = new THREE.Group();
   readonly models: TreeModel[] = [];
   private cells: Cell[] = [];
   private lods: ModelLOD[][] = []; // [model][lod]
+  /**
+   * Beyond LOD 0 every tree of a species is drawn with one representative model scaled to its
+   * height (in the night fog the variants can't be told apart there): about half the draws.
+   */
+  private rep: number[] = [];
   private frustum = new THREE.Frustum();
   private m4 = new THREE.Matrix4();
   private lastPos = new THREE.Vector3(1e9, 0, 0);
@@ -167,12 +174,24 @@ export class Forest {
       return mat(`leaves:${H > 8 ? 'tall' : 'small'}`, () => foliageMaterial({ map: V.beechLeaves, treeHeight: H > 8 ? 22 : 4, trunkSway: H > 8 ? 0.4 : 0.15, flutter: 0.12, alphaTest: 0.38 }));
     };
 
+    const groups = new Map<string, number[]>();
+    this.models.forEach((m, i) => {
+      const key = `${m.species}:${m.species === 'spruce' && m.height < 12 ? 'young' : ''}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(i);
+    });
+    for (const ids of groups.values()) {
+      const sorted = [...ids].sort((a, b) => this.models[a].height - this.models[b].height);
+      const r = sorted[Math.floor(sorted.length / 2)];
+      for (const i of ids) this.rep[i] = r;
+    }
     const counts = this.models.map(() => 0);
-    for (const c of this.cells) for (const t of c.trees) counts[t.model]++;
+    const repCounts = this.models.map(() => 0);
+    for (const c of this.cells) for (const t of c.trees) { counts[t.model]++; repCounts[this.rep[t.model]]++; }
     this.models.forEach((model, mi) => {
       const lods: ModelLOD[] = [];
       model.lods.forEach((lod, li) => {
-        const cap = Math.max(1, counts[mi]);
+        const cap = Math.max(1, li === 0 ? counts[mi] : repCounts[mi]);
         const attr = new THREE.InstancedBufferAttribute(new Float32Array(cap * 16), 16);
         attr.setUsage(THREE.DynamicDrawUsage);
         const slots: ModelSlot[] = [];
@@ -243,10 +262,16 @@ export class Forest {
         const t = c.trees[i];
         const dx = t.x - cp.x, dz = t.z - cp.z, td2 = dx * dx + dz * dz;
         const lod = td2 < 32 * 32 ? 0 : td2 < 85 * 85 ? 1 : 2;
-        const L = this.lods[t.model][lod];
+        const mi = lod === 0 ? t.model : this.rep[t.model];
+        const L = this.lods[mi][lod];
         const dst = L.attr.array as Float32Array;
         const o = L.count * 16, src = i * 16;
         for (let k = 0; k < 16; k++) dst[o + k] = mats[src + k];
+        if (mi !== t.model) {
+          // the representative, scaled to this tree's height (basis columns only)
+          const f = this.models[t.model].height / this.models[mi].height;
+          for (const k of SCALE_IDX) dst[o + k] *= f;
+        }
         L.count++;
       }
     }
