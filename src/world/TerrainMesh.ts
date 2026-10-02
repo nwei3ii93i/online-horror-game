@@ -14,6 +14,7 @@ const UNDERGROUND: Rect[] = TUNNELS.flatMap((t) => t.points.slice(1).map((p, i) 
 const underground = (x: number, z: number) => UNDERGROUND.some((r) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1);
 import { TextureStore } from '../materials/TextureStore';
 import { worldUniforms } from '../render/WorldUniforms';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const CHUNK = 32;
 const LOD_STEPS = [1, 2, 4, 8];
@@ -23,6 +24,8 @@ const LAYER_SCALE = [4.5, 4.2, 4.0, 3.2, 4.0, 5.0, 2.5];
 const LAYER_TEX = ['forest_floor', 'meadow', 'mud', 'gravel', 'asphalt', 'rock', 'moss'];
 
 interface Chunk { cx: number; cz: number; mesh: THREE.Mesh; lod: number; geoms: (THREE.BufferGeometry | null)[]; center: THREE.Vector3; hasHole: boolean }
+/** 2×2 chunks drawn as one mesh once all four are far (coarse LODs): a quarter of the draws. */
+interface Block { chunks: Chunk[]; mesh: THREE.Mesh; lod: number; geoms: (THREE.BufferGeometry | null)[] }
 
 /**
  * Chunked terrain renderer with distance LOD, skirts against cracks and holes
@@ -33,6 +36,7 @@ export class TerrainMesh {
   readonly group = new THREE.Group();
   readonly material: THREE.MeshStandardNodeMaterial;
   private chunks: Chunk[] = [];
+  private blocks: Block[] = [];
   private splatTex0: THREE.DataTexture;
   private splatTex1: THREE.DataTexture;
   private layerScale: number[];
@@ -67,6 +71,17 @@ export class TerrainMesh {
       mesh.name = `terrain_${cx}_${cz}`;
       this.group.add(mesh);
       this.chunks.push({ cx, cz, mesh, lod: -1, geoms: [null, null, null, null], center: new THREE.Vector3(x0 + CHUNK / 2, cy, z0 + CHUNK / 2), hasHole });
+    }
+    for (let bz = 0; bz < nC; bz += 2) for (let bx = 0; bx < nC; bx += 2) {
+      const chunks = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([dx, dz]) => this.chunks[(bz + dz) * nC + bx + dx]);
+      const mesh = new THREE.Mesh(new THREE.BufferGeometry(), this.material);
+      mesh.receiveShadow = true;
+      mesh.castShadow = false;
+      mesh.matrixAutoUpdate = false;
+      mesh.visible = false;
+      mesh.name = `terrain_block_${bx}_${bz}`;
+      this.group.add(mesh);
+      this.blocks.push({ chunks, mesh, lod: -1, geoms: [null, null, null, null] });
     }
   }
 
@@ -196,17 +211,43 @@ export class TerrainMesh {
 
   /** Select LODs and visibility around the viewer. */
   update(viewer: THREE.Vector3, viewDistance: number): void {
-    for (const c of this.chunks) {
+    const want = (c: Chunk): number => {
       const d = Math.hypot(c.center.x - viewer.x, c.center.z - viewer.z) - CHUNK * 0.7;
-      if (d > viewDistance + 40) { c.mesh.visible = false; continue; }
-      let lod = d < 72 ? 0 : d < 150 ? 1 : d < 260 ? 2 : 3;
-      if (c.hasHole && d < 90) lod = 0;
-      if (lod !== c.lod) {
-        if (!c.geoms[lod]) c.geoms[lod] = this.buildGeometry(c, lod);
-        c.mesh.geometry = c.geoms[lod]!;
-        c.lod = lod;
+      if (d > viewDistance + 40) return -1;
+      if (c.hasHole && d < 90) return 0;
+      return d < 72 ? 0 : d < 150 ? 1 : d < 260 ? 2 : 3;
+    };
+    for (const b of this.blocks) {
+      const lods = b.chunks.map(want);
+      // far block: one merged mesh at the finest LOD any of its chunks wants (skirts hide the seams)
+      if (lods.every((l) => l >= 2)) {
+        const lod = Math.min(...lods);
+        if (lod !== b.lod) {
+          if (!b.geoms[lod]) {
+            const parts = b.chunks.map((c) => c.geoms[lod] ?? (c.geoms[lod] = this.buildGeometry(c, lod)));
+            const merged = mergeGeometries(parts, false);
+            merged.computeBoundingSphere();
+            merged.computeBoundingBox();
+            b.geoms[lod] = merged;
+          }
+          b.mesh.geometry = b.geoms[lod]!;
+          b.lod = lod;
+        }
+        b.mesh.visible = true;
+        for (const c of b.chunks) c.mesh.visible = false;
+        continue;
       }
-      c.mesh.visible = true;
+      b.mesh.visible = false;
+      b.chunks.forEach((c, i) => {
+        const lod = lods[i];
+        if (lod < 0) { c.mesh.visible = false; return; }
+        if (lod !== c.lod) {
+          if (!c.geoms[lod]) c.geoms[lod] = this.buildGeometry(c, lod);
+          c.mesh.geometry = c.geoms[lod]!;
+          c.lod = lod;
+        }
+        c.mesh.visible = true;
+      });
     }
   }
 
