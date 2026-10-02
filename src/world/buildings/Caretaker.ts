@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 import { float, mix, texture, uv } from 'three/tsl';
-import { BuildingKit, BuildingOutput, InteriorSpan, KitWall } from '../architecture/BuildingKit';
+import { BuildingKit, BuildingOutput, KitWall } from '../architecture/BuildingKit';
 import { buildSlab, buildWindow, WindowOpts } from '../architecture/Elements';
 import { buildRoof, buildChimney, RoofInfo } from '../architecture/Roofs';
 import { wallFrame, buildSkirting, Opening, WallFrame, FaceSpec } from '../architecture/Walls';
@@ -35,8 +35,8 @@ import { RNG } from '../../core/Random';
  * Grounds (same output group, own sub-meshes for culling):
  *  - Gate at POI.gate across the service road: granite pillars, wrought-iron double gate chained
  *    and padlocked (static meshes + one blocking collider), enamel sign, dry-stone walls ~15 m
- *    each side that crumble away into the forest (a collapsed breach 4–5 m east of the gate is
- *    the intended way in), rusted mailbox on a post outside the gate (anchor 'road_mailbox').
+ *    each side that crumble away into the forest (a collapsed 2 m breach ~7 m east of the gate
+ *    is the intended way in), rusted mailbox on a post outside the gate (anchor 'road_mailbox').
  *  - Woodshed at POI.woodshed: open-fronted timber lean-to, stacked firewood, chopping block.
  *
  * ============================================================================ INTEGRATION
@@ -413,7 +413,7 @@ export function buildCaretaker(physics: Physics | undefined, materials: Material
   const S = CARETAKER_SPOTS;
   kit.anchor('key_manor_front', S.keyBoard.x + 0.04, S.keyBoard.y - 0.07, S.keyBoard.z + 0.04, 0, 'ct_kitchen');
   kit.anchor('caretaker_stove', S.stove.x, G0 + 0.6, S.stove.z - 0.35, Math.PI, 'ct_kitchen');
-  kit.anchor('caretaker_votive', IX0 + 0.16, G0 + 1.62, IZ1 - 0.16, -Math.PI / 4, 'ct_living');
+  kit.anchor('caretaker_votive', IX0 + 0.2 * Math.SQRT1_2, G0 + 1.65, IZ1 - 0.2 * Math.SQRT1_2, 3 * Math.PI / 4, 'ct_living');
   kit.anchor('caretaker_crawlspace', S.crawl.x, C.CRAWL.y0, S.crawl.z, 0, 'ct_crawl');
 
   const group = new THREE.Group();
@@ -1055,26 +1055,28 @@ function buildLiving(mb: MeshBuilder, physics: Physics | undefined): void {
   polyN(mb, 'furniture_oak', [[0, shelfY - 0.03, 0], [pA[0], shelfY - 0.03, pA[2]], [pB[0], shelfY - 0.03, pB[2]]], [0, -1, 0]);
   quadN(mb, 'furniture_oak', [pB[0], shelfY - 0.03, pB[2]], [pA[0], shelfY - 0.03, pA[2]], pA, pB, [0, 0, 1]);
   mb.box('furniture_oak', 0, shelfY - 0.07, r * 0.69, 0.48, 0.05, 0.015, { uv: 'local' });
-  // votive in red glass with a small flame
-  mb.cylinder('ct_votive', 0, shelfY, 0.16, 0.034, 0.038, 0.085, 14, 'bottom');
-  mb.cylinder('ct_wax', 0, shelfY + 0.005, 0.16, 0.03, 0.03, 0.045, 12, 'top');
-  mb.cylinder('ct_flame', 0, shelfY + 0.05, 0.16, 0.006, 0.0, 0.026, 6, 'none');
+  // votive in red glass with a small flame (in the corner the walls run at |x| = z, so
+  // everything stays inside that wedge)
+  const vz = 0.2;
+  mb.cylinder('ct_votive', 0, shelfY, vz, 0.034, 0.038, 0.085, 14, 'bottom');
+  mb.cylinder('ct_wax', 0, shelfY + 0.005, vz, 0.03, 0.03, 0.045, 12, 'top');
+  mb.cylinder('ct_flame', 0, shelfY + 0.05, vz, 0.006, 0.0, 0.026, 6, 'none');
   // crucifix
-  const cy = shelfY + 0.12;
-  mb.box('furniture_oak', 0, cy + 0.24, 0.1, 0.036, 0.5, 0.024, { uv: 'local' });
-  mb.box('furniture_oak', 0, cy + 0.37, 0.1, 0.26, 0.032, 0.024, { uv: 'local' });
-  mb.box('ct_corpus', 0, cy + 0.3, 0.118, 0.045, 0.1, 0.018);
-  mb.box('ct_corpus', 0, cy + 0.2, 0.116, 0.03, 0.11, 0.016);
-  mb.cylinder('ct_corpus', 0, cy + 0.355, 0.118, 0.014, 0.012, 0.03, 8, 'both');
-  for (const s of [-1, 1]) mb.beam('ct_corpus', V(s * 0.02, cy + 0.34, 0.118), V(s * 0.11, cy + 0.375, 0.118), 0.014, 0.014, V(0, 0, 1));
-  mb.box('paper', 0, cy + 0.42, 0.114, 0.05, 0.022, 0.004);
+  const cy = shelfY + 0.12, cz2 = 0.155;
+  mb.box('furniture_oak', 0, cy + 0.24, cz2, 0.036, 0.5, 0.024, { uv: 'local' });
+  mb.box('furniture_oak', 0, cy + 0.37, cz2, 0.25, 0.032, 0.024, { uv: 'local' });
+  mb.box('ct_corpus', 0, cy + 0.3, cz2 + 0.018, 0.045, 0.1, 0.018);
+  mb.box('ct_corpus', 0, cy + 0.2, cz2 + 0.016, 0.03, 0.11, 0.016);
+  mb.cylinder('ct_corpus', 0, cy + 0.355, cz2 + 0.018, 0.014, 0.012, 0.03, 8, 'both');
+  for (const s of [-1, 1]) mb.beam('ct_corpus', V(s * 0.02, cy + 0.34, cz2 + 0.018), V(s * 0.105, cy + 0.372, cz2 + 0.018), 0.014, 0.014, V(0, 0, 1));
+  mb.box('paper', 0, cy + 0.42, cz2 + 0.014, 0.05, 0.022, 0.004);
   // Palmbuschen tucked behind the cross
   for (let i = 0; i < 7; i++) {
-    const a = -0.6 + i * 0.2;
-    mb.beam('ct_palm', V(0, cy + 0.28, 0.07), V(Math.sin(a) * 0.22, cy + 0.28 + Math.cos(a) * 0.24, 0.05), 0.02, 0.008, V(0, 0, 1));
+    const a = -0.42 + i * 0.14;
+    mb.beam('ct_palm', V(0, cy + 0.28, cz2 - 0.025), V(Math.sin(a) * 0.23, cy + 0.28 + Math.cos(a) * 0.25, cz2 - 0.04), 0.02, 0.008, V(0, 0, 1));
   }
-  mb.box('fabric_red', 0.0, cy + 0.27, 0.075, 0.03, 0.08, 0.004);
-  mb.box('fabric_white', 0.02, cy + 0.25, 0.076, 0.02, 0.1, 0.004);
+  mb.box('fabric_red', 0.0, cy + 0.27, cz2 - 0.022, 0.03, 0.08, 0.004);
+  mb.box('fabric_white', 0.02, cy + 0.25, cz2 - 0.021, 0.02, 0.1, 0.004);
   mb.pop();
 
   // ---- living-room ceiling beam (Tram) and curtains
@@ -1181,13 +1183,11 @@ function buildCellar(mb: MeshBuilder, physics: Physics | undefined): void {
   // the four labelled jars on the bottom board (labels drawn as decals in the browser)
   JAR_LABELS.forEach((l, i) => {
     const x = js.x0 + 0.56 + i * 0.105;
-    const r2 = new RNG(`jar${i}`);
     mb.pushTRS(x, C0 + js.boards[0] + 0.0125, js.z0 + js.depth / 2 + 0.04);
     mb.cylinder(l.mat, 0, 0.004, 0, 0.042, 0.042, 0.11 * l.fill, 8, 'top');
     mb.lathe('glass', [[0.0, 0.0], [0.044, 0.0], [0.047, 0.01], [0.047, 0.11], [0.04, 0.125], [0.04, 0.135]], 10);
     mb.cylinder('ct_jar_lid', 0, 0.133, 0, 0.043, 0.043, 0.01, 10, 'top');
     mb.pop();
-    void r2;
   });
 
   // potato crates and the sauerkraut crock are props; a firewood stack along the south cellar's west wall
@@ -1566,6 +1566,9 @@ function buildMailbox(gm: MeshBuilder, kit: BuildingKit, heightAt: (x: number, z
   gm.box('furniture_oak', MB_W / 2 + 0.003, y0 + 0.26, 0.0, 0.006, 0.05, 0.2);
   gm.box('rubber_black', MB_W / 2 + 0.002, y0 + 0.2, 0.0, 0.004, 0.018, 0.11);
   gm.pop();
+  // post collider only: the open box must not block the interaction ray to the note inside
+  const [cx, cz] = frameToWorld({ ox: wx, oz: wz, yaw }, 0, -MB_D / 2 + 0.05);
+  kit.physics?.addBox({ cx, cy: g + MB_POST / 2, cz, hx: 0.06, hy: MB_POST / 2, hz: 0.06, ry: yaw, surface: 'wood' });
   const pose = mailboxNotePose(heightAt);
   kit.anchor('road_mailbox', pose.x, pose.y, pose.z, pose.rot);
   const [gx, gz] = frameToWorld(F, 2.35, 0.32);

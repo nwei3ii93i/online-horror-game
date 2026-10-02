@@ -59,6 +59,9 @@ const INTERIOR: PropPlacement[] = [
   ['planter_pot_clay', 30.34, PORCH.y + 0.45, 9.45, 0.4, none],                      // on the porch bench
   ['power_box_01', 32.25, PORCH.y + 1.72, PORCH.z0, 0, { anchor: 'back' }],         // fuse box (generator circuit), above head height
 
+  // ---------------------------------------------------------------- outside, on the paved strip (fixed height)
+  ['Barrel_01', 27.5, 0.1, 8.5, 0.3],                                                // rain barrel under the south-west downpipe
+
   // ---------------------------------------------------------------- cellar
   ['Barrel_01', 32.9, C0, 6.9, 0.4],                                                 // sauerkraut
   ['wooden_crate_01', 32.1, C0, 1.76, 0],                                            // potatoes
