@@ -124,7 +124,6 @@ export class Game {
     for (const h of HOLES) this.physics.terrainExclusions.push({ rect: h, below: terrain.heightAt((h.x0 + h.x1) / 2, (h.z0 + h.z1) / 2) + 0.4 });
 
     loading.set(0.8, 'Placing the estate');
-    World.renderBundles = this.opts.automation.has('bundles') && this.engine.backend === 'webgpu';
     this.world = new World(this.physics, this.materials, terrain);
     this.world.build();
     this.world.applyInteriorMap();

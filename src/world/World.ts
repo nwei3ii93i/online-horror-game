@@ -82,17 +82,7 @@ export class World {
     }
   }
 
-  /** Record static buildings into WebGPU render bundles (CPU cost per draw ≈ 0 on replay). */
-  static renderBundles = false;
-
   private add(b: BuildingOutput): void {
-    if (World.renderBundles) {
-      // a bundle replays its recorded draws as-is, so per-mesh frustum culling must be off
-      const bg = new THREE.BundleGroup();
-      bg.name = b.group.name;
-      for (const c of [...b.group.children]) { c.frustumCulled = false; bg.add(c); }
-      b = { ...b, group: bg };
-    }
     this.buildings.push(b);
     this.rooms.push(...b.rooms);
     this.group.add(b.group);
@@ -154,13 +144,11 @@ export class World {
       const d = box.distanceToPoint(cam);
       if (b.id === 'tunnels') b.group.visible = cam.y < 0.3 && d < 70;
       else b.group.visible = d < (b.id === 'manor' ? 220 : 95);
-      let changed = false;
       // interiors only from close by (through windows / doors) – or from inside, of course
       const interiorOn = d < 14;
       if (interiorOn !== info.interiorOn) {
         info.interiorOn = interiorOn;
         for (const m of info.interior) m.visible = interiorOn;
-        changed = true;
       }
       // a building's moon shadow only reads close by; beyond that every caster is a wasted draw
       // call per shadow cascade (the torch never reaches that far either)
@@ -168,9 +156,7 @@ export class World {
       if (shadows !== info.shadows) {
         info.shadows = shadows;
         for (const m of info.casters) m.castShadow = shadows;
-        changed = true;
       }
-      if (changed && (b.group as THREE.BundleGroup).isBundleGroup) (b.group as THREE.BundleGroup).needsUpdate = true;
     }
   }
 
