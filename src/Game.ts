@@ -390,7 +390,9 @@ export class Game {
     this.flashlight.setBounce(hit ? cam.position.clone().addScaledVector(dir, hit.toi) : null, d, dir);
     const torch = this.flashlight.on ? 1 : 0;
     // close surfaces under the torch → lower exposure; nothing lit → open up a little
-    const target = torch ? THREE.MathUtils.lerp(0.42, 1.0, THREE.MathUtils.smoothstep(d, 0.4, 4.5)) : 1.12;
+    // the torch's hotspot falls off with 1/d²; follow most of that so a wall at arm's length
+    // (a sign, a note) stays readable instead of blowing out
+    const target = torch ? THREE.MathUtils.clamp(Math.pow(d / 4.5, 1.25), 0.14, 1.0) : 1.12;
     const rate = target < this.adaptExposure ? 6 : 1.2; // close down fast, open up slowly
     this.adaptExposure += (target - this.adaptExposure) * Math.min(1, dt * rate);
     this.engine.post.exposureBoost.value = this.adaptExposure;
