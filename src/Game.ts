@@ -35,6 +35,8 @@ import { PropPlacer } from './world/props/PropPlacer';
 import { MANOR_PROP_IDS, placeManorProps } from './world/props/ManorProps';
 import { SACRED_PROP_IDS, placeSacredProps } from './world/props/SacredProps';
 import { SACRED_DOCS } from './world/story/SacredDocs';
+import { OUTBUILDING_PROP_IDS, placeOutbuildingProps } from './world/props/OutbuildingProps';
+import { OUTBUILDING_DOCS } from './world/story/OutbuildingDocs';
 
 const VAN_CARGO = ['metal_tool_chest', 'cardboard_box_01', 'Lantern_01'];
 
@@ -98,7 +100,7 @@ export class Game {
     await this.assets.init();
     const photos = this.opts.automation.has('nophoto') ? {} : this.assets.manifest.textures;
     const texP = this.textures.loadAll((d, t, id) => loading.set(0.05 + 0.6 * (d / t), `Preparing materials (${id})`), photos, ASSET_BASE);
-    const propsP = this.opts.automation.has('noprops') ? Promise.resolve() : this.assets.preload([...MANOR_PROP_IDS, ...SACRED_PROP_IDS, ...VAN_CARGO]);
+    const propsP = this.opts.automation.has('noprops') ? Promise.resolve() : this.assets.preload([...MANOR_PROP_IDS, ...SACRED_PROP_IDS, ...OUTBUILDING_PROP_IDS, ...VAN_CARGO]);
     const terrainP = TerrainData.generateAsync(this.opts.seed);
     const physP = this.physics.init();
     this.audio = new AudioEngine({ masterVolume: this.settings.values.masterVolume });
@@ -140,13 +142,18 @@ export class Game {
     placeSacredProps(sacred);
     scene.add(sacred.group);
     this.propSets.push({ placer: sacred, rect: null, range: 45 });
+    // workshop, barn, pump house and tunnels
+    const outbuildings = new PropPlacer(this.assets, this.physics);
+    placeOutbuildingProps(outbuildings);
+    scene.add(outbuildings.group);
+    this.propSets.push({ placer: outbuildings, rect: null, range: 28 });
     this.interaction = new Interaction(this.physics);
     this.doors = new Doors(this.physics, this.materials, this.interaction, this.bridge);
     for (const d of this.world.doorSpecs) this.doors.add(d);
     scene.add(this.doors.group);
     this.reader = new DocumentReader(document.body);
     this.reader.onClose = () => { this.readerClosedAt = performance.now(); };
-    this.docMeshes = placeDocuments([...MANOR_DOCS, ...SACRED_DOCS], this.physics, this.interaction, (d) => this.reader.open(d));
+    this.docMeshes = placeDocuments([...MANOR_DOCS, ...SACRED_DOCS, ...OUTBUILDING_DOCS], this.physics, this.interaction, (d) => this.reader.open(d));
     const dressing = buildStoryDressing(this.materials, this.physics);
     scene.add(this.docMeshes, dressing);
     this.interiorGroups.push(dressing);

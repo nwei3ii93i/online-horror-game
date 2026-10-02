@@ -136,7 +136,7 @@ export const MANOR_PROPS: P[] = [
   ['vintage_suitcase', 4.8, U0, -26.2, 1.2, none],
   ['old_bed_frame', 10.0, U0, -27.42, 0],
   ['painted_wooden_cabinet', 7.0, U0, -27.9, 0],
-  ['wooden_ladder', 12.1, U0, -23.5, -H, { tiltX: -0.25 }],
+  ['wooden_ladder', 11.9, U0, -23.5, -H],                      // A-frame step ladder
 
   // ---------------------------------------------------------------- basement
   ['power_box_01', -2.85, B0 + 1.55, -21.6, H, wall],

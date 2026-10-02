@@ -38,7 +38,7 @@ type HeightFn = (x: number, z: number) => number;
 interface Section { a: number; b: number; c: number }
 
 const svc = TUNNELS.find((t) => t.id === 'service')!;
-const coalDef = TUNNELS.find((t) => t.id === 'tunnel_coal')!;
+const coalDef = TUNNELS.find((t) => t.id === 'coal')!;
 
 export const TUNNEL = {
   F: svc.y,

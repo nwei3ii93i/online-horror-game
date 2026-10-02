@@ -203,7 +203,7 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
   // kitchen back door
   kit.doorInWall('door:manor_kitchen_back', backWall, { at: WX1 - 8.3, width: 1.0, bottom: 0.3, top: 0.3 + 2.15, kind: 'door' }, { style: 'ledged', mat: 'painted_wood_brown_ext', handle: 'lever', seed: 8 }, 1, -1, { locked: true, key: 'key_manor_kitchen', sound: 'wood' });
   // tunnel door (iron, basement west)
-  const westB = kit.frames.find((x) => x.wall.y0 === B0 && x.wall.a[0] === WX0 && x.wall.b[1] === WZ1)!.frame;
+  const westB = kit.frames.find((x) => x.wall.y0 === B0 && x.wall.a[0] === WX0 && x.wall.a[1] === WZ0 && x.wall.b[1] === WZ1)!.frame;
   kit.doorInWall('door:manor_tunnel', westB, { at: -24.5 - WZ0, width: 1.1, bottom: 0, top: 2.0, kind: 'door' }, { style: 'flush', mat: 'rust_metal_int', handle: 'lever', handleMat: 'rust_metal_int' }, -1, 1, { sound: 'metal', open: 0.1 });
 
   const D = (id: string, f: any, at: number, w: number, h: number, hinge: 1 | -1, swing: 1 | -1, leaf = panel(), extra: any = {}) => kit.doorInWall(id, f, G(f, at, w, h), leaf, hinge, swing, extra);
