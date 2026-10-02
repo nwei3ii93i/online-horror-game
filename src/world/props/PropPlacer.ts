@@ -136,7 +136,8 @@ export class PropPlacer {
     const src = m as THREE.MeshStandardMaterial;
     const n = new THREE.MeshStandardNodeMaterial();
     n.name = `prop:${src.name}`;
-    n.color.copy(src.color ?? new THREE.Color(1, 1, 1)).multiplyScalar(tint);
+    // scans are shot clean and bright; the house has been dusty for decades
+    n.color.copy(src.color ?? new THREE.Color(1, 1, 1)).multiplyScalar(tint * 0.84);
     n.map = src.map ?? null;
     n.normalMap = src.normalMap ?? null;
     if (src.normalScale) n.normalScale.copy(src.normalScale);

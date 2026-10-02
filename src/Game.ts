@@ -335,6 +335,7 @@ export class Game {
     const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
     const hit = this.physics.raycast({ x: cam.position.x, y: cam.position.y, z: cam.position.z }, { x: dir.x, y: dir.y, z: dir.z }, 12, undefined, this.player.rapierCollider);
     const d = hit ? hit.toi : 12;
+    this.flashlight.setBounce(hit ? cam.position.clone().addScaledVector(dir, hit.toi) : null, d, dir);
     const torch = this.flashlight.on ? 1 : 0;
     // close surfaces under the torch → lower exposure; nothing lit → open up a little
     const target = torch ? THREE.MathUtils.lerp(0.42, 1.0, THREE.MathUtils.smoothstep(d, 0.4, 4.5)) : 1.12;
@@ -343,7 +344,6 @@ export class Game {
     this.engine.post.exposureBoost.value = this.adaptExposure;
   }
 
-  /** URL-driven automation for screenshots / tests: ?cam=x,y,z,yawDeg,pitchDeg&noclip&wet=0.8 */
   /** Debug / tour helper: put the eye at (x, y, z) world space, yaw/pitch in degrees. */
   setCamera(x: number, y: number, z: number, yawDeg: number, pitchDeg = 0, noclip = true): void {
     this.player.noclip = noclip;
@@ -351,6 +351,7 @@ export class Game {
     this.player.pitch = (pitchDeg * Math.PI) / 180;
   }
 
+  /** URL-driven automation for screenshots / tests: ?cam=x,y,z,yawDeg,pitchDeg&noclip&wet=0.8 */
   private applyAutomation(): void {
     const a = this.opts.automation;
     const cam = a.get('cam');

@@ -54,6 +54,9 @@ export class Flashlight {
   private flickerTime = 0;
   private aim = new THREE.Vector3();
   private initialized = false;
+  private bounce = new THREE.Vector3();
+  private bounceDist = 6;
+  private bounceValid = false;
 
   constructor(scene: THREE.Scene, shadowSize: number) {
     const l = new THREE.SpotLight(0xfff1dc, this.intensity, 45, 0.48, 0.6, 2);
@@ -67,12 +70,24 @@ export class Flashlight {
     l.layers.enable(LAYER_VOLUMETRIC);
     this.light = l;
     scene.add(l, l.target);
-    // faint bounce/spill so the near field isn't pitch black around the beam
-    this.fill = new THREE.PointLight(0xffe8cc, 0.6, 6, 2);
+    // fake one-bounce GI: a soft light just in front of whatever the beam hits, so the room
+    // around the hot spot picks up some of its light (see setBounce)
+    this.fill = new THREE.PointLight(0xffe2c4, 0.6, 8, 2);
     scene.add(this.fill);
   }
 
   toggle(): void { this.on = !this.on; }
+
+  /** Where the beam lands (view-ray hit) – drives the bounce light. null = nothing within range. */
+  setBounce(hit: THREE.Vector3 | null, dist: number, viewDir: THREE.Vector3): void {
+    const target = hit ? hit.clone().addScaledVector(viewDir, -Math.min(0.6, dist * 0.3)) : null;
+    if (target) {
+      if (!this.bounceValid) this.bounce.copy(target);
+      else this.bounce.lerp(target, 0.25);
+      this.bounceValid = true;
+    } else this.bounceValid = false;
+    this.bounceDist += ((hit ? dist : 12) - this.bounceDist) * 0.2;
+  }
 
   /** Brief instability (e.g. when something happens nearby). */
   stutter(duration = 0.6): void { this.flickerTime = Math.max(this.flickerTime, duration); }
@@ -102,7 +117,14 @@ export class Flashlight {
     const I = this.intensity * k * this.flicker;
     // never toggle .visible: changing the light count recompiles every material
     this.light.intensity = I;
-    this.fill.position.copy(this.aim).sub(this.light.position).normalize().multiplyScalar(1.2).add(this.light.position);
-    this.fill.intensity = 0.6 * k * this.flicker;
+    if (this.bounceValid) {
+      // inverse-square falloff of the torch onto the surface, re-emitted diffusely
+      const d = this.bounceDist;
+      this.fill.position.copy(this.bounce);
+      this.fill.intensity = Math.min(5, 9 / (d * d + 0.8)) * k * this.flicker;
+    } else {
+      this.fill.position.copy(this.aim).sub(this.light.position).normalize().multiplyScalar(1.2).add(this.light.position);
+      this.fill.intensity = 0.4 * k * this.flicker;
+    }
   }
 }
