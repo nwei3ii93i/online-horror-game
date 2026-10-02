@@ -3,7 +3,8 @@ import type RAPIER from '@dimforge/rapier3d-compat';
 import { RNG, hash2 } from '../../core/Random';
 import { Noise } from '../../materials/texgen/noise';
 import type { TerrainData } from '../TerrainData';
-import { BUILDINGS, CEMETERY, GARDEN, COURTYARD, WORLD_HALF, rectDist, grow, Rect } from '../Layout';
+import { BUILDINGS, CEMETERY, GARDEN, COURTYARD, WORLD_HALF, POI, rectDist, grow, Rect } from '../Layout';
+import { CEMETERY_SPRUCES } from '../buildings/Sacred';
 import type { TextureStore } from '../../materials/TextureStore';
 import type { Physics } from '../../physics/Physics';
 import { GROUP } from '../../physics/Physics';
@@ -24,6 +25,8 @@ function blockers(): { r: Rect; m: number }[] {
   const out: { r: Rect; m: number }[] = [];
   for (const b of Object.values(BUILDINGS)) out.push({ r: b, m: 4 });
   out.push({ r: CEMETERY, m: 1.5 }, { r: COURTYARD, m: 3 }, { r: GARDEN, m: -2 });
+  const hs = POI.huntingStand;
+  out.push({ r: { x0: hs.x - 2.5, z0: hs.z - 2.5, x1: hs.x + 2.5, z1: hs.z + 2.5 }, m: 1.5 });
   return out;
 }
 
@@ -122,7 +125,8 @@ export class Forest {
       this.totalTrees += cell.trees.length;
     }
     // hand-placed landmark trees
-    const special: [number, number, number][] = [[15.5, 6.5, 14], [-16, -48, 14], [57, -94, 14], [-8, 10, 4], [-14, -40, 12], [11, -58, 12]];
+    // (the three spruces over the nameless cross outside the cemetery wall come from Sacred.ts)
+    const special: [number, number, number][] = [[15.5, 6.5, 14], [-16, -48, 14], [57, -94, 14], [-8, 10, 4], [-14, -40, 12], [11, -58, 12], ...CEMETERY_SPRUCES];
     for (const [x, z, model] of special) {
       const cx = Math.floor((x + WORLD_HALF) / CELL), cz = Math.floor((z + WORLD_HALF) / CELL);
       const cell = this.cells[cz * NC + cx];

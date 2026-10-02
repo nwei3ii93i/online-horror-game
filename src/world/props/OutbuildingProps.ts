@@ -81,6 +81,7 @@ export const OUTBUILDING_PROPS: PropPlacement[] = [
   ['power_box_01', PIX0, PB + PUMPHOUSE_FIT.switchBoxY + 0.25, PUMPHOUSE_FIT.switchBoxZ, H, wall],
   ['wooden_bucket_01', -26.45, PB, -51.0, 0.3, none],
   ['Lantern_01', -28.95, PF + 0.78, PIZ0 + 0.25, 0.4, none],                    // on the ground-floor table
+  ['wooden_stool_01', -28.75, PF, PIZ0 + 0.95, 0.5],
 
   // ---------------------------------------------------------------- tunnels
   ['Lantern_01', G.x0 + 0.7, TF, G.zc + 0.02, 0.5, none],                       // by the candles at the bricked-up end

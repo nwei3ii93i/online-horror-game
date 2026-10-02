@@ -30,10 +30,10 @@ export const TUNNEL_MATS: Record<string, MatSpec> = {
   tunnel_brick: { tex: 'brick', scale: 2.08, color: '#9c8e84' },
   tunnel_brick_new: { tex: 'brick', scale: 2.08, color: '#c39b85' },
   tunnel_brick_damp: { tex: 'brick', scale: 2.08, color: '#62574f', roughness: 0.6 },
-  coal_floor: { tex: 'concrete', scale: 2, color: '#47423c', roughness: 0.95 },
-  coal: { color: '#121110', roughness: 0.42 },
-  pipe_lagging: { tex: 'fabric_white', scale: 0.4, color: '#9c9384', vertexColors: true },
-  water_streak: { color: '#2c2823', roughness: 0.3 },
+  tunnel_coal_floor: { tex: 'concrete', scale: 2, color: '#47423c', roughness: 0.95 },
+  tunnel_coal: { color: '#121110', roughness: 0.42 },
+  tunnel_lagging: { tex: 'fabric_white', scale: 0.4, color: '#9c9384', vertexColors: true },
+  tunnel_streak: { color: '#2c2823', roughness: 0.3 },
 };
 
 // ------------------------------------------------------------------ interior spans
@@ -202,10 +202,12 @@ export function wallPatch(mb: MeshBuilder, mat: string, c: THREE.Vector3, n: THR
 
 /** Floor drain: cast-iron grate over a dark sump. */
 export function drainGrate(mb: MeshBuilder, x: number, y: number, z: number, s = 0.3): void {
-  mb.quad('black_soot', [x - s / 2, y - 0.03, z + s / 2], [x + s / 2, y - 0.03, z + s / 2], [x + s / 2, y - 0.03, z - s / 2], [x - s / 2, y - 0.03, z - s / 2], [0, 1, 0]);
-  mb.box('iron_black', x, y + 0.003, z - s / 2 + 0.012, s, 0.012, 0.024, { skip: ['ny'] });
-  mb.box('iron_black', x, y + 0.003, z + s / 2 - 0.012, s, 0.012, 0.024, { skip: ['ny'] });
-  for (let k = 0; k < 7; k++) mb.box('iron_black', x - s / 2 + 0.03 + k * ((s - 0.06) / 6), y + 0.003, z, 0.012, 0.012, s - 0.048, { skip: ['ny'] });
+  // dark sump shows between the bars (drawn just above the floor surface)
+  mb.quad('black_soot', [x - s / 2 + 0.02, y + 0.001, z + s / 2 - 0.02], [x + s / 2 - 0.02, y + 0.001, z + s / 2 - 0.02], [x + s / 2 - 0.02, y + 0.001, z - s / 2 + 0.02], [x - s / 2 + 0.02, y + 0.001, z - s / 2 + 0.02], [0, 1, 0]);
+  mb.box('iron_black', x, y + 0.006, z - s / 2 + 0.012, s, 0.012, 0.024, { skip: ['ny'] });
+  mb.box('iron_black', x, y + 0.006, z + s / 2 - 0.012, s, 0.012, 0.024, { skip: ['ny'] });
+  for (const sx of [-1, 1]) mb.box('iron_black', x + sx * (s / 2 - 0.012), y + 0.006, z, 0.024, 0.012, s - 0.048, { skip: ['ny'] });
+  for (let k = 0; k < 7; k++) mb.box('iron_black', x - s / 2 + 0.03 + k * ((s - 0.06) / 6), y + 0.006, z, 0.012, 0.012, s - 0.048, { skip: ['ny'] });
 }
 
 /** Quad whose winding is flipped if needed so its front face looks along n. */
@@ -380,7 +382,7 @@ export function boardRun(mb: MeshBuilder, d: BoardRunDef): number {
 // ------------------------------------------------------------------ farm bits
 /** Small rectangular hay bale with two strings, base centred at (x, y, z). */
 export function hayBale(mb: MeshBuilder, mat: string, twine: string, x: number, y: number, z: number, ry: number, rng: RNG, size: [number, number, number] = [0.9, 0.36, 0.46]): void {
-  const [lx, ly, lz] = size.map((v) => v * rng.range(0.95, 1.05));
+  const lx = size[0] * rng.range(0.96, 1.04), ly = size[1], lz = size[2] * rng.range(0.96, 1.04);   // fixed height: layers stack flush
   mb.pushTRS(x, y, z, ry + rng.range(-0.06, 0.06), 1, 1, 1, 0, rng.range(-0.03, 0.03));
   mb.box(mat, 0, ly / 2, 0, lx, ly, lz, { uv: 'local', uvOffset: [rng.float() * 4, rng.float() * 4] });
   for (const bx of [-lx * 0.25, lx * 0.25]) {

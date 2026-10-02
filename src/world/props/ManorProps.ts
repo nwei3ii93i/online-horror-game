@@ -30,8 +30,8 @@ export const MANOR_PROPS: P[] = [
   // salon
   ['Sofa_01', -9.6, G0, -17.25, PI],
   ['WoodenTable_01', -9.6, G0, -18.6, 0.04],
-  ['ArmChair_01', -11.4, G0, -19.4, H + 0.6],
-  ['ArmChair_01', -7.7, G0, -19.3, -H - 0.5],
+  ['ArmChair_01', -11.4, G0, -19.4, H + 0.6, { tint: 0.72 }],
+  ['ArmChair_01', -7.7, G0, -19.3, -H - 0.5, { tint: 0.72 }],
   ['painted_wooden_nightstand', -9.8, G0, -21.78, 0],
   ['Television_01', -9.8, G0 + 0.62, -21.8, 0.1, none],
   ['Rockingchair_01', -5.0, G0, -16.6, PI + 0.5],
@@ -61,12 +61,12 @@ export const MANOR_PROPS: P[] = [
   ['drawer_cabinet', 3.42, G0, -16.6, H],
   ['wooden_bookshelf_worn', 5.0, G0, -20.77, 0],
   ['Shelf_01', 6.95, G0, -20.92, 0],
-  ['ArmChair_01', 7.1, G0, -19.6, -H - 0.5],
+  ['ArmChair_01', 7.1, G0, -19.6, -H - 0.5, { tint: 0.72 }],
   // library
   ['wooden_bookshelf_worn', 9.0, G0, -20.77, 0],
   ['wooden_bookshelf_worn', 10.62, G0, -20.77, 0],
   ['Shelf_01', 12.3, G0, -19.6, -H],
-  ['ArmChair_01', 11.4, G0, -16.6, PI + 0.6],
+  ['ArmChair_01', 11.4, G0, -16.6, PI + 0.6, { tint: 0.72 }],
   ['book_encyclopedia_set_01', 8.9, G0, -19.6, 1.2, none],
   ['book_encyclopedia_set_01', 9.7, G0, -16.3, 0.4, none],
   ['WoodenTable_01', 10.1, G0, -18.2, H + 0.1],
@@ -99,7 +99,7 @@ export const MANOR_PROPS: P[] = [
   // sewing room
   ['spinning_wheel_01', -1.9, U0, -16.6, H + 0.3],
   ['wicker_basket_01', -1.15, U0, -17.6, 0.2, none],
-  ['ArmChair_01', 1.9, U0, -16.5, -H - 0.4],
+  ['ArmChair_01', 1.9, U0, -16.5, -H - 0.4, { tint: 0.72 }],
   // master bedroom
   ['GothicBed_01', -6.6, U0, -21.06, 0],
   ['ClassicNightstand_01', -7.75, U0, -21.85, 0],

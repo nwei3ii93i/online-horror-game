@@ -4,6 +4,7 @@ import type { MaterialLibrary } from '../materials/MaterialLibrary';
 import type { TerrainData } from './TerrainData';
 import type { BuildingOutput, InteriorSpan, Room } from './architecture/BuildingKit';
 import { buildManor } from './buildings/Manor';
+import { buildGreenhouse, buildChapel, buildCemetery, buildHuntingStand } from './buildings/Sacred';
 import { worldUniforms } from '../render/WorldUniforms';
 import { buildVan, VanOutput } from './vehicles/Van';
 import { POI } from './Layout';
@@ -61,6 +62,11 @@ export class World {
   build(): void {
     const manor = buildManor(this.physics, this.materials);
     this.add(manor);
+    const h = (x: number, z: number) => this.terrain.heightAt(x, z);
+    this.add(buildGreenhouse(this.physics, this.materials, h));
+    this.add(buildChapel(this.physics, this.materials, h));
+    this.add(buildCemetery(this.physics, this.materials, h));
+    this.add(buildHuntingStand(this.physics, this.materials, h));
     if (World.withVan) {
       const v = POI.van;
       this.van = buildVan(this.materials, this.physics, v.x, v.z, v.heading, (x, z) => this.terrain.heightAt(x, z));

@@ -10,7 +10,7 @@ import { Volumetrics } from './render/Volumetrics';
 import { LAYER_VOLUMETRIC } from './render/PostFX';
 import { TerrainData } from './world/TerrainData';
 import { TerrainMesh } from './world/TerrainMesh';
-import { WORLD_HALF, HOLES, POI, BUILDINGS } from './world/Layout';
+import { WORLD_HALF, HOLES, POI, BUILDINGS, Rect } from './world/Layout';
 import { Physics } from './physics/Physics';
 import { PlayerController } from './gameplay/PlayerController';
 import { Flashlight } from './gameplay/Flashlight';
@@ -33,6 +33,8 @@ import { AssetManager, ASSET_BASE } from './assets/AssetManager';
 import { MANOR } from './world/buildings/Manor';
 import { PropPlacer } from './world/props/PropPlacer';
 import { MANOR_PROP_IDS, placeManorProps } from './world/props/ManorProps';
+import { SACRED_PROP_IDS, placeSacredProps } from './world/props/SacredProps';
+import { SACRED_DOCS } from './world/story/SacredDocs';
 
 const VAN_CARGO = ['metal_tool_chest', 'cardboard_box_01', 'Lantern_01'];
 
@@ -65,6 +67,9 @@ export class Game {
   reader!: DocumentReader;
   private readerClosedAt = 0;
   private propCullTimer = 0;
+  /** Prop placers per building with the footprint used for proximity culling. */
+  private propSets: { placer: PropPlacer; rect: Rect | null; range: number }[] = [];
+  private docMeshes = new THREE.Group();
   /** Interior-only groups (documents, story dressing, lamp fixtures) hidden away from the house. */
   private interiorGroups: THREE.Object3D[] = [];
   bridge: WorldBridge = new LocalWorldBridge();
@@ -93,7 +98,7 @@ export class Game {
     await this.assets.init();
     const photos = this.opts.automation.has('nophoto') ? {} : this.assets.manifest.textures;
     const texP = this.textures.loadAll((d, t, id) => loading.set(0.05 + 0.6 * (d / t), `Preparing materials (${id})`), photos, ASSET_BASE);
-    const propsP = this.opts.automation.has('noprops') ? Promise.resolve() : this.assets.preload([...MANOR_PROP_IDS, ...VAN_CARGO]);
+    const propsP = this.opts.automation.has('noprops') ? Promise.resolve() : this.assets.preload([...MANOR_PROP_IDS, ...SACRED_PROP_IDS, ...VAN_CARGO]);
     const terrainP = TerrainData.generateAsync(this.opts.seed);
     const physP = this.physics.init();
     this.audio = new AudioEngine({ masterVolume: this.settings.values.masterVolume });
@@ -129,16 +134,22 @@ export class Game {
       scene.add(vanProps.group);
     }
     scene.add(this.props.group);
+    this.propSets.push({ placer: this.props, rect: BUILDINGS.manor, range: 16 });
+    // garden, chapel, cemetery and hunting stand: scattered, so only per-prop distance culling
+    const sacred = new PropPlacer(this.assets, this.physics);
+    placeSacredProps(sacred);
+    scene.add(sacred.group);
+    this.propSets.push({ placer: sacred, rect: null, range: 45 });
     this.interaction = new Interaction(this.physics);
     this.doors = new Doors(this.physics, this.materials, this.interaction, this.bridge);
     for (const d of this.world.doorSpecs) this.doors.add(d);
     scene.add(this.doors.group);
     this.reader = new DocumentReader(document.body);
     this.reader.onClose = () => { this.readerClosedAt = performance.now(); };
-    const docs = placeDocuments(MANOR_DOCS, this.physics, this.interaction, (d) => this.reader.open(d));
+    this.docMeshes = placeDocuments([...MANOR_DOCS, ...SACRED_DOCS], this.physics, this.interaction, (d) => this.reader.open(d));
     const dressing = buildStoryDressing(this.materials, this.physics);
-    scene.add(docs, dressing);
-    this.interiorGroups.push(docs, dressing);
+    scene.add(this.docMeshes, dressing);
+    this.interiorGroups.push(dressing);
 
     loading.set(0.85, 'Growing the forest');
     await new Promise((r) => setTimeout(r, 0));
@@ -255,14 +266,23 @@ export class Game {
         this.propCullTimer -= dt;
         if (this.propCullTimer <= 0) {
           this.propCullTimer = 0.2;
-          const c = e.camera.position, M = BUILDINGS.manor;
-          const dx = Math.max(M.x0 - c.x, 0, c.x - M.x1), dz = Math.max(M.z0 - c.z, 0, c.z - M.z1);
-          const near = dx * dx + dz * dz < 22 * 22;
-          this.props.group.visible = near;
-          for (const g of this.interiorGroups) g.visible = near;
-          const room = near ? this.world.roomAt(c) : undefined;
-          if (near) this.props.cull(c, 16, room ? room.y0 : null);
-          this.doors.cull(c, near ? 24 : 0, room ? room.y0 : null);
+          const c = e.camera.position;
+          const room = this.world.roomAt(c);
+          const floorY = room ? room.y0 : null;
+          const nearRect = (r: Rect) => {
+            const dx = Math.max(r.x0 - c.x, 0, c.x - r.x1), dz = Math.max(r.z0 - c.z, 0, c.z - r.z1);
+            return dx * dx + dz * dz < 22 * 22;
+          };
+          // each building's dressing is only visible through its windows from close by
+          for (const b of this.propSets) {
+            const near = b.rect ? nearRect(b.rect) : true;
+            b.placer.group.visible = near;
+            if (near) b.placer.cull(c, b.range, floorY);
+          }
+          const nearManor = nearRect(BUILDINGS.manor);
+          for (const g of this.interiorGroups) g.visible = nearManor;
+          for (const d of this.docMeshes.children) d.visible = d.position.distanceToSquared(c) < 20 * 20;
+          this.doors.cull(c, 24, floorY, (x, z) => this.terrain.heightAt(x, z));
         }
         worldUniforms.windTime.value += dt;
         this.updateAudio(dt);
@@ -286,7 +306,7 @@ export class Game {
     this.reader.onClose = () => { prevClose?.(); a.play('paper_rustle', { volume: 0.55 }); };
     // a clock that still ticks in an empty house; lamps hum where the generator feeds them
     a.play('clock_tick_loop', { position: new THREE.Vector3(-2.43, MANOR.G0 + 1.6, -21.4), loop: true, volume: 0.5, refDistance: 1.2, maxDistance: 14 });
-    for (const f of this.world.lightFixtures) if (f.working) a.play('bulb_buzz_loop', { position: f.position.clone(), loop: true, volume: 0.35, refDistance: 0.8, maxDistance: 8 });
+    for (const f of this.world.lightFixtures) if (f.working && f.kind !== 'candle' && f.kind !== 'lantern') a.play('bulb_buzz_loop', { position: f.position.clone(), loop: true, volume: 0.35, refDistance: 0.8, maxDistance: 8 });
     this.doors.events.on('locked', (ev) => a.play('door_locked', { position: ev.position }));
     this.doors.events.on('unlock', (ev) => a.play('door_unlock', { position: ev.position }));
     const d = new THREE.Vector3();

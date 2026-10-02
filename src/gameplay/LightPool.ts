@@ -34,10 +34,13 @@ export class LightPool {
       const room = rooms.find((r) => r.id === f.room);
       const ceil = room ? room.y1 : f.position.y + 0.6;
       const p = f.position;
-      // cord, bakelite socket; pendants get a shallow enamel shade
-      mb.rod('rubber_black', new THREE.Vector3(p.x, ceil, p.z), new THREE.Vector3(p.x, p.y + 0.09, p.z), 0.005, 0.005, 5);
-      mb.cylinder('plastic_bakelite', p.x, p.y + 0.04, p.z, 0.022, 0.018, 0.06, 10);
-      mb.cylinder('plastic_bakelite', p.x, ceil - 0.025, p.z, 0.045, 0.045, 0.025, 12);
+      const flame = f.kind === 'candle' || f.kind === 'lantern';
+      // cord, bakelite socket; pendants get a shallow enamel shade (candles are just a flame)
+      if (!flame) mb.rod('rubber_black', new THREE.Vector3(p.x, ceil, p.z), new THREE.Vector3(p.x, p.y + 0.09, p.z), 0.005, 0.005, 5);
+      if (!flame) {
+        mb.cylinder('plastic_bakelite', p.x, p.y + 0.04, p.z, 0.022, 0.018, 0.06, 10);
+        mb.cylinder('plastic_bakelite', p.x, ceil - 0.025, p.z, 0.045, 0.045, 0.025, 12);
+      }
       if (f.kind === 'pendant') {
         mb.pushTRS(p.x, p.y - 0.06, p.z);
         mb.lathe('ceramic_white', [[0.21, 0.0], [0.2, 0.02], [0.12, 0.1], [0.03, 0.14]], 18);
@@ -48,9 +51,9 @@ export class LightPool {
       mat.colorNode = color(new THREE.Color(f.working ? 0xe8dcc0 : 0x9a968c));
       mat.roughnessNode = float(0.15);
       (mat as any).emissiveNode = color(new THREE.Color(f.color ?? 0xffc98a)).mul(glow);
-      const bulb = new THREE.Mesh(new THREE.SphereGeometry(f.kind === 'pendant' ? 0.04 : 0.032, 12, 8), mat);
-      bulb.position.set(p.x, p.y, p.z);
-      bulb.scale.set(1, 1.3, 1);
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(flame ? 0.008 : f.kind === 'pendant' ? 0.04 : 0.032, 12, 8), mat);
+      bulb.position.set(p.x, flame ? p.y - 0.06 : p.y, p.z);
+      bulb.scale.set(1, flame ? 2.6 : 1.3, 1);
       bulb.castShadow = false;
       this.group.add(bulb);
       this.states.push({ f, glow, level: 0, nextEvent: 1 + Math.random() * 4, dropout: 0 });

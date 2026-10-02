@@ -73,8 +73,9 @@ function tallyCanvas(count: number): HTMLCanvasElement {
     for (let col = 0; col < cols && n < count; col++) {
       const x = 20 + col * gw + rng.range(-2, 2), y = 20 + row * (gh + 6) + rng.range(-2, 2);
       const age = n / count;
-      g.strokeStyle = age < 0.35 ? 'rgba(70,68,62,0.75)' : age < 0.7 ? 'rgba(52,50,46,0.85)' : 'rgba(225,220,205,0.6)';
-      g.lineWidth = age < 0.7 ? 1.6 : 2.2;
+      // charcoal first, then pencil, the last year scratched pale into the stone
+      g.strokeStyle = age < 0.35 ? 'rgba(28,26,24,0.92)' : age < 0.7 ? 'rgba(40,38,35,0.9)' : 'rgba(215,208,190,0.85)';
+      g.lineWidth = age < 0.7 ? 3.4 : 3.8;
       const k = Math.min(5, count - n);
       for (let i = 0; i < Math.min(4, k); i++) {
         g.beginPath(); g.moveTo(x + i * 4.5, y + rng.range(0, 2)); g.lineTo(x + i * 4.5 + rng.range(-1, 1), y + gh - rng.range(0, 3)); g.stroke();

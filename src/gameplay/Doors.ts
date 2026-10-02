@@ -177,7 +177,7 @@ export class Doors {
    * Hide leaves the camera cannot see: beyond `range`, or (camera indoors at floor `floorY`)
    * more than a storey away. Saves a draw call per part and per shadow pass.
    */
-  cull(cam: THREE.Vector3, range: number, floorY: number | null): void {
+  cull(cam: THREE.Vector3, range: number, floorY: number | null, groundAt?: (x: number, z: number) => number): void {
     for (const d of this.doors.values()) {
       const h = d.spec.hinge;
       const dx = h.x - cam.x, dz = h.z - cam.z, d2 = dx * dx + dz * dz;
@@ -186,7 +186,11 @@ export class Doors {
       let vis = d2 < range * range;
       if (vis && d2 > 25) {
         if (floorY !== null) vis = h.y > floorY - 1.2 && h.y < floorY + 2.8;
-        else vis = h.y > -0.6 && h.y < 1.5; // from outside: ground-floor and terrace leaves only
+        else {
+          // from outside: only leaves near ground level (no cellars, no upper storeys)
+          const g = groundAt ? groundAt(h.x, h.z) : 0;
+          vis = h.y > g - 0.6 && h.y < g + 1.6;
+        }
       }
       d.pivot.visible = vis;
     }

@@ -176,8 +176,8 @@ export function buildWorkshop(physics: Physics | undefined, materials: MaterialL
     ws_steel: { color: '#5f5e5a', roughness: 0.42, metalness: 0.85 },
     ws_handle_red: { color: '#7a2a20', roughness: 0.45 },
     ws_jar: { color: '#3f4236', roughness: 0.12 },
-    oil_stain: { color: '#14120e', roughness: 0.22 },
-    exposed_brick: { tex: 'brick', scale: 2.08, exterior: true, groundDirt: 1 },
+    ws_oil_stain: { color: '#14120e', roughness: 0.22 },
+    ws_exposed_brick: { tex: 'brick', scale: 2.08, exterior: true, groundDirt: 1 },
   });
   const facade: FaceSpec = { mat: 'ws_render', dado: { mat: 'ws_socle', h: 0.3 } };
   const inner: FaceSpec = { mat: 'ws_wall_int', dado: { mat: 'ws_dado', h: 1.25 } };
@@ -237,15 +237,15 @@ export function buildWorkshop(physics: Physics | undefined, materials: MaterialL
   kit.doorInWall('door:workshop_side', walls.n, sdl.o, { style: 'ledged', mat: 'painted_wood_brown_ext', handle: 'lever', handleMat: 'iron_black', seed: 23 }, sdl.hingeSide, -1, { sound: 'wood' });
 
   // ------------------------------------------------------------------ roof structure inside
+  // tie beams (out of reach – no colliders), king posts carrying a ridge purlin under the rafters, struts
   const tieX = [-31.0, -28.5, -26.0, -23.5];
+  const purlinBot = roof.innerHeight(-27.5, 0) - 0.14 - 0.12;
+  mb.box('rough_timber', (IX0 + IX1) / 2, purlinBot + 0.06, 0, IX1 - IX0 + 0.2, 0.12, 0.12, { uv: 'local' });
   for (const x of tieX) {
     mb.box('rough_timber', x, E - 0.1, 0, 0.14, 0.2, IZ1 - IZ0 + 0.2, { uv: 'local', uvOffset: [x, 0] });
-    // king post up to the ridge with two struts
-    const top = roof.innerHeight(x, 0) - 0.07;
-    mb.box('rough_timber', x, (E + top) / 2, 0, 0.12, top - E, 0.12, { uv: 'local', uvRotate: true });
-    for (const s of [-1, 1]) mb.beam('rough_timber', V(x, E + 0.1, s * 0.12), V(x, roof.innerHeight(x, s * 2.0) - 0.08, s * 2.0), 0.08, 0.1, V(1, 0, 0));
+    mb.box('rough_timber', x, (E + purlinBot) / 2, 0, 0.12, purlinBot - E, 0.12, { uv: 'local', uvRotate: true });
+    for (const s of [-1, 1]) mb.beam('rough_timber', V(x, E + 0.1, s * 0.12), V(x, roof.innerHeight(x, s * 2.0) - 0.14, s * 2.0), 0.08, 0.1, V(1, 0, 0));
   }
-  if (physics) physics.addBox({ cx: (W.X0 + W.X1) / 2, cy: E - 0.1, cz: 0, hx: (IX1 - IX0) / 2, hy: 0.1, hz: 0.07, surface: 'wood' });
 
   // ------------------------------------------------------------------ workbench and pegboard (west wall)
   const B = WORKSHOP_BENCH;
@@ -351,8 +351,8 @@ export function buildWorkshop(physics: Physics | undefined, materials: MaterialL
 
   // ------------------------------------------------------------------ floor details
   drainGrate(mb, -27.2, F, -1.2);
-  for (const [x, z, rx, rz] of [[-27.0, 1.6, 0.6, 0.35], [-25.2, 1.2, 0.3, 0.25], [-31.6, -1.6, 0.25, 0.4], [-27.25, -1.15, 0.32, 0.24], [-23.0, 2.2, 0.22, 0.3]]) {
-    puddle(mb, 'oil_stain', x, z, F + 0.002, rx, rz, rng);
+  for (const [x, z, rx, rz] of [[-27.0, 1.6, 0.6, 0.35], [-25.2, 1.2, 0.3, 0.25], [-31.6, -1.6, 0.25, 0.4], [-28.3, -0.6, 0.32, 0.24], [-23.0, 2.2, 0.22, 0.3]]) {
+    puddle(mb, 'ws_oil_stain', x, z, F + 0.002, rx, rz, rng);
   }
 
   // ------------------------------------------------------------------ exterior
@@ -375,7 +375,7 @@ export function buildWorkshop(physics: Physics | undefined, materials: MaterialL
   mb.pop();
   // render fallen off in places
   for (const [x, y, z, nx, nz, w, h] of [[-30.5, 0.9, W.Z1 + 0.004, 0, 1, 0.35, 0.22], [-25.6, 2.6, W.Z1 + 0.004, 0, 1, 0.25, 0.15], [-31.2, 1.6, W.Z0 - 0.004, 0, -1, 0.45, 0.3], [W.X0 - 0.004, 1.2, 1.8, -1, 0, 0.5, 0.35], [W.X0 - 0.004, 2.5, -2.2, -1, 0, 0.3, 0.2], [W.X1 + 0.004, 0.75, -1.2, 1, 0, 0.3, 0.2]]) {
-    wallPatch(mb, 'exposed_brick', V(x, y, z), V(nx, 0, nz), w, h, rng);
+    wallPatch(mb, 'ws_exposed_brick', V(x, y, z), V(nx, 0, nz), w, h, rng);
   }
   // downpipes (gutters run along the north and south eaves)
   const tan = Math.tan(W.PITCH), vT = 0.12 / Math.cos(W.PITCH);
@@ -420,9 +420,9 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
     barn_earth: { tex: 'mud', scale: 3, color: '#7a7163', roughness: 1 },
     barn_tenne: { tex: 'floor_boards_dark', scale: 2, color: '#958b80' },
     barn_loft: { tex: 'floor_boards', scale: 2, color: '#8c8070' },
-    hay_int: { tex: 'hay', scale: 1 },
-    twine: { color: '#8a7a50', roughness: 0.9 },
-    rope: { color: '#6e6250', roughness: 0.95 },
+    barn_hay: { tex: 'hay', scale: 1 },
+    barn_twine: { color: '#8a7a50', roughness: 0.9 },
+    barn_rope: { color: '#6e6250', roughness: 0.95 },
   });
   const kit = new BuildingKit('barn', physics, { mat: 'stone_wall' });
   const mb = kit.mb;
@@ -482,9 +482,9 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
   // sill beams (interrupted at the door openings), plates
   const beamX = (x0: number, x1: number, z: number, yc: number, h: number, d = POST) => mb.box(T, (x0 + x1) / 2, yc, z, x1 - x0, h, d, { uv: 'local', uvOffset: [z, yc] });
   const beamZ = (z0: number, z1: number, x: number, yc: number, h: number, d = POST) => mb.box(T, x, yc, (z0 + z1) / 2, d, h, z1 - z0, { uv: 'local', uvOffset: [x, yc] });
-  beamX(Bn.X0 + 0.012, tx0 - 0.1, zS, PL + 0.09, 0.18); beamX(tx1 + 0.1, Bn.X1 - 0.012, zS, PL + 0.09, 0.18);
+  beamX(Bn.X0 + 0.012, tx0 + 0.1, zS, PL + 0.09, 0.18); beamX(tx1 - 0.1, Bn.X1 - 0.012, zS, PL + 0.09, 0.18);
   beamX(Bn.X0 + 0.012, Bn.X1 - 0.012, zN, PL + 0.09, 0.18);
-  beamZ(Bn.Z0 + 0.212, westDoor.z0 - 0.2, xW, PL + 0.09, 0.18); beamZ(westDoor.z1 + 0.2, Bn.Z1 - 0.212, xW, PL + 0.09, 0.18);
+  beamZ(Bn.Z0 + 0.212, westDoor.z0, xW, PL + 0.09, 0.18); beamZ(westDoor.z1, Bn.Z1 - 0.212, xW, PL + 0.09, 0.18);
   beamZ(Bn.Z0 + 0.212, Bn.Z1 - 0.212, xE, PL + 0.09, 0.18);
   beamX(Bn.X0 + 0.012, Bn.X1 - 0.012, zS, PT - 0.1, 0.2); beamX(Bn.X0 + 0.012, Bn.X1 - 0.012, zN, PT - 0.1, 0.2);
   beamZ(Bn.Z0 + 0.212, Bn.Z1 - 0.212, xW, PT - 0.1, 0.2); beamZ(Bn.Z0 + 0.212, Bn.Z1 - 0.212, xE, PT - 0.1, 0.2);
@@ -495,8 +495,9 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
     for (let i = 0; i < s.length - 1; i++) for (const y of ys) {
       const a = s[i] + POST / 2, b = s[i + 1] - POST / 2;
       if (b - a < 0.05 || skip(a, b, y)) continue;
-      if (alongX) mb.box(T, (a + b) / 2, y, fixed - Math.sign(fixed - (Bn.Z0 + Bn.Z1) / 2) * 0.02, b - a, y > 2.6 && y < 3.2 ? 0.21 : 0.14, 0.14, { uv: 'local', uvOffset: [a, y] });
-      else mb.box(T, fixed - Math.sign(fixed - (Bn.X0 + Bn.X1) / 2) * 0.02, y, (a + b) / 2, 0.14, 0.14, b - a, { uv: 'local', uvOffset: [a, y] });
+      // nailers sit right behind the cladding (outer face at the boards' inner face)
+      if (alongX) mb.box(T, (a + b) / 2, y, fixed + Math.sign(fixed - (Bn.Z0 + Bn.Z1) / 2) * 0.03, b - a, y > 2.6 && y < 3.2 ? 0.21 : 0.14, 0.14, { uv: 'local', uvOffset: [a, y] });
+      else mb.box(T, fixed + Math.sign(fixed - (Bn.X0 + Bn.X1) / 2) * 0.03, y, (a + b) / 2, 0.14, 0.14, b - a, { uv: 'local', uvOffset: [a, y] });
     }
   };
   railsBetween(postsS, zS, true, [LO - 0.335, 4.75], (a, b, y) => a >= tx0 - 0.2 && b <= tx1 + 0.2 && y < tenneHead + 0.4);
@@ -550,9 +551,9 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
   for (const x of [tx0 + 0.02, tx1 - 0.02]) mb.box(T, x, LO - 0.14, (Bn.Z0 + Bn.Z1) / 2, 0.04, 0.28, Bn.Z1 - Bn.Z0 - 0.424, { uv: 'local' });
   // railings at the loft edges (gap where the ladder arrives)
   const ladderZ = -47.3;
-  timberRailing(mb, physics, [[tx0 + 0.05, Bn.Z0 + 0.3], [tx0 + 0.05, ladderZ - 0.45]], LO, T);
-  timberRailing(mb, physics, [[tx0 + 0.05, ladderZ + 0.45], [tx0 + 0.05, Bn.Z1 - 0.3]], LO, T);
-  timberRailing(mb, physics, [[tx1 - 0.05, Bn.Z0 + 0.3], [tx1 - 0.05, Bn.Z1 - 0.3]], LO, T);
+  timberRailing(mb, physics, [[tx0 - 0.06, Bn.Z0 + 0.3], [tx0 - 0.06, ladderZ - 0.45]], LO, T);
+  timberRailing(mb, physics, [[tx0 - 0.06, ladderZ + 0.45], [tx0 - 0.06, Bn.Z1 - 0.3]], LO, T);
+  timberRailing(mb, physics, [[tx1 + 0.06, Bn.Z0 + 0.3], [tx1 + 0.06, Bn.Z1 - 0.3]], LO, T);
   // ladder-stair from the threshing floor to the west loft (46°)
   const lRise = LO - F, lSteps = 14, lRun = 0.22;
   ladderStair(mb, physics, { x: tx0 + 0.01 + lSteps * lRun, z: ladderZ, y: F, dir: Math.PI / 2, width: 0.62, rise: lRise, steps: lSteps, run: lRun, mat: T, rail: 'left', surface: 'wood_old' });
@@ -574,14 +575,15 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
   }
 
   // ------------------------------------------------------------------ doors
-  const fS = wallFrame({ a: [Bn.X0, Bn.Z1], b: [Bn.X1, Bn.Z1], y0: F, y1: F + 4.3, t: 0.156 });
+  // leaves hang outside the cladding, clear of the plinth face (hinge line 6 cm outside the footprint)
+  const fS = wallFrame({ a: [Bn.X0, Bn.Z1], b: [Bn.X1, Bn.Z1], y0: F, y1: F + 4.3, t: 0.19 });
   const tc = (tx0 + tx1) / 2 - Bn.X0;
   const dl = leafOpening(tx0 + 0.05 - Bn.X0, tc - 0.003, 0, 4.035);
   const dr = leafOpening(tx1 - 0.05 - Bn.X0, tc + 0.003, 0, 4.035);
   const barnLeaf = { style: 'ledged' as const, mat: 'barn_boards', handle: 'ring' as const, handleMat: 'iron_black', thickness: 0.05 };
   kit.doorInWall('door:barn_gate_w', fS, dl.o, { ...barnLeaf, seed: 31 }, dl.hingeSide, 1, { sound: 'wood' });
   kit.doorInWall('door:barn_gate_e', fS, dr.o, { ...barnLeaf, seed: 32 }, dr.hingeSide, 1, { sound: 'wood', open: 1.25 });
-  const fW = wallFrame({ a: [Bn.X0, Bn.Z0], b: [Bn.X0, Bn.Z1], y0: F, y1: F + 2.4, t: 0.156 });
+  const fW = wallFrame({ a: [Bn.X0, Bn.Z0], b: [Bn.X0, Bn.Z1], y0: F, y1: F + 2.4, t: 0.19 });
   const wd = leafOpening(westDoor.z1 + 0.05 - Bn.Z0, westDoor.z0 - 0.05 - Bn.Z0, 0, westDoor.h + 0.035);
   kit.doorInWall('door:barn_west', fW, wd.o, { style: 'ledged', mat: 'barn_boards', handle: 'ring', handleMat: 'iron_black', seed: 33 }, wd.hingeSide, 1, { sound: 'wood', open: 0.5 });
   // hay hatch in the east gable, hanging open (static)
@@ -596,22 +598,22 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
   mb.pushTRS(Bn.X1 + 0.8, hoistY - 0.2, -42.5, Math.PI / 2);
   mb.rod('rust_metal', V(0, 0, -0.03), V(0, 0, 0.03), 0.11, 0.11, 14);
   mb.pop();
-  mb.rod('rope', V(Bn.X1 + 0.69, hoistY - 0.2, -42.5), V(Bn.X1 + 0.7, F + 2.6, -42.48), 0.012, 0.012, 5);
-  mb.rod('rope', V(Bn.X1 + 0.91, hoistY - 0.2, -42.5), V(Bn.X1 + 0.9, F + 4.2, -42.52), 0.012, 0.012, 5);
+  mb.rod('barn_rope', V(Bn.X1 + 0.69, hoistY - 0.2, -42.5), V(Bn.X1 + 0.7, F + 2.6, -42.48), 0.012, 0.012, 5);
+  mb.rod('barn_rope', V(Bn.X1 + 0.91, hoistY - 0.2, -42.5), V(Bn.X1 + 0.9, F + 4.2, -42.52), 0.012, 0.012, 5);
 
   // ------------------------------------------------------------------ hay
   const bales = new RNG('barn-bales');
   for (let x = Bn.X0 + 0.75; x < -41.6; x += 0.95) for (let row = 0; row < 3; row++) for (let layer = 0; layer < 3; layer++) {
     if (layer === 2 && bales.chance(0.35)) continue;
     if (row === 2 && bales.chance(0.25)) continue;
-    hayBale(mb, 'hay_int', 'twine', x + bales.range(-0.03, 0.03), LO + layer * 0.37, Bn.Z0 + 0.55 + row * 0.5, 0, bales);
+    hayBale(mb, 'barn_hay', 'barn_twine', x + bales.range(-0.03, 0.03), LO + layer * 0.361, Bn.Z0 + 0.55 + row * 0.5, 0, bales);
   }
   if (physics) physics.addBox({ cx: (Bn.X0 + 0.3 + -41.6) / 2, cy: LO + 0.55, cz: Bn.Z0 + 0.95, hx: (-41.6 - Bn.X0 - 0.3) / 2, hy: 0.55, hz: 0.75, surface: 'hay' });
-  for (const [x, z, rx, rz, h] of [[-46.5, -41.0, 1.8, 1.4, 0.7], [-51.5, -40.5, 1.4, 1.6, 0.9], [-33.2, -38.5, 1.1, 0.9, 0.55]] as number[][]) heap(mb, 'hay_int', x, LO, z, rx, rz, h, bales, 14, 4);
-  heap(mb, 'hay_int', -37.2, F, -46.3, 0.9, 0.7, 0.35, bales, 12, 3);
-  for (let i = 0; i < 4; i++) hayBale(mb, 'hay_int', 'twine', -34.2 + i * 0.95, LO, -48.4, 0, bales);
-  hayBale(mb, 'hay_int', 'twine', -36.4, F, -40.6, 0.7, bales);
-  hayBale(mb, 'hay_int', 'twine', -36.2, F + 0.37, -40.55, 0.5, bales);
+  for (const [x, z, rx, rz, h] of [[-46.5, -41.0, 1.8, 1.4, 0.7], [-51.5, -40.5, 1.4, 1.6, 0.9], [-33.2, -38.5, 1.1, 0.9, 0.55]] as number[][]) heap(mb, 'barn_hay', x, LO, z, rx, rz, h, bales, 14, 4);
+  heap(mb, 'barn_hay', -37.2, F, -46.3, 0.9, 0.7, 0.35, bales, 12, 3);
+  for (let i = 0; i < 4; i++) hayBale(mb, 'barn_hay', 'barn_twine', -34.2 + i * 0.95, LO, -48.4, 0, bales);
+  hayBale(mb, 'barn_hay', 'barn_twine', -36.4, F, -40.6, 0.7, bales);
+  hayBale(mb, 'barn_hay', 'barn_twine', -36.25, F + 0.361, -40.55, 0.5, bales);
 
   // ------------------------------------------------------------------ old farm gear (ground floor, west bays)
   // hay wagon (Leiterwagen), front wheel missing, axle on a block
@@ -635,7 +637,7 @@ export function buildBarn(physics: Physics | undefined, materials: MaterialLibra
   // loose wheels against the north plinth wall and one lying flat
   leaningWheel(mb, 'rough_timber', 'rust_metal_int', -53.3, F, BIZ0 + 0.16, 0, 0.18, 0.55);
   leaningWheel(mb, 'rough_timber', 'rust_metal_int', -52.1, F, BIZ0 + 0.2, 0.15, 0.22, 0.6, 3, new RNG(7));
-  mb.pushTRS(-49.4, F + 0.07, -47.6, 0.3, 1, 1, 1, Math.PI / 2); cartWheel(mb, 'rough_timber', 'rust_metal_int', 0.48); mb.pop();
+  mb.pushTRS(-49.4, F + 0.14, -47.6, 0.3, 1, 1, 1, Math.PI / 2); cartWheel(mb, 'rough_timber', 'rust_metal_int', 0.48); mb.pop();   // lying on its hub
   // rubble of old roof tiles in a corner, broom marks of nothing
   scatterBlocks(mb, 'roof_tiles', -54.3, -37.4, -53.0, -36.6, F, 14, rng, [0.24, 0.02, 0.4]);
 
@@ -687,7 +689,7 @@ export const PUMPHOUSE = {
 
 /** Basement fittings used by props/documents. */
 export const PUMPHOUSE_FIT = {
-  generator: { x: -29.12, z: -51.25, pallet: 0.12 },
+  generator: { x: -29.12, z: -51.25, pallet: 0.111 },
   crate: { x: -29.1, z: -52.36 },
   stairVoid: { x0: -26.25, z0: -51.6, x1: -25.38, z1: -49.2 },
   /** power_box_01 on the west wall (base of its back face above B) — the generator cable runs into it. */
@@ -708,9 +710,9 @@ export function buildPumpHouse(physics: Physics | undefined, materials: Material
     ph_vessel: { tex: 'painted_metal', scale: 1, color: '#4b5f6b', vertexColors: true },
     ph_steel: { tex: 'painted_metal', scale: 1, color: '#6c706c', vertexColors: true },
     ph_door: { tex: 'painted_metal', scale: 1, color: '#56604f', exterior: true },
-    enamel_plate: { color: '#e6e0ce', roughness: 0.22, exterior: true },
-    soot_stain: { color: '#161412', roughness: 0.9 },
-    gauge_face: { color: '#d8d4c4', roughness: 0.3 },
+    ph_enamel: { color: '#e6e0ce', roughness: 0.22, exterior: true },
+    ph_soot: { color: '#161412', roughness: 0.9 },
+    ph_gauge: { color: '#d8d4c4', roughness: 0.3 },
   });
   const facade: FaceSpec = { mat: 'ph_render', dado: { mat: 'ph_socle', h: 0.3 } };
   const kit = new BuildingKit('pumphouse', physics, facade);
@@ -798,8 +800,8 @@ export function buildPumpHouse(physics: Physics | undefined, materials: Material
   pipe(mb, 'rust_metal_int', [V(G.x - 0.26, B + G.pallet + 0.4, exZ), V(exX, B + G.pallet + 0.4, exZ), V(exX, F + 0.55, exZ), V(Ph.X0 - 0.22, F + 0.55, exZ), V(Ph.X0 - 0.22, F + 0.3, exZ)], 0.035, 8);
   flange(mb, 'rust_metal_int', V(exX, F + 0.005, exZ), V(0, 1, 0), 0.06, 0.012);
   flange(mb, 'rust_metal', V(Ph.X0 - 0.005, F + 0.55, exZ), V(1, 0, 0), 0.07, 0.012);
-  wallPatch(mb, 'soot_stain', V(Ph.X0 - 0.004, F + 0.95, exZ - 0.05), V(-1, 0, 0), 0.32, 0.55, rng);
-  wallPatch(mb, 'soot_stain', V(IX0 + 0.003, F + 1.15, exZ), V(1, 0, 0), 0.12, 0.45, rng);
+  wallPatch(mb, 'ph_soot', V(Ph.X0 - 0.004, F + 0.95, exZ - 0.05), V(-1, 0, 0), 0.32, 0.55, rng);
+  wallPatch(mb, 'ph_soot', V(IX0 + 0.003, F + 1.15, exZ), V(1, 0, 0), 0.12, 0.45, rng);
   // pressure vessel (Windkessel) with gauge and valve
   const wk = { x: -28.2, z: -52.25, y: B + 0.1 };
   mb.box('concrete_int', wk.x, B + 0.05, wk.z, 0.64, 0.1, 0.64);
@@ -809,7 +811,7 @@ export function buildPumpHouse(physics: Physics | undefined, materials: Material
   physics?.addBox({ cx: wk.x, cy: wk.y + 0.75, cz: wk.z, hx: 0.29, hy: 0.8, hz: 0.29, surface: 'metal' });
   mb.rod('ph_steel', V(wk.x, wk.y + 1.1, wk.z + 0.28), V(wk.x, wk.y + 1.1, wk.z + 0.36), 0.012, 0.012, 6);
   mb.rod('ph_steel', V(wk.x, wk.y + 1.1, wk.z + 0.36), V(wk.x, wk.y + 1.1, wk.z + 0.39), 0.055, 0.055, 14);
-  mb.quad('gauge_face', [wk.x - 0.045, wk.y + 1.055, wk.z + 0.392], [wk.x + 0.045, wk.y + 1.055, wk.z + 0.392], [wk.x + 0.045, wk.y + 1.145, wk.z + 0.392], [wk.x - 0.045, wk.y + 1.145, wk.z + 0.392], [0, 0, 1], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+  mb.quad('ph_gauge', [wk.x - 0.045, wk.y + 1.055, wk.z + 0.392], [wk.x + 0.045, wk.y + 1.055, wk.z + 0.392], [wk.x + 0.045, wk.y + 1.145, wk.z + 0.392], [wk.x - 0.045, wk.y + 1.145, wk.z + 0.392], [0, 0, 1], [[0, 0], [1, 0], [1, 1], [0, 1]]);
   mb.box('black_soot', wk.x + 0.012, wk.y + 1.105, wk.z + 0.394, 0.03, 0.004, 0.002);
   // pump set on a concrete plinth: motor (finned), coupling, volute; suction into the well
   const pp = { x0: -27.7, x1: -26.7, z: -52.27, y: B + 0.22 };
@@ -839,7 +841,7 @@ export function buildPumpHouse(physics: Physics | undefined, materials: Material
   mb.rod('iron_black', V(xin, B + 1.0, -49.15), V(xin + 0.18, B + 1.0, -49.15), 0.012, 0.012, 5);
   flange(mb, 'iron_black', V(xin + 0.19, B + 1.0, -49.15), V(1, 0, 0), 0.09, 0.012);
   for (const x of [xin, xout]) {
-    mb.rod('pipe_lagging', V(x, B + 1.5, zw - 0.02), V(x, B + 1.5, IZ1 - 0.2), 0.075, 0.075, 10);
+    mb.rod('tunnel_lagging', V(x, B + 1.5, zw - 0.02), V(x, B + 1.5, IZ1 - 0.2), 0.075, 0.075, 10);
     flange(mb, 'rust_metal_int', V(x, B + 1.5, IZ1 - 0.2), V(0, 0, 1), 0.085, 0.02);
     flange(mb, 'rust_metal_int', V(x, B + 1.5, IZ1 - 0.23), V(0, 0, 1), 0.085, 0.02);
   }
@@ -861,14 +863,14 @@ export function buildPumpHouse(physics: Physics | undefined, materials: Material
   const de = Math.min(heightAt(mainDoorX, Ph.Z1 + 0.4), F) - 0.15;
   mb.box('ph_socle', mainDoorX, (F - 0.01 + de) / 2, Ph.Z1 + 0.28, 1.4, F - 0.01 - de, 0.56, { skip: ['ny', 'nz'] });
   physics?.addBox({ cx: mainDoorX, cy: F - 0.11, cz: Ph.Z1 + 0.28, hx: 0.7, hy: 0.1, hz: 0.28, surface: 'concrete' });
-  mb.box('enamel_plate', -26.6, F + 1.75, Ph.Z1 + 0.006, 0.52, 0.26, 0.008, { skip: ['nz'] });
+  mb.box('ph_enamel', -26.6, F + 1.75, Ph.Z1 + 0.006, 0.52, 0.26, 0.008, { skip: ['nz'] });
   kit.anchor('pumphouse_sign', -26.6, F + 1.75, Ph.Z1 + 0.011, 0);
   const tanP = Math.tan(Ph.PITCH), vTP = 0.18 / Math.cos(Ph.PITCH);
   downpipe(mb, Ph.X1 + Ph.OVERHANG + 0.09, E - Ph.OVERHANG * tanP - vTP - 0.02, Ph.Z1 + Ph.OVERHANG - 0.15, Ph.X1 + 0.08, Ph.Z1 - 0.2, heightAt(Ph.X1 + 0.2, Ph.Z1 - 0.2));
 
   // ------------------------------------------------------------------ light, anchors, spans
   kit.light({ id: 'light:pumphouse_bulb', position: V(-27.7, -0.32, -50.7), kind: 'bulb', working: true, flicker: 0.5, color: 0xffb466, intensity: 1.6, room: 'ph_basement' });
-  kit.light({ id: 'light:pumphouse_ground', position: V(-27.6, E - 0.45, -50.5), kind: 'bulb', working: false, flicker: 0, room: 'ph_ground' });
+  kit.light({ id: 'light:pumphouse_ground', position: V(-27.6, E - 0.45, -49.5), kind: 'bulb', working: false, flicker: 0, room: 'ph_ground' });
   kit.anchor('generator_label', IX0 + 0.004, B + 1.05, G.z, Math.PI / 2, 'ph_basement');
   kit.span(spanFromInner(IX0, IZ0, IX1, IZ1, B - 0.05, (x, z) => roof.innerHeight(x, z)));
 

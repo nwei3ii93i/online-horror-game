@@ -38,7 +38,7 @@ type HeightFn = (x: number, z: number) => number;
 interface Section { a: number; b: number; c: number }
 
 const svc = TUNNELS.find((t) => t.id === 'service')!;
-const coalDef = TUNNELS.find((t) => t.id === 'coal')!;
+const coalDef = TUNNELS.find((t) => t.id === 'tunnel_coal')!;
 
 export const TUNNEL = {
   F: svc.y,
@@ -71,7 +71,6 @@ export const TUNNEL_GEOMETRY = tunnelGeometry();
 
 export function buildTunnels(physics: Physics | undefined, materials: MaterialLibrary, heightAt: HeightFn): BuildingOutput {
   defineMaterials(materials, TUNNEL_MATS);
-  defineMaterials(materials, { candle_wax: { color: '#d6ccb2', roughness: 0.55 } });
   const kit = new BuildingKit('tunnels', physics, { mat: 'tunnel_wall' });
   const mb = kit.mb;
   const rng = new RNG('tunnels');
@@ -136,7 +135,7 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
   floor(L1.x0, L1.z0, L1.x1, L1.z1, 'tunnel_floor', 'concrete');
   floor(HEAD.x0, HEAD.z0, HEAD.x1, L1.z0, 'tunnel_floor', 'concrete');
   floor(L2.x0, L2.z0, L2.x1, L2.z1, 'tunnel_floor', 'concrete');
-  floor(G.x0, G.z0, G.x1, G.z1, 'coal_floor', 'gravel');
+  floor(G.x0, G.z0, G.x1, G.z1, 'tunnel_coal_floor', 'gravel');
 
   // ------------------------------------------------------------------ walls (outer faces are buried: not drawn)
   const common = { y0: F, t: T, cap: 'tunnel_wall', noTop: true, skirting: false, surface: 'concrete' };
@@ -249,16 +248,16 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
   }
   physics?.addBox({ cx: (C.x0 + C.x1) / 2, cy: (capY + yc + 0.3) / 2, cz: G.zc, hx: (C.x1 - C.x0) / 2, hy: (yc + 0.3 - capY) / 2, hz: (G.z1 - G.z0) / 2, surface: 'wood' });
   for (const s of [-1, 1]) {
-    heap(mb, 'coal_floor', (C.x0 + C.x1) / 2 - 0.2, F, G.zc + s * (va - 0.12), 0.75, 0.2, 0.22, rng, 12, 3);
+    heap(mb, 'tunnel_coal_floor', (C.x0 + C.x1) / 2 - 0.2, F, G.zc + s * (va - 0.12), 0.75, 0.2, 0.22, rng, 12, 3);
     scatterBlocks(mb, 'tunnel_brick', C.x0 - 0.4, G.zc + s * (va - 0.32), C.x1 + 0.3, G.zc + s * (va - 0.08), F, 8, rng);
   }
   scatterBlocks(mb, 'tunnel_brick', C.x0, G.zc - 0.3, C.x1, G.zc + 0.3, F, 4, rng);
   // coal remains at the end, candle stubs below the drawing (the lantern is a prop)
-  heap(mb, 'coal', G.x0 + 0.45, F, G.z1 - 0.3, 0.42, 0.26, 0.32, rng, 12, 4);
-  scatterBlocks(mb, 'coal', G.x0 + 0.3, G.z1 - 0.7, G.x0 + 1.4, G.z1 - 0.1, F, 16, rng, [0.08, 0.05, 0.07]);
+  heap(mb, 'tunnel_coal', G.x0 + 0.45, F, G.z1 - 0.3, 0.42, 0.26, 0.32, rng, 12, 4);
+  scatterBlocks(mb, 'tunnel_coal', G.x0 + 0.3, G.z1 - 0.7, G.x0 + 1.4, G.z1 - 0.1, F, 16, rng, [0.08, 0.05, 0.07]);
   for (const [z, h] of [[G.zc - 0.05, 0.05], [G.zc + 0.06, 0.03], [G.zc + 0.14, 0.07]]) {
-    mb.cylinder('candle_wax', G.x0 + 0.12, F, z, 0.022, 0.02, h, 8);
-    mb.cylinder('candle_wax', G.x0 + 0.12, F, z, 0.04, 0.04, 0.004, 10);
+    mb.cylinder('candle', G.x0 + 0.12, F, z, 0.022, 0.02, h, 8);
+    mb.cylinder('candle', G.x0 + 0.12, F, z, 0.04, 0.04, 0.004, 10);
     mb.rod('black_soot', V(G.x0 + 0.12, F + h, z), V(G.x0 + 0.12, F + h + 0.008, z), 0.002, 0.002, 3);
   }
   puddle(mb, 'tunnel_water', C.x1 + 0.6, G.zc + 0.2, F + 0.002, 0.35, 0.22, rng);
@@ -270,8 +269,8 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
   const yHeat = F + 1.5, yMain = F + 0.4;
   const jog0 = HEAD.x1 - 1.05, jog1 = HEAD.x0 + 0.1;
   const run = (zH: number, zR: number, xR: number, y: number) => [V(ax, y, zH), V(jog0, y, zH), V(jog1, y, zR), V(xR, y, zR), V(xR, y, L2.z0)];
-  pipe(mb, 'pipe_lagging', run(zInH, zIn, xIn, yHeat), 0.075, 10);
-  pipe(mb, 'pipe_lagging', run(zOutH, zOut, xOut, yHeat), 0.075, 10);
+  pipe(mb, 'tunnel_lagging', run(zInH, zIn, xIn, yHeat), 0.075, 10);
+  pipe(mb, 'tunnel_lagging', run(zOutH, zOut, xOut, yHeat), 0.075, 10);
   pipe(mb, 'rust_metal_int', run(zInH, zIn, xIn, yMain), 0.06, 10);
   for (const [z, y, r] of [[zInH, yHeat, 0.09], [zOutH, yHeat, 0.09], [zInH, yMain, 0.075]]) flange(mb, 'tunnel_wall', V(ax - 0.01, y, z), V(1, 0, 0), r + 0.04, 0.04);
   for (const [x, y, r] of [[xIn, yHeat, 0.09], [xOut, yHeat, 0.09], [xIn, yMain, 0.075]]) flange(mb, 'tunnel_wall', V(x, y, L2.z0 + 0.015), V(0, 0, 1), r + 0.04, 0.03);
@@ -289,7 +288,7 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
   const rustStreak = (at: THREE.Vector3) => {
     if (!streakRng.chance(0.5)) return;
     const n = Math.abs(at.z - (L1.z0)) < 0.05 ? V(0, 0, 1) : V(-1, 0, 0);
-    wallPatch(mb, 'water_streak', at.clone().addScaledVector(n, 0.003).add(V(0, -0.35, 0)), n, 0.03, 0.32, streakRng, 8);
+    wallPatch(mb, 'tunnel_streak', at.clone().addScaledVector(n, 0.003).add(V(0, -0.35, 0)), n, 0.03, 0.32, streakRng, 8);
   };
   for (let x = jog1 - 0.6; x > L2.x1 + 0.4; x -= 1.6) {
     bracket((o, y) => V(x, y, L1.z0 + o), V(1, 0, 0));
@@ -329,7 +328,7 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
     const t = [p1[0] - p0[0], 0, p1[2] - p0[2]]; const tl = Math.hypot(t[0], t[2]) || 1;
     const u = [-n[2] * w, 0, n[0] * w];
     void tl;
-    orientedQuad(mb, 'water_streak', [p0[0] - u[0], p0[1], p0[2] - u[2]], [p0[0] + u[0], p0[1], p0[2] + u[2]], [p1[0] + u[0], p1[1], p1[2] + u[2]], [p1[0] - u[0], p1[1], p1[2] - u[2]], n);
+    orientedQuad(mb, 'tunnel_streak', [p0[0] - u[0], p0[1], p0[2] - u[2]], [p0[0] + u[0], p0[1], p0[2] + u[2]], [p1[0] + u[0], p1[1], p1[2] + u[2]], [p1[0] - u[0], p1[1], p1[2] - u[2]], n);
   };
   for (let x = jog1 - 1.4; x > L2.x1 + 0.2; x -= 3.0) {
     joint([x, F, L1.z1 - 0.002], [x, ceil1(x), L1.z1 - 0.002], [0, 0, -1]);
@@ -345,11 +344,11 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
       const z = rng.range(L2.z0 + 0.8, L1.z0 - 0.5);
       if (z > G.z0 - 0.5 && z < G.z1 + 0.5) continue;
       const len = rng.range(0.4, 1.3);
-      wallPatch(mb, 'water_streak', V(L2.x0 + 0.003, ceil2(z) - len / 2, z), V(1, 0, 0), rng.range(0.05, 0.16), len / 2, rng, 10);
+      wallPatch(mb, 'tunnel_streak', V(L2.x0 + 0.003, ceil2(z) - len / 2, z), V(1, 0, 0), rng.range(0.05, 0.16), len / 2, rng, 10);
     } else {
       const x = rng.range(jog1 - 0.5, L2.x1 + 0.5);
       const len = rng.range(0.4, 1.2);
-      wallPatch(mb, 'water_streak', V(x, ceil1(x) - len / 2, L1.z1 - 0.003), V(0, 0, -1), rng.range(0.05, 0.14), len / 2, rng, 10);
+      wallPatch(mb, 'tunnel_streak', V(x, ceil1(x) - len / 2, L1.z1 - 0.003), V(0, 0, -1), rng.range(0.05, 0.14), len / 2, rng, 10);
     }
   }
   const drains: [number, number][] = [[-18.5, (L1.z0 + L1.z1) / 2], [(L2.x0 + L2.x1) / 2, -30.0], [(L2.x0 + L2.x1) / 2, -41.5]];
@@ -388,8 +387,8 @@ export function buildTunnels(physics: Physics | undefined, materials: MaterialLi
   }
   const shTop = sh.y + 0.03;
   for (const [x, z, h] of [[sh.x0 + 0.12, sh.z0 + 0.1, 0.06], [sh.x0 + 0.2, sh.z0 + 0.16, 0.035], [sh.x0 + 0.1, sh.z0 + 0.22, 0.09]]) {
-    mb.cylinder('candle_wax', x, shTop, z, 0.021, 0.019, h, 8);
-    mb.cylinder('candle_wax', x, shTop, z, 0.035 + h * 0.2, 0.035 + h * 0.2, 0.003, 10);
+    mb.cylinder('candle', x, shTop, z, 0.021, 0.019, h, 8);
+    mb.cylinder('candle', x, shTop, z, 0.035 + h * 0.2, 0.035 + h * 0.2, 0.003, 10);
     mb.rod('black_soot', V(x, shTop + h, z), V(x, shTop + h + 0.008, z), 0.002, 0.002, 3);
   }
   mb.box('cardboard', sh.x0 + 0.24, shTop + 0.009, sh.z1 - 0.12, 0.05, 0.018, 0.035);
