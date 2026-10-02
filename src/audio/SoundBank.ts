@@ -386,6 +386,13 @@ export class SoundBank {
     return this.count(id) > 0;
   }
 
+  /** Replace a sound's synthesised variations with decoded recordings (CC0 samples). */
+  setSamples(id: SoundId, buffers: AudioBuffer[]): void {
+    if (!buffers.length) return;
+    this.buffers.set(id, buffers.slice());
+    this.history.delete(id);
+  }
+
   /** Impulse response for an environment (null until rendered). */
   getIR(env: EnvironmentId): AudioBuffer | null {
     return this.irs.get(env) ?? null;

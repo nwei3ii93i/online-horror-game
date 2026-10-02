@@ -141,6 +141,8 @@ export const POI = {
   playerSpawn: { x: 36, z: 60, rot: Math.PI * 0.95 },
   /** The group's van, pulled onto the shoulder of the service road below the gate. */
   van: { x: 32.2, z: 39.35, heading: -2.709 },
+  /** Arrival point on the service road below the gate, looking up towards it. */
+  arrival: { x: 31.4, z: 37.6, rot: 0.56 },
 } as const;
 
 export function grow(r: Rect, m: number): Rect {

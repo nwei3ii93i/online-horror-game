@@ -155,6 +155,8 @@ export class MaterialLibrary {
   create(name: string, spec: MatSpec): THREE.Material {
     const mat = spec.clearcoat ? new THREE.MeshPhysicalNodeMaterial() : new THREE.MeshStandardNodeMaterial();
     mat.name = name;
+    // exterior surfaces never see the interior lamps (see Game.assignLightSets)
+    if (spec.exterior) mat.userData.exterior = true;
     if (spec.side !== undefined) mat.side = spec.side;
     if (spec.transparent) { mat.transparent = true; mat.opacity = spec.opacity ?? 1; }
     if (spec.depthWrite === false) mat.depthWrite = false;

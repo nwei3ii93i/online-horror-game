@@ -61,7 +61,7 @@ export class Flashlight {
     l.castShadow = true;
     l.shadow.mapSize.set(shadowSize, shadowSize);
     l.shadow.camera.near = 0.15;
-    l.shadow.camera.far = 38;
+    l.shadow.camera.far = 22; // beyond this the torch is too weak for shadows to read – saves a big shadow pass
     l.shadow.bias = -0.0006;
     l.shadow.normalBias = 0.02;
     l.layers.enable(LAYER_VOLUMETRIC);

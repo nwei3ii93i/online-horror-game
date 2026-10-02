@@ -33,6 +33,10 @@ export class PropPlacer {
   readonly group = new THREE.Group();
   private converted = new Map<THREE.Material, THREE.Material>();
   private bounds = new Map<string, THREE.Box3>();
+  /** Unit fix per model: some scans ship in decimetres; compare with the catalogue size. */
+  private unit = new Map<string, number>();
+  /** Placed props for distance / floor culling. */
+  readonly placed: { obj: THREE.Object3D; x: number; y: number; z: number; r: number }[] = [];
   private _box = new THREE.Box3();
   private _v = new THREE.Vector3();
   count = 0;
@@ -47,6 +51,18 @@ export class PropPlacer {
     if (!src) return null;
     let bb = this.bounds.get(id);
     if (!bb) { bb = new THREE.Box3().setFromObject(src, true); this.bounds.set(id, bb); }
+    let unit = this.unit.get(id);
+    if (unit === undefined) {
+      unit = 1;
+      const dims = this.assets.manifest.models[id]?.dimensions;
+      const ext = bb.getSize(new THREE.Vector3());
+      const real = dims ? Math.max(...dims) : 0, got = Math.max(ext.x, ext.y, ext.z);
+      if (real > 0 && got > 0 && (got / real > 1.8 || got / real < 0.55)) {
+        unit = real / got;
+        console.warn(`prop ${id}: rescaled ×${unit.toFixed(3)} to its catalogue size`);
+      }
+      this.unit.set(id, unit);
+    }
     const inner = src.clone(true);
     const anchor = o.anchor ?? 'base';
     const cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
@@ -54,21 +70,25 @@ export class PropPlacer {
     const obj = new THREE.Group();
     obj.add(inner);
     obj.name = id;
-    const s = o.scale ?? 1;
+    const s = (o.scale ?? 1) * unit;
     obj.scale.setScalar(s);
     obj.rotation.set(o.tiltX ?? 0, ry, o.tiltZ ?? 0, 'YXZ');
     obj.position.set(x, y, z);
+    // only furniture-sized props cast (flashlight) shadows; clutter would cost a shadow pass each
+    const ext = bb.getSize(new THREE.Vector3()).multiplyScalar(s);
+    const castDefault = ext.y > 0.9 || ext.x * ext.z > 0.6;
     obj.traverse((c) => {
       const m = c as THREE.Mesh;
       if (!m.isMesh) return;
-      m.castShadow = o.castShadow ?? true;
+      m.castShadow = o.castShadow ?? castDefault;
       m.receiveShadow = true;
       m.material = Array.isArray(m.material) ? m.material.map((mm) => this.convert(mm, o.tint)) : this.convert(m.material, o.tint);
     });
     obj.updateMatrixWorld(true);
     this.group.add(obj);
     this.count++;
-    const size = bb.getSize(this._v);
+    this.placed.push({ obj, x, y, z, r: Math.max(ext.x, ext.y, ext.z) / 2 });
+    const size = bb.getSize(this._v).multiplyScalar(unit);
     const tilted = Math.abs(o.tiltX ?? 0) + Math.abs(o.tiltZ ?? 0) > 0.05;
     const auto = size.x * size.z * s * s > 0.12 || size.y * s > 0.6 ? 'box' : 'none';
     if (this.physics && (o.collider ?? auto) === 'box') {
@@ -76,6 +96,22 @@ export class PropPlacer {
       else this.addCollider(inner.position, bb, x, y, z, ry, s, o.surface ?? 'wood');
     }
     return obj;
+  }
+
+  /**
+   * Visibility culling: props further than `range` are hidden; when `floorY` is given (camera is
+   * inside a building), props more than one storey away are hidden too unless very close
+   * (stairwells). Hidden props also drop out of every shadow pass.
+   */
+  cull(cam: THREE.Vector3, range: number, floorY: number | null): void {
+    const r2 = range * range;
+    for (const p of this.placed) {
+      const dx = p.x - cam.x, dz = p.z - cam.z, d2 = dx * dx + dz * dz;
+      let vis = d2 < (range + p.r) * (range + p.r) || d2 < r2;
+      if (vis && floorY !== null && d2 > 36) vis = p.y > floorY - 1.0 && p.y < floorY + 3.0;
+      else if (vis && floorY === null) vis = p.y > -0.5; // from outside nothing in the cellar can be seen
+      p.obj.visible = vis;
+    }
   }
 
   /** Oriented box collider from the template's local bounds. */

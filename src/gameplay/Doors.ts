@@ -37,6 +37,8 @@ const _e = new THREE.Euler();
  * with a damped spring, a kinematic Rapier body follows the leaf. All state changes go
  * through the WorldBridge so they replicate in multiplayer.
  */
+const EXTERIOR_DOOR = /front|terrace|kitchen_back|balcony/;
+
 export class Doors {
   readonly group = new THREE.Group();
   readonly events = new EventBus<DoorEvents>();
@@ -168,6 +170,25 @@ export class Doors {
         this.events.emit('close', { id: d.spec.id, position: d.spec.hinge.clone().add(new THREE.Vector3(0, 1.2, 0)), kind: d.spec.sound ?? 'wood' });
       }
       this.apply(d);
+    }
+  }
+
+  /**
+   * Hide leaves the camera cannot see: beyond `range`, or (camera indoors at floor `floorY`)
+   * more than a storey away. Saves a draw call per part and per shadow pass.
+   */
+  cull(cam: THREE.Vector3, range: number, floorY: number | null): void {
+    for (const d of this.doors.values()) {
+      const h = d.spec.hinge;
+      const dx = h.x - cam.x, dz = h.z - cam.z, d2 = dx * dx + dz * dz;
+      // entrance doors stay visible from afar (they read from the courtyard / garden)
+      if (EXTERIOR_DOOR.test(d.spec.id) && (floorY === null || Math.abs(h.y - floorY) < 1.5)) { d.pivot.visible = d2 < 70 * 70; continue; }
+      let vis = d2 < range * range;
+      if (vis && d2 > 25) {
+        if (floorY !== null) vis = h.y > floorY - 1.2 && h.y < floorY + 2.8;
+        else vis = h.y > -0.6 && h.y < 1.5; // from outside: ground-floor and terrace leaves only
+      }
+      d.pivot.visible = vis;
     }
   }
 

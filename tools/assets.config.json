@@ -1,5 +1,5 @@
 {
-  "maxTris": 40000,
+  "maxTris": 12000,
   "textures": [
     {
       "id": "yellow_plaster_02",
@@ -180,10 +180,12 @@
   ],
   "models": [
     {
-      "id": "ArmChair_01"
+      "id": "ArmChair_01",
+      "maxTris": 6000
     },
     {
-      "id": "ClassicNightstand_01"
+      "id": "ClassicNightstand_01",
+      "maxTris": 6000
     },
     {
       "id": "GothicBed_01"
@@ -192,10 +194,12 @@
       "id": "GothicCabinet_01"
     },
     {
-      "id": "GothicCommode_01"
+      "id": "GothicCommode_01",
+      "maxTris": 6000
     },
     {
-      "id": "Rockingchair_01"
+      "id": "Rockingchair_01",
+      "maxTris": 6000
     },
     {
       "id": "Shelf_01"
@@ -213,7 +217,8 @@
       "id": "WoodenTable_03"
     },
     {
-      "id": "dining_chair_02"
+      "id": "dining_chair_02",
+      "maxTris": 6000
     },
     {
       "id": "dining_table"
@@ -223,78 +228,96 @@
     },
     {
       "id": "mantel_clock_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "vintage_grandfather_clock_01"
     },
     {
-      "id": "Television_01"
+      "id": "Television_01",
+      "maxTris": 3000
     },
     {
-      "id": "Chandelier_01"
+      "id": "Chandelier_01",
+      "maxTris": 6000
     },
     {
       "id": "Lantern_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "book_encyclopedia_set_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "wooden_bookshelf_worn"
     },
     {
       "id": "fancy_picture_frame_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "hanging_picture_frame_02",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "standing_picture_frame_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
-      "id": "Barrel_01"
+      "id": "Barrel_01",
+      "maxTris": 6000
     },
     {
-      "id": "wooden_crate_01"
+      "id": "wooden_crate_01",
+      "maxTris": 6000
     },
     {
-      "id": "wooden_crate_02"
+      "id": "wooden_crate_02",
+      "maxTris": 6000
     },
     {
       "id": "cardboard_box_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "can_rusted",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "metal_jerrycan",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
-      "id": "metal_tool_chest"
+      "id": "metal_tool_chest",
+      "maxTris": 6000
     },
     {
       "id": "wooden_ladder"
     },
     {
       "id": "hatchet",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "handsaw_wood",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "sledgehammer_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "covered_car"
@@ -303,13 +326,16 @@
       "id": "old_bed_frame"
     },
     {
-      "id": "painted_wooden_cabinet"
+      "id": "painted_wooden_cabinet",
+      "maxTris": 6000
     },
     {
-      "id": "painted_wooden_chair_01"
+      "id": "painted_wooden_chair_01",
+      "maxTris": 6000
     },
     {
-      "id": "painted_wooden_nightstand"
+      "id": "painted_wooden_nightstand",
+      "maxTris": 6000
     },
     {
       "id": "painted_wooden_table"
@@ -326,75 +352,93 @@
     },
     {
       "id": "vintage_oil_lamp",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "wall_clock",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
-      "id": "ornate_mirror_01"
+      "id": "ornate_mirror_01",
+      "maxTris": 6000
     },
     {
-      "id": "spinning_wheel_01"
+      "id": "spinning_wheel_01",
+      "maxTris": 6000
     },
     {
       "id": "wicker_basket_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "wooden_bucket_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "watering_can_metal_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "rusted_spade_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "old_tyre",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
-      "id": "portable_generator"
+      "id": "portable_generator",
+      "maxTris": 6000
     },
     {
       "id": "propane_tank",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "rubber_boots",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "russian_food_cans_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "wine_bottles_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "pot_enamel_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "tea_set_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "rubber_duck_toy",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "treasure_chest",
-      "maxTris": 20000
+      "maxTris": 6000
     },
     {
-      "id": "wheelchair_01"
+      "id": "wheelchair_01",
+      "maxTris": 6000
     },
     {
       "id": "vintage_crutches_01",
@@ -408,45 +452,55 @@
     },
     {
       "id": "wooden_stool_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "bench_vice_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
-      "id": "old_drill_press"
+      "id": "old_drill_press",
+      "maxTris": 6000
     },
     {
       "id": "wooden_barrels_01"
     },
     {
       "id": "planter_pot_clay",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "seeding_tray_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "caged_hanging_light",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "pull_chain_light_socket",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "power_box_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "small_lpg_tank",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "vintage_telephone_wall_clock",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 3000
     },
     {
       "id": "wooden_broom",
@@ -466,7 +520,7 @@
     },
     {
       "id": "boulder_01",
-      "maxTris": 16000
+      "maxTris": 12000
     },
     {
       "id": "dead_tree_trunk"
@@ -477,20 +531,22 @@
     },
     {
       "id": "nettle_plant",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "dry_branches_medium_01",
-      "tex": 512
+      "tex": 512,
+      "maxTris": 6000
     },
     {
       "id": "root_cluster_01",
-      "maxTris": 16000
+      "maxTris": 12000
     },
     {
       "id": "moss_01",
       "tex": 512,
-      "maxTris": 16000
+      "maxTris": 6000
     }
   ]
 }

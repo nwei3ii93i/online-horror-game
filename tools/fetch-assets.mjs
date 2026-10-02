@@ -74,14 +74,16 @@ function simplifyStep(m, polycount) {
 async function resimplify(m) {
   const file = join(out, 'models', `${m.id}.glb`);
   const info = manifest.models[m.id];
-  if (!existsSync(file) || !info || !info.polycount || info.polycount <= (m.maxTris ?? MAX_TRIS) || info.simplified) return;
+  const target = m.maxTris ?? MAX_TRIS;
+  const current = info?.simplified ?? info?.polycount;
+  if (!existsSync(file) || !info || !current || current <= target) return;
   await MeshoptSimplifier.ready;
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
   const doc = await io.read(file);
-  await doc.transform(weld(), ...simplifyStep(m, info.polycount), prune());
+  await doc.transform(weld(), ...simplifyStep(m, current), prune());
   await io.write(file, doc);
-  info.simplified = Math.min(info.polycount, m.maxTris ?? MAX_TRIS);
-  console.log(`  ✓ simplified ${m.id} ${info.polycount} → ~${info.simplified}`);
+  info.simplified = target;
+  console.log(`  ✓ simplified ${m.id} ${current} → ~${target}`);
 }
 
 async function fetchModel(m) {

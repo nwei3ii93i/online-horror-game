@@ -13,9 +13,7 @@ export interface PhotoOverride {
 }
 
 export const PHOTO_OVERRIDES: Record<string, PhotoOverride> = {
-  // masonry & plaster
-  plaster_ext: { photo: 'worn_mossy_plasterwall', scale: 2.4 },
-  plaster_ext_grey: { photo: 'worn_plaster_wall', scale: 2.2 },
+  // masonry & plaster (the rendered façades stay procedural: ochre lime render with grey surrounds)
   brick: { photo: 'red_brick_plaster_patch_02', scale: 1.6 },
   stone_wall: { photo: 'old_stone_wall', scale: 2.2 },
   stone_slab: { photo: 'monastery_stone_floor', scale: 2.0, tint: [1.15, 1.12, 1.08] },

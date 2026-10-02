@@ -87,7 +87,7 @@ export class Engine {
     const w = this.container.clientWidth || window.innerWidth;
     const h = this.container.clientHeight || window.innerHeight;
     const p = this.settings.profile;
-    const dpr = Math.min(window.devicePixelRatio || 1, p.maxPixelRatio) * p.renderScale;
+    const dpr = Math.min(window.devicePixelRatio || 1, p.maxPixelRatio) * p.renderScale * this.dynScale;
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
@@ -118,6 +118,38 @@ export class Engine {
     this.render();
   }
 
+  /** Dynamic resolution: fraction of the profile's render scale currently used (0.55 … 1). */
+  dynScale = 1;
+  dynamicResolution = true;
+  private dynTime = -3; // ignore the first seconds (shader warm-up, streaming)
+  private dynFrames = 0;
+  private dynHold = 0;
+  private dynCeil = 1;
+  private dynCeilTimer = 0;
+
+  /** Keep ~60 fps by trading resolution (TRAA hides most of it) before anything else. */
+  private updateDynamicResolution(dt: number): void {
+    if (!this.dynamicResolution) return;
+    this.dynTime += dt;
+    if (this.dynTime < 0) return;
+    this.dynFrames++;
+    if (this.dynTime < 1) return;
+    const fps = this.dynFrames / this.dynTime;
+    this.dynTime = 0; this.dynFrames = 0;
+    if ((this.dynCeilTimer -= 1) <= 0) this.dynCeil = 1;
+    let next = this.dynScale;
+    if (fps < 52) {
+      next = Math.max(0.55, this.dynScale - (fps < 40 ? 0.12 : 0.06));
+      this.dynCeil = this.dynScale - 0.02; // this level was too much – don't retry it for a while
+      this.dynCeilTimer = 20;
+      this.dynHold = 4;
+    } else if (fps > 57 && --this.dynHold <= 0) {
+      next = Math.min(this.dynCeil, this.dynScale + 0.05);
+      this.dynHold = 3;
+    }
+    if (Math.abs(next - this.dynScale) > 0.004) { this.dynScale = next; this.resize(); }
+  }
+
   private tick(): void {
     const now = performance.now();
     let dt = (now - this.last) / 1000;
@@ -125,6 +157,7 @@ export class Engine {
     if (dt > 0.1) dt = 0.1;
     this.fpsAcc += dt; this.fpsFrames++;
     if (this.fpsAcc > 0.5) { this.fps = this.fpsFrames / this.fpsAcc; this.fpsAcc = 0; this.fpsFrames = 0; }
+    this.updateDynamicResolution(dt);
     if (!this.paused) this.advance(dt);
     this.render();
   }

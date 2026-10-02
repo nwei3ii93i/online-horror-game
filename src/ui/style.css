@@ -27,3 +27,31 @@ html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; c
 .hud .overlay .title { font-size: 40px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--ink); }
 .hud .overlay .hint { margin-top: 18px; font-size: 14px; letter-spacing: 0.2em; color: var(--accent); }
 .hud .overlay .keys { margin-top: 26px; font-size: 12px; letter-spacing: 0.06em; color: var(--ink-dim); font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+/* ---- document reader ---------------------------------------------------- */
+.reader { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55), rgba(0,0,0,0.88)); opacity: 0; pointer-events: none; transition: opacity 0.35s ease; }
+.reader.open { opacity: 1; pointer-events: auto; }
+.reader-title { font-size: 13px; letter-spacing: 0.16em; color: var(--ink-dim); margin-bottom: 14px; text-align: center; max-width: 80vw; }
+.reader-hint { margin-top: 14px; font: 11px ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.08em; color: var(--ink-dim); }
+.reader-paper { position: relative; width: min(620px, 86vw); max-height: 74vh; overflow-y: auto; box-sizing: border-box; padding: 44px 52px 52px;
+  color: #2a2620; background-color: #ddd3bb;
+  background-image:
+    radial-gradient(ellipse at 12% 8%, rgba(120, 90, 40, 0.18), transparent 40%),
+    radial-gradient(ellipse at 85% 92%, rgba(110, 80, 40, 0.22), transparent 45%),
+    radial-gradient(circle at 70% 30%, rgba(150, 120, 70, 0.10), transparent 25%),
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.06));
+  box-shadow: 0 30px 80px rgba(0,0,0,0.8), inset 0 0 60px rgba(90, 60, 20, 0.25);
+  transform: rotate(-0.6deg); scrollbar-width: thin; scrollbar-color: #8a7a5a transparent; }
+.reader-paper.style-handwriting_neat .reader-body, .reader-paper.style-handwriting_shaky .reader-body { color: #1f2a4a; font-size: 21px; line-height: 1.55; }
+.reader-paper.style-handwriting_shaky .reader-body { letter-spacing: 0.02em; transform: rotate(0.4deg); }
+.reader-paper.style-handwriting_child .reader-body { color: #3a3a46; font-size: 20px; line-height: 1.7; }
+.reader-paper.style-typewriter .reader-body, .reader-paper.style-stamp .reader-body { font-size: 15px; line-height: 1.5; color: #22201c; }
+.reader-paper.style-print .reader-body { font-size: 16px; line-height: 1.45; text-align: justify; }
+.reader-paper.kind-newspaper { background-color: #cfc8b4; }
+.reader-paper.kind-logbook { background-color: #d8cfb2; background-image: repeating-linear-gradient(180deg, transparent 0 31px, rgba(60, 90, 140, 0.18) 31px 32px); }
+.reader-paper.kind-letter, .reader-paper.kind-note { background-color: #e2dac6; }
+.reader-paper.kind-drawing { background-color: #e6e0cf; }
+.reader-paper.transcript { background-color: #c9c4b8; }
+.reader-paper.transcript .reader-body { color: #22201c; font-size: 16px; line-height: 1.55; transform: none; }
+.reader-body { white-space: pre-wrap; }

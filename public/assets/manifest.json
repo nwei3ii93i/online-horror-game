@@ -550,7 +550,7 @@
    "authors": [
     "Rob Tuytel"
    ],
-   "simplified": 40000
+   "simplified": 12000
   },
   "ClassicNightstand_01": {
    "name": "Classic Nightstand 01",
@@ -574,7 +574,8 @@
    ],
    "authors": [
     "Kirill Sannikov"
-   ]
+   ],
+   "simplified": 12000
   },
   "GothicCabinet_01": {
    "name": "Gothic Cabinet 01",
@@ -586,7 +587,8 @@
    ],
    "authors": [
     "Kirill Sannikov"
-   ]
+   ],
+   "simplified": 12000
   },
   "GothicCommode_01": {
    "name": "Gothic Commode 01",
@@ -610,7 +612,8 @@
    ],
    "authors": [
     "Jorge Camacho"
-   ]
+   ],
+   "simplified": 6000
   },
   "Shelf_01": {
    "name": "Shelf 01",
@@ -646,7 +649,8 @@
    ],
    "authors": [
     "Jake Mobley"
-   ]
+   ],
+   "simplified": 12000
   },
   "WoodenTable_01": {
    "name": "Wooden Table 01",
@@ -682,7 +686,8 @@
    ],
    "authors": [
     "James Ray Cock"
-   ]
+   ],
+   "simplified": 6000
   },
   "drawer_cabinet": {
    "name": "Drawer Cabinet",
@@ -694,7 +699,8 @@
    ],
    "authors": [
     "Ulan Cabanilla"
-   ]
+   ],
+   "simplified": 12000
   },
   "dining_table": {
    "name": "Dining Table",
@@ -719,7 +725,8 @@
    "authors": [
     "Yann Kervran",
     "Rico Cilliers"
-   ]
+   ],
+   "simplified": 3000
   },
   "Television_01": {
    "name": "Television 01",
@@ -743,7 +750,8 @@
    ],
    "authors": [
     "Kirill Sannikov"
-   ]
+   ],
+   "simplified": 6000
   },
   "wooden_bookshelf_worn": {
    "name": "Wooden Bookshelf Worn",
@@ -768,7 +776,7 @@
    "authors": [
     "John Malcolm"
    ],
-   "simplified": 40000
+   "simplified": 3000
   },
   "vintage_grandfather_clock_01": {
    "name": "Vintage Grandfather Clock 01",
@@ -781,7 +789,8 @@
    "authors": [
     "Yann Kervran",
     "James Ray Cock"
-   ]
+   ],
+   "simplified": 12000
   },
   "fancy_picture_frame_01": {
    "name": "Fancy Picture Frame 01",
@@ -842,7 +851,8 @@
    ],
    "authors": [
     "Rajil Jose Macatangay"
-   ]
+   ],
+   "simplified": 3000
   },
   "wooden_crate_01": {
    "name": "Wooden Crate 01",
@@ -854,7 +864,8 @@
    ],
    "authors": [
     "James Ray Cock"
-   ]
+   ],
+   "simplified": 6000
   },
   "cardboard_box_01": {
    "name": "Cardboard Box 01",
@@ -866,7 +877,8 @@
    ],
    "authors": [
     "Rahul Chaudhary"
-   ]
+   ],
+   "simplified": 3000
   },
   "can_rusted": {
    "name": "Can Rusted",
@@ -878,7 +890,8 @@
    ],
    "authors": [
     "Rahul Chaudhary"
-   ]
+   ],
+   "simplified": 3000
   },
   "wooden_crate_02": {
    "name": "Wooden Crate 02",
@@ -903,7 +916,8 @@
    ],
    "authors": [
     "Sean Buckley"
-   ]
+   ],
+   "simplified": 3000
   },
   "metal_tool_chest": {
    "name": "Metal Tool Chest",
@@ -916,7 +930,8 @@
    "authors": [
     "Yann Kervran",
     "John Hutcheson"
-   ]
+   ],
+   "simplified": 6000
   },
   "wooden_ladder": {
    "name": "Wooden Ladder",
@@ -964,7 +979,8 @@
    ],
    "authors": [
     "MP"
-   ]
+   ],
+   "simplified": 12000
   },
   "painted_wooden_cabinet": {
    "name": "Painted Wooden Cabinet",
@@ -989,7 +1005,7 @@
    "authors": [
     "Luca B"
    ],
-   "simplified": 40000
+   "simplified": 12000
   },
   "painted_wooden_chair_01": {
    "name": "Painted Wooden Chair 01",
@@ -1038,7 +1054,7 @@
    "authors": [
     "Rico Cilliers"
    ],
-   "simplified": 40000
+   "simplified": 12000
   },
   "vintage_day_bed": {
    "name": "Vintage Day Bed",
@@ -1063,7 +1079,8 @@
    "authors": [
     "James Ray Cock",
     "Ulan Cabanilla"
-   ]
+   ],
+   "simplified": 3000
   },
   "vintage_suitcase": {
    "name": "Vintage Suitcase",
@@ -1075,7 +1092,8 @@
    ],
    "authors": [
     "Maximilian Schuster"
-   ]
+   ],
+   "simplified": 12000
   },
   "wall_clock": {
    "name": "Wall Clock",
@@ -1087,7 +1105,8 @@
    ],
    "authors": [
     "PierreB3D"
-   ]
+   ],
+   "simplified": 3000
   },
   "ornate_mirror_01": {
    "name": "Ornate Mirror 01",
@@ -1099,7 +1118,8 @@
    ],
    "authors": [
     "James Ray Cock"
-   ]
+   ],
+   "simplified": 6000
   },
   "vintage_oil_lamp": {
    "name": "Vintage Oil Lamp",
@@ -1111,7 +1131,8 @@
    ],
    "authors": [
     "Monsta3D"
-   ]
+   ],
+   "simplified": 6000
   },
   "wicker_basket_01": {
    "name": "Wicker Basket 01",
@@ -1123,7 +1144,8 @@
    ],
    "authors": [
     "Kuutti Siitonen"
-   ]
+   ],
+   "simplified": 3000
   },
   "spinning_wheel_01": {
    "name": "Spinning Wheel 01",
@@ -1136,7 +1158,7 @@
    "authors": [
     "Sofia Pahaoja"
    ],
-   "simplified": 40000
+   "simplified": 6000
   },
   "wooden_bucket_01": {
    "name": "Wooden Bucket 01",
@@ -1148,7 +1170,8 @@
    ],
    "authors": [
     "James Ray Cock"
-   ]
+   ],
+   "simplified": 3000
   },
   "old_tyre": {
    "name": "Old Tyre",
@@ -1172,7 +1195,8 @@
    ],
    "authors": [
     "Charles Nderitu"
-   ]
+   ],
+   "simplified": 3000
   },
   "portable_generator": {
    "name": "Portable Generator",
@@ -1184,7 +1208,8 @@
    ],
    "authors": [
     "James Ray Cock"
-   ]
+   ],
+   "simplified": 6000
   },
   "propane_tank": {
    "name": "Propane Tank",
@@ -1196,7 +1221,8 @@
    ],
    "authors": [
     "Slinc"
-   ]
+   ],
+   "simplified": 3000
   },
   "rubber_boots": {
    "name": "Rubber Boots",
@@ -1208,7 +1234,8 @@
    ],
    "authors": [
     "L"
-   ]
+   ],
+   "simplified": 6000
   },
   "wine_bottles_01": {
    "name": "Wine Bottles 01",
@@ -1221,7 +1248,8 @@
    "authors": [
     "Rico Cilliers",
     "Jurita Burger"
-   ]
+   ],
+   "simplified": 6000
   },
   "pot_enamel_01": {
    "name": "Pot Enamel 01",
@@ -1233,7 +1261,8 @@
    ],
    "authors": [
     "Kuutti Siitonen"
-   ]
+   ],
+   "simplified": 3000
   },
   "rubber_duck_toy": {
    "name": "Rubber Duck Toy",
@@ -1245,7 +1274,8 @@
    ],
    "authors": [
     "Plat251"
-   ]
+   ],
+   "simplified": 3000
   },
   "tea_set_01": {
    "name": "Tea Set 01",
@@ -1260,7 +1290,7 @@
     "Rico Cilliers",
     "Jurita Burger"
    ],
-   "simplified": 40000
+   "simplified": 6000
   },
   "rusted_spade_01": {
    "name": "Rusted Spade 01",
@@ -1272,7 +1302,8 @@
    ],
    "authors": [
     "Blemonade"
-   ]
+   ],
+   "simplified": 6000
   },
   "treasure_chest": {
    "name": "Treasure Chest",
@@ -1285,7 +1316,7 @@
    "authors": [
     "Rico Cilliers"
    ],
-   "simplified": 20000
+   "simplified": 6000
   },
   "russian_food_cans_01": {
    "name": "Russian Food Cans 01",
@@ -1333,7 +1364,8 @@
    ],
    "authors": [
     "Kuutti Siitonen"
-   ]
+   ],
+   "simplified": 3000
   },
   "bench_vice_01": {
    "name": "Bench Vice 01",
@@ -1358,7 +1390,8 @@
    ],
    "authors": [
     "Harsh Vardhan Singh"
-   ]
+   ],
+   "simplified": 6000
   },
   "planter_pot_clay": {
    "name": "Planter Pot Clay",
@@ -1370,7 +1403,8 @@
    ],
    "authors": [
     "Amal Kumar"
-   ]
+   ],
+   "simplified": 3000
   },
   "wooden_barrels_01": {
    "name": "Wooden Barrels 01",
@@ -1382,7 +1416,8 @@
    ],
    "authors": [
     "James Ray Cock"
-   ]
+   ],
+   "simplified": 12000
   },
   "wheelchair_01": {
    "name": "Wheelchair 01",
@@ -1395,7 +1430,7 @@
    "authors": [
     "Garreth Dean"
    ],
-   "simplified": 40000
+   "simplified": 6000
   },
   "vintage_crutches_01": {
    "name": "Vintage Crutches 01",
@@ -1419,7 +1454,8 @@
    ],
    "authors": [
     "Ulan Cabanilla"
-   ]
+   ],
+   "simplified": 6000
   },
   "power_box_01": {
    "name": "Power Box 01",
@@ -1432,7 +1468,8 @@
    "authors": [
     "Rico Cilliers",
     "Yann Kervran"
-   ]
+   ],
+   "simplified": 3000
   },
   "small_lpg_tank": {
    "name": "Small Lpg Tank",
@@ -1444,7 +1481,8 @@
    ],
    "authors": [
     "Ulan Cabanilla"
-   ]
+   ],
+   "simplified": 6000
   },
   "wooden_broom": {
    "name": "Wooden Broom",
@@ -1456,7 +1494,8 @@
    ],
    "authors": [
     "Balen"
-   ]
+   ],
+   "simplified": 12000
   },
   "seeding_tray_01": {
    "name": "Seedling Tray 01",
@@ -1468,7 +1507,8 @@
    ],
    "authors": [
     "Satyaki Mandal"
-   ]
+   ],
+   "simplified": 3000
   },
   "vintage_telephone_wall_clock": {
    "name": "Vintage Telephone Wall Clock",
@@ -1480,7 +1520,8 @@
    ],
    "authors": [
     "Adrian C"
-   ]
+   ],
+   "simplified": 3000
   },
   "pull_chain_light_socket": {
    "name": "Pull Chain Light Socket",
@@ -1492,7 +1533,8 @@
    ],
    "authors": [
     "Josh Dean"
-   ]
+   ],
+   "simplified": 3000
   },
   "tree_stump_01": {
    "name": "Tree Stump 01",
@@ -1505,7 +1547,7 @@
    "authors": [
     "Rob Tuytel"
    ],
-   "simplified": 40000
+   "simplified": 12000
   },
   "rock_moss_set_01": {
    "name": "Rock Moss Set 01",
@@ -1518,7 +1560,7 @@
    "authors": [
     "Kless Gyzen"
    ],
-   "simplified": 40000
+   "simplified": 12000
   },
   "boulder_01": {
    "name": "Boulder 01",
@@ -1531,7 +1573,7 @@
    "authors": [
     "Rico Cilliers"
    ],
-   "simplified": 16000
+   "simplified": 12000
   },
   "nettle_plant": {
    "name": "Nettle Plant",
@@ -1545,7 +1587,7 @@
     "Rob Tuytel",
     "Rico Cilliers"
    ],
-   "simplified": 40000
+   "simplified": 6000
   },
   "rock_moss_set_02": {
    "name": "Rock Moss Set 02",
@@ -1558,7 +1600,7 @@
    "authors": [
     "Kless Gyzen"
    ],
-   "simplified": 40000
+   "simplified": 12000
   },
   "tree_stump_02": {
    "name": "Tree Stump 02",
@@ -1571,7 +1613,7 @@
    "authors": [
     "Rob Tuytel"
    ],
-   "simplified": 40000
+   "simplified": 12000
   },
   "moss_01": {
    "name": "Moss 01",
@@ -1584,7 +1626,7 @@
    "authors": [
     "Rob Tuytel"
    ],
-   "simplified": 16000
+   "simplified": 6000
   },
   "dry_branches_medium_01": {
    "name": "Dry Branches Medium 01",
@@ -1596,7 +1638,8 @@
    ],
    "authors": [
     "Rico Cilliers"
-   ]
+   ],
+   "simplified": 6000
   },
   "root_cluster_01": {
    "name": "Root Cluster 01",
@@ -1610,7 +1653,7 @@
     "Jenelle van Heerden",
     "Rico Cilliers"
    ],
-   "simplified": 16000
+   "simplified": 12000
   }
  }
 }

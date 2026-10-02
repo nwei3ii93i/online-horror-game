@@ -7,6 +7,7 @@ import type { PropPlacer, PropOptions } from './PropPlacer';
  * late 1980s, a wheelchair at the top of the stairs, a child's room nobody cleared, and a
  * sealed coal cellar that was lived in.
  */
+export type PropPlacement = P;
 type P = [id: string, x: number, y: number, z: number, ry?: number, o?: PropOptions];
 
 const { B0, G0, U0, A0 } = MANOR;

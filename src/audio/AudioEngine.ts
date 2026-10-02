@@ -583,6 +583,27 @@ export class AudioEngine {
     }
   }
 
+  /**
+   * Swap synthesised sounds for recorded samples: `${base}${id}_${n}.mp3` for n < count.
+   * Missing or undecodable files leave the synthesised version in place.
+   */
+  async loadSamples(base: string, counts: Partial<Record<SoundId, number>>): Promise<void> {
+    const ctx = this.ctx, bank = this.bank;
+    if (!ctx || !bank) return;
+    await Promise.all(Object.entries(counts).map(async ([id, n]) => {
+      const bufs = await Promise.all(Array.from({ length: n ?? 0 }, async (_, i) => {
+        try {
+          const r = await fetch(`${base}${id}_${i}.mp3`);
+          if (!r.ok) return null;
+          return await ctx.decodeAudioData(await r.arrayBuffer());
+        } catch {
+          return null;
+        }
+      }));
+      bank.setSamples(id as SoundId, bufs.filter((b): b is AudioBuffer => !!b));
+    }));
+  }
+
   /** fn(listener, source) → 0..1 occlusion. Re-evaluated round-robin for active positional sounds. */
   setOcclusionProvider(fn: OcclusionProvider | null): void {
     this.occProvider = fn;

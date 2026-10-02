@@ -21,7 +21,7 @@ interface FixtureState {
  */
 export class LightPool {
   readonly group = new THREE.Group();
-  private lights: THREE.PointLight[] = [];
+  readonly lights: THREE.PointLight[] = [];
   private assigned: (FixtureState | null)[] = [];
   private states: FixtureState[] = [];
   private t = 0;
@@ -58,7 +58,7 @@ export class LightPool {
     this.group.add(mb.build(materials, { name: 'fixtures', castShadow: false }));
     for (let i = 0; i < size; i++) {
       const l = new THREE.PointLight(0xffc98a, 0, 9, 2);
-      l.castShadow = true;
+      l.castShadow = shadowSize > 0;
       l.shadow.mapSize.set(shadowSize, shadowSize);
       l.shadow.bias = -0.002;
       l.shadow.camera.near = 0.08;

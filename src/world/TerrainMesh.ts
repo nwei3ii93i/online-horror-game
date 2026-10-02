@@ -66,6 +66,7 @@ export class TerrainMesh {
   private createMaterial(arrA: THREE.DataArrayTexture, arrB: THREE.DataArrayTexture): THREE.MeshStandardNodeMaterial {
     const mat = new THREE.MeshStandardNodeMaterial();
     mat.name = 'terrain';
+    mat.userData.exterior = true;
     const W = worldUniforms;
     const pw = positionWorld;
     const suv = pw.xz.add(WORLD_HALF).div(WORLD_HALF * 2);

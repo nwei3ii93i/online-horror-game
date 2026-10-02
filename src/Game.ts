@@ -1,4 +1,5 @@
 import * as THREE from 'three/webgpu';
+import { lights } from 'three/tsl';
 import { Engine } from './core/Engine';
 import { Settings } from './core/Settings';
 import { TextureStore } from './materials/TextureStore';
@@ -25,7 +26,11 @@ import { Interaction } from './gameplay/Interaction';
 import { Doors } from './gameplay/Doors';
 import { LocalWorldBridge, WorldBridge } from './gameplay/WorldBridge';
 import { LightPool } from './gameplay/LightPool';
+import { DocumentReader } from './ui/DocumentReader';
+import { MANOR_DOCS, placeDocuments } from './world/story/DocumentProps';
+import { buildStoryDressing } from './world/story/Dressing';
 import { AssetManager, ASSET_BASE } from './assets/AssetManager';
+import { MANOR } from './world/buildings/Manor';
 import { PropPlacer } from './world/props/PropPlacer';
 import { MANOR_PROP_IDS, placeManorProps } from './world/props/ManorProps';
 
@@ -57,6 +62,11 @@ export class Game {
   doors!: Doors;
   props!: PropPlacer;
   lamps!: LightPool;
+  reader!: DocumentReader;
+  private readerClosedAt = 0;
+  private propCullTimer = 0;
+  /** Interior-only groups (documents, story dressing, lamp fixtures) hidden away from the house. */
+  private interiorGroups: THREE.Object3D[] = [];
   bridge: WorldBridge = new LocalWorldBridge();
   inventory = new Set<string>();
   hud!: HUD;
@@ -113,14 +123,22 @@ export class Game {
     this.props = new PropPlacer(this.assets, this.physics);
     placeManorProps(this.props);
     // the group's gear in the van
-    const vanProps = new PropPlacer(this.assets);
-    this.world.van.cargo.forEach((c, i) => vanProps.place(VAN_CARGO[i], c.x, c.y, c.z, c.ry, { collider: 'none' }));
-    scene.add(vanProps.group);
+    if (this.world.van) {
+      const vanProps = new PropPlacer(this.assets);
+      this.world.van.cargo.forEach((c, i) => vanProps.place(VAN_CARGO[i], c.x, c.y, c.z, c.ry, { collider: 'none' }));
+      scene.add(vanProps.group);
+    }
     scene.add(this.props.group);
     this.interaction = new Interaction(this.physics);
     this.doors = new Doors(this.physics, this.materials, this.interaction, this.bridge);
     for (const d of this.world.doorSpecs) this.doors.add(d);
     scene.add(this.doors.group);
+    this.reader = new DocumentReader(document.body);
+    this.reader.onClose = () => { this.readerClosedAt = performance.now(); };
+    const docs = placeDocuments(MANOR_DOCS, this.physics, this.interaction, (d) => this.reader.open(d));
+    const dressing = buildStoryDressing(this.materials, this.physics);
+    scene.add(docs, dressing);
+    this.interiorGroups.push(docs, dressing);
 
     loading.set(0.85, 'Growing the forest');
     await new Promise((r) => setTimeout(r, 0));
@@ -134,10 +152,11 @@ export class Game {
     loading.set(0.9, 'Lighting');
     this.player = new PlayerController(this.physics, this.engine.input, this.settings, this.engine.camera);
     // everyone starts beside the van's open sliding door (slot 0 = local solo player)
-    const sp = this.world.van?.spawn[0] ?? POI.playerSpawn;
+    const sp = this.world.van?.spawn[0] ?? POI.arrival;
     this.player.init(sp.x, terrain.heightAt(sp.x, sp.z) + 0.05, sp.z, sp.rot);
     this.setupVanLights();
-    this.lamps = new LightPool(scene, this.world.lightFixtures, this.world.rooms, this.materials);
+    this.lamps = new LightPool(scene, this.world.lightFixtures, this.world.rooms, this.materials, q.lampLights, q.lampShadowSize);
+    this.interiorGroups.push(this.lamps.group);
     this.flashlight = new Flashlight(scene, q.flashlightShadowSize);
     this.engine.setupPost();
     if (q.volumetrics) {
@@ -148,6 +167,7 @@ export class Game {
     this.setupAudio();
     this.registerSystems();
     this.applyAutomation();
+    this.assignLightSets();
     // compile every pipeline now instead of hitching when things first come into view
     loading.set(0.97, 'Compiling shaders');
     this.forest.prepareWarmup(true);
@@ -158,6 +178,24 @@ export class Game {
     loading.set(1, 'Ready');
   }
 
+  /**
+   * Exterior materials (terrain, vegetation, façades) get a light list without the interior
+   * lamp pool: those point lights (with cube shadows) never reach them, so skipping them
+   * saves their evaluation on most outdoor pixels.
+   */
+  private assignLightSets(): void {
+    const scene = this.engine.scene;
+    const pool = new Set<THREE.Object3D>(this.lamps.lights);
+    const outdoor: THREE.Light[] = [];
+    scene.traverse((o) => { if ((o as THREE.Light).isLight && !pool.has(o)) outdoor.push(o as THREE.Light); });
+    const node = lights(outdoor);
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) if (mat.userData.exterior) (mat as any).lightsNode = node;
+    });
+  }
+
   /** Dipped headlights left on: the only warm light outside, scattering in the fog. */
   private setupVanLights(): void {
     const van = this.world.van;
@@ -166,7 +204,7 @@ export class Game {
     const spot = new THREE.SpotLight(0xffe2b0, 260, 55, 0.42, 0.55, 1.6);
     spot.position.copy(h.pos);
     spot.target.position.copy(h.pos).addScaledVector(h.dir, 20);
-    spot.castShadow = true;
+    spot.castShadow = this.settings.profile.lampShadowSize > 0;
     spot.shadow.mapSize.set(512, 512);
     spot.shadow.bias = -0.0006;
     spot.shadow.camera.near = 0.3;
@@ -191,12 +229,16 @@ export class Game {
         physics.step();
       },
       update: (dt) => {
-        this.player.update(dt);
+        const reading = this.reader.isOpen;
+        if (!reading) this.player.update(dt);
         this.interaction.update(e.camera, this.player.rapierCollider);
         const ictx = { playerId: 'local', hasItem: (id: string) => this.inventory.has(id), point: this.interaction.focusPoint };
-        this.hud.setPrompt(this.interaction.focused ? this.interaction.focused.prompt(ictx) : null);
-        if (e.frame % 30 === 0) this.hud.setInfo(`${e.backend.toUpperCase()}  ${e.fps.toFixed(0)} fps`);
-        if (e.input.wasPressed('interact') && this.interaction.focused) {
+        this.hud.setPrompt(this.interaction.focused && !reading ? this.interaction.focused.prompt(ictx) : null);
+        if (e.frame % 30 === 0) {
+          const ri = e.renderer.info.render as any;
+          this.hud.setInfo(`${e.backend.toUpperCase()}  ${e.fps.toFixed(0)} fps  ·  ${Math.round(e.dynScale * this.settings.profile.renderScale * 100)}% res  ·  ${ri.drawCalls ?? ri.calls} calls  ·  ${(ri.triangles / 1e6).toFixed(2)}M tris`);
+        }
+        if (e.input.wasPressed('interact') && this.interaction.focused && !reading && performance.now() - this.readerClosedAt > 300) {
           this.interaction.focused.interact({ playerId: 'local', hasItem: (id) => this.inventory.has(id), point: this.interaction.focusPoint });
         }
         if (e.input.wasPressed('flashlight')) { this.flashlight.toggle(); this.audio.play('flashlight_click'); }
@@ -209,10 +251,19 @@ export class Game {
         this.terrainMesh.update(e.camera.position, this.settings.profile.viewDistance);
         this.forest.update(e.camera, this.settings.profile.viewDistance, this.player.position);
         this.groundCover.update(this.player.position);
-        // interior dressing is only visible through windows from close by – skip it beyond that
-        const c = e.camera.position, M = BUILDINGS.manor;
-        const dx = Math.max(M.x0 - c.x, 0, c.x - M.x1), dz = Math.max(M.z0 - c.z, 0, c.z - M.z1);
-        this.props.group.visible = dx * dx + dz * dz < 22 * 22;
+        // interior dressing: distance + storey culling (also keeps it out of the shadow passes)
+        this.propCullTimer -= dt;
+        if (this.propCullTimer <= 0) {
+          this.propCullTimer = 0.2;
+          const c = e.camera.position, M = BUILDINGS.manor;
+          const dx = Math.max(M.x0 - c.x, 0, c.x - M.x1), dz = Math.max(M.z0 - c.z, 0, c.z - M.z1);
+          const near = dx * dx + dz * dz < 22 * 22;
+          this.props.group.visible = near;
+          for (const g of this.interiorGroups) g.visible = near;
+          const room = near ? this.world.roomAt(c) : undefined;
+          if (near) this.props.cull(c, 16, room ? room.y0 : null);
+          this.doors.cull(c, near ? 24 : 0, room ? room.y0 : null);
+        }
         worldUniforms.windTime.value += dt;
         this.updateAudio(dt);
       },
@@ -226,8 +277,16 @@ export class Game {
     const surf = (s: string, p: THREE.Vector3) => (s === 'terrain' ? `terrain:${this.terrain.surfaceAt(p.x, p.z)}` : s);
     this.player.onFootstep = (ev) => playFootstep(a, surf(ev.surface, ev.position), ev.position, ev.intensity, ev.stance, wet());
     this.player.onLand = (speed, s) => playLanding(a, surf(s, this.player.position), this.player.position.clone(), speed, wet());
-    this.doors.events.on('creak', (ev) => a.play(ev.kind === 'metal' ? 'gate_iron_creak' : 'door_open_creak', { position: ev.position }));
-    this.doors.events.on('close', (ev) => a.play('door_close', { position: ev.position }));
+    // recorded CC0 samples (Kenney) replace the synthesised door / paper sounds where present
+    void a.loadSamples(`${ASSET_BASE}audio/`, { door_open_creak: 4, door_close: 4, door_locked: 2, door_unlock: 1, latch: 2, page_turn: 2, paper_rustle: 2 });
+    this.doors.events.on('creak', (ev) => a.play(ev.kind === 'metal' ? 'gate_iron_creak' : 'door_open_creak', { position: ev.position, volume: 0.85, pitch: ev.kind === 'metal' ? 1 : 0.9 + Math.random() * 0.2 }));
+    this.doors.events.on('close', (ev) => a.play('door_close', { position: ev.position, volume: 0.8 }));
+    this.reader.onOpen = () => a.play('page_turn', { volume: 0.6 });
+    const prevClose = this.reader.onClose;
+    this.reader.onClose = () => { prevClose?.(); a.play('paper_rustle', { volume: 0.55 }); };
+    // a clock that still ticks in an empty house; lamps hum where the generator feeds them
+    a.play('clock_tick_loop', { position: new THREE.Vector3(-2.43, MANOR.G0 + 1.6, -21.4), loop: true, volume: 0.5, refDistance: 1.2, maxDistance: 14 });
+    for (const f of this.world.lightFixtures) if (f.working) a.play('bulb_buzz_loop', { position: f.position.clone(), loop: true, volume: 0.35, refDistance: 0.8, maxDistance: 8 });
     this.doors.events.on('locked', (ev) => a.play('door_locked', { position: ev.position }));
     this.doors.events.on('unlock', (ev) => a.play('door_unlock', { position: ev.position }));
     const d = new THREE.Vector3();
@@ -299,6 +358,7 @@ export class Game {
     if (cam || a.has('nohud')) this.hud.el.style.display = 'none';
     if (a.has('wet')) worldUniforms.wetness.value = Number(a.get('wet'));
     if (a.has('noflash')) this.flashlight.on = false;
+    if (a.get('dynres') === '0' || a.has('frames')) this.engine.dynamicResolution = false;
     if (a.has('exposure')) this.engine.renderer.toneMappingExposure = Number(a.get('exposure'));
     if (a.has('moon')) this.atmosphere.moon.intensity = Number(a.get('moon'));
     if (a.has('hemi')) this.atmosphere.hemi.intensity = Number(a.get('hemi'));

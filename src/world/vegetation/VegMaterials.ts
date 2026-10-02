@@ -44,6 +44,7 @@ export interface FoliageOpts {
 /** Alpha-tested, double-sided foliage card material with wind and wetness. */
 export function foliageMaterial(o: FoliageOpts): THREE.MeshStandardNodeMaterial {
   const mat = new THREE.MeshStandardNodeMaterial();
+  mat.userData.exterior = true;
   mat.side = THREE.DoubleSide;
   mat.alphaTest = o.alphaTest ?? 0.42;
   const W = worldUniforms;
@@ -70,6 +71,7 @@ export function foliageMaterial(o: FoliageOpts): THREE.MeshStandardNodeMaterial 
 export function barkMaterial(textures: TextureStore, texId: string, scaleU: number, scaleV: number, treeHeight: number, trunkSway: number, mossUp = 0.4): THREE.MeshStandardNodeMaterial {
   const set = textures.get(texId);
   const mat = new THREE.MeshStandardNodeMaterial();
+  mat.userData.exterior = true;
   const tuv = uv().div(set.scale ? vec2(set.scale[0], set.scale[1]) : vec2(scaleU, scaleV));
   const A = texture(set.a, tuv), B = texture(set.b, tuv);
   const W = worldUniforms;

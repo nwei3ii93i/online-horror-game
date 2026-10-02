@@ -41,7 +41,10 @@ export class World {
   readonly group = new THREE.Group();
   readonly buildings: BuildingOutput[] = [];
   readonly rooms: Room[] = [];
-  van!: VanOutput;
+  /** The group's van – disabled until a proper photoscanned/realistic model replaces the procedural placeholder. */
+  van: VanOutput | null = null;
+
+  static withVan = false;
 
   constructor(private physics: Physics, private materials: MaterialLibrary, private terrain: TerrainData) {
     this.group.name = 'world';
@@ -58,9 +61,11 @@ export class World {
   build(): void {
     const manor = buildManor(this.physics, this.materials);
     this.add(manor);
-    const v = POI.van;
-    this.van = buildVan(this.materials, this.physics, v.x, v.z, v.heading, (x, z) => this.terrain.heightAt(x, z));
-    this.group.add(this.van.group);
+    if (World.withVan) {
+      const v = POI.van;
+      this.van = buildVan(this.materials, this.physics, v.x, v.z, v.heading, (x, z) => this.terrain.heightAt(x, z));
+      this.group.add(this.van.group);
+    }
   }
 
   private add(b: BuildingOutput): void {
