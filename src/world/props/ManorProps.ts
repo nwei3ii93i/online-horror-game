@@ -147,7 +147,8 @@ export const MANOR_PROPS: P[] = [
   ['old_tyre', -4.2, B0 + 0.3, -16.3, 0, { tiltX: H, collider: 'none' }],
   ['wooden_crate_02', -6.0, B0, -16.2, 0.1],
   // boiler cellar: the jar shelf lies on THIS side of the sealed wall – pushed from within
-  ['steel_frame_shelves_01', -5.9, B0 + 0.27, -27.15, H + 0.35, { tiltX: -H }],
+  // (lying on its back: the base stays at the sealed wall, the top points into the boiler room)
+  ['steel_frame_shelves_01', -6.95, B0 + 0.27, -26.95, -H + 0.35, { tiltX: -H }],
   ['Lantern_01', -4.0, B0, -23.0, 0.7, none],
   // sealed room
   ['treasure_chest', -11.75, B0, -23.0, H],

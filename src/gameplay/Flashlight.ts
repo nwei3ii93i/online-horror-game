@@ -48,7 +48,7 @@ export class Flashlight {
   readonly fill: THREE.PointLight;
   on = true;
   battery = 1;
-  intensity = 420;
+  intensity = 340;
   private quat = new THREE.Quaternion();
   private flicker = 0;
   private flickerTime = 0;
@@ -121,7 +121,7 @@ export class Flashlight {
       // inverse-square falloff of the torch onto the surface, re-emitted diffusely
       const d = this.bounceDist;
       this.fill.position.copy(this.bounce);
-      this.fill.intensity = Math.min(5, 9 / (d * d + 0.8)) * k * this.flicker;
+      this.fill.intensity = Math.min(6, 10 / (d * d + 0.8)) * k * this.flicker;
     } else {
       this.fill.position.copy(this.aim).sub(this.light.position).normalize().multiplyScalar(1.2).add(this.light.position);
       this.fill.intensity = 0.4 * k * this.flicker;
