@@ -33,6 +33,8 @@ interface Door {
   cast: boolean;
   /** Depth-only stand-in of the leaf, plus parts that can't be merged (glass etc.). */
   shadow: { proxies: THREE.Mesh[]; rest: THREE.Mesh[] };
+  /** Rooms on both sides (set by markIndoorDoors). */
+  indoor: boolean;
 }
 
 const _q = new THREE.Quaternion();
@@ -85,7 +87,7 @@ export class Doors {
     );
     this.physics.surfaces.set(col.handle, spec.sound === 'metal' ? 'metal' : 'wood');
     const initial = spec.open ?? 0;
-    const door: Door = { spec, pivot, body, collider: col, angle: initial, target: initial, vel: 0, locked: !!spec.locked, blockedTime: 0, creaked: false, cast: true, shadow };
+    const door: Door = { spec, pivot, body, collider: col, angle: initial, target: initial, vel: 0, locked: !!spec.locked, blockedTime: 0, creaked: false, cast: true, shadow, indoor: false };
     this.apply(door);
     this.doors.set(spec.id, door);
     this.byCollider.set(col.handle, door);
@@ -200,7 +202,7 @@ export class Doors {
       const { hinge, ry, leaf } = d.spec;
       const along = new THREE.Vector3(Math.cos(ry), 0, -Math.sin(ry)), n = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry));
       const mid = hinge.clone().addScaledVector(along, leaf.width / 2).setY(hinge.y + 1);
-      if (inRoom(p.copy(mid).addScaledVector(n, 0.6)) && inRoom(p.copy(mid).addScaledVector(n, -0.6))) markIndoor(d.pivot);
+      if (inRoom(p.copy(mid).addScaledVector(n, 0.6)) && inRoom(p.copy(mid).addScaledVector(n, -0.6))) { markIndoor(d.pivot); d.indoor = true; }
     }
   }
 
@@ -227,9 +229,10 @@ export class Doors {
       if (vis && d2 > 25) {
         if (floorY !== null) vis = h.y > floorY - 1.2 && h.y < floorY + 2.8;
         else {
-          // from outside: only leaves near ground level (no cellars, no upper storeys)
+          // from outside: only leaves near ground level (no cellars, no upper storeys), and
+          // inner doors only from close by (they're only glimpsed through a window)
           const g = groundAt ? groundAt(h.x, h.z) : 0;
-          vis = h.y > g - 0.6 && h.y < g + 1.6;
+          vis = h.y > g - 0.6 && h.y < g + 1.6 && (!d.indoor || d2 < 12 * 12);
         }
       }
       show(d, vis);
