@@ -336,11 +336,13 @@ export function buildManor(physics: Physics | undefined, materials: MaterialLibr
 
   // roof (hipped, Biberschwanz tiles) and chimneys
   const roof = buildRoof(mb, { type: 'hip', x0: H.X0, z0: H.Z0, x1: H.X1, z1: H.Z1, eaveY: H.EAVE, pitch: (47 * Math.PI) / 180, overhang: 0.75, thickness: 0.24, innerMat: 'rough_timber', rafters: { mat: 'rough_timber', spacing: 0.95, size: 0.16 }, gutterMat: 'rust_metal' }, physics);
-  buildChimney(mb, -6.2, -22.2, Bc, roof.ridgeY - 1.4, 0.7, 0.55);
-  buildChimney(mb, 6.6, -24.5, Bc, roof.ridgeY - 1.8, 0.65, 0.55);
+  // chimney stacks rise ~1.1 m above the tiles where they pierce the roof
+  const chimTop = (x: number, z: number) => roof.innerHeight(x, z) + 0.24 + 1.1;
+  buildChimney(mb, -6.2, -22.2, Bc, chimTop(-6.2, -22.2), 0.7, 0.55);
+  buildChimney(mb, 6.6, -24.5, Bc, chimTop(6.6, -24.5), 0.65, 0.55);
   if (physics) {
-    physics.addBox({ cx: -6.2, cy: (Bc + roof.ridgeY) / 2, cz: -22.2, hx: 0.35, hy: (roof.ridgeY - Bc) / 2, hz: 0.28, surface: 'stone' });
-    physics.addBox({ cx: 6.6, cy: (Bc + roof.ridgeY) / 2, cz: -24.5, hx: 0.33, hy: (roof.ridgeY - Bc) / 2, hz: 0.28, surface: 'stone' });
+    physics.addBox({ cx: -6.2, cy: (Bc + chimTop(-6.2, -22.2)) / 2, cz: -22.2, hx: 0.35, hy: (chimTop(-6.2, -22.2) - Bc) / 2, hz: 0.28, surface: 'stone' });
+    physics.addBox({ cx: 6.6, cy: (Bc + chimTop(6.6, -24.5)) / 2, cz: -24.5, hx: 0.33, hy: (chimTop(6.6, -24.5) - Bc) / 2, hz: 0.28, surface: 'stone' });
   }
   // downpipes at the corners
   for (const [x, z] of [[H.X0 - 0.75, H.Z0 - 0.75], [H.X1 + 0.75, H.Z0 - 0.75], [H.X0 - 0.75, H.Z1 + 0.75], [H.X1 + 0.75, H.Z1 + 0.75]]) {

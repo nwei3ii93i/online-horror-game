@@ -60,8 +60,9 @@ export function plasterExterior(b: TexBuilder, tint = '#b4aa94'): void {
     const grain = nz.value(u * 512, v * 512, 512, 512) ;
     // spalling patches (plaster fallen off)
     const spallN = nz.fbm(u + 5.2, v + 1.3, 3, 5, 0.55);
-    const spall = smoothstep(0.34, 0.37, spallN);
-    const spallEdge = smoothstep(0.30, 0.34, spallN) - spall;
+    // (rare and larger: small saturated holes read as splatter at night)
+    const spall = smoothstep(0.39, 0.42, spallN);
+    const spallEdge = smoothstep(0.35, 0.39, spallN) - spall;
     // water streaks: vertical, anisotropic
     const streak = smoothstep(0.1, 0.7, nz.fbm2(u, v, 48, 3, 4, 0.6)) * smoothstep(-0.3, 0.5, nz.fbm(u, v + 0.5, 2, 3));
     const cracks = crackNetwork(nz, u, v, 5, 0.035, 0.05);
@@ -80,8 +81,9 @@ export function plasterExterior(b: TexBuilder, tint = '#b4aa94'): void {
     let rough = 0.88 + fine * 0.08;
     if (spall > 0) {
       brickAt(u * 2, v * 2, 8, 28, 0.18, bi);
+      // Mühlviertel walls are granite rubble under the render: grey-brown stones, lime mortar
       const r1 = idRand(bi.id, 1);
-      const bc = BRICK_PALETTE[Math.floor(r1 * BRICK_PALETTE.length)].map((x) => x * 0.85);
+      const bc = mix3(hex('#6f6a60'), hex('#8a8275'), r1);
       const mc = hex('#8a8272');
       const m = bi.mortar;
       const inner = [lerp(bc[0], mc[0], m), lerp(bc[1], mc[1], m), lerp(bc[2], mc[2], m)];

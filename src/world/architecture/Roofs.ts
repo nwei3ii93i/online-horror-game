@@ -219,6 +219,8 @@ export function buildRoof(mb: MeshBuilder, r: RoofDef, physics?: Physics): RoofI
       // collar ties
       for (let x = r.x0 + 0.3; x <= r.x1 - 0.3; x += spacing * 2) {
         const y = r.eaveY + (ridgeY - r.eaveY) * 0.62;
+        // hip ends: the roof is lower there – a collar tie would poke out through the tiles
+        if (topH(x, cz) - vThick < y + size) continue;
         const zoff = (ridgeY - y) / tan;
         mb.box(mat, x, y, cz, size * 0.5, size * 0.8, zoff * 2, { uv: 'local' });
       }

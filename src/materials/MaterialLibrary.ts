@@ -273,7 +273,7 @@ export class MaterialLibrary {
     const dirt = A.a;
     const wet = worldUniforms.wetness.mul(float(1).sub(worldUniforms.indoorAt()));
     mat.colorNode = vec4(mix(vec3(0.03, 0.035, 0.04), A.rgb.mul(0.6), dirt), mix(float(0.12), float(0.85), dirt).add(wet.mul(0.05)));
-    mat.roughnessNode = mix(float(0.04), float(0.85), dirt);
+    mat.roughnessNode = mix(float(0.12), float(0.85), dirt); // old float glass: a softer torch glint, no blown-out flare
     mat.metalnessNode = float(0);
     this.glass = mat;
     return mat;
