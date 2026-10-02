@@ -99,7 +99,7 @@ const HATCH: Rect = { x0: IX0, z0: 2.3, x1: 28.3, z1: 4.275 };           // kitc
 
 /** Furniture tops and fixed spots shared with CaretakerProps / CaretakerDocs. */
 export const CARETAKER_SPOTS = {
-  kitchenTable: { x: 29.05, z: 1.92, w: 1.1, d: 0.74, top: G0 + 0.78 },
+  kitchenTable: { x: 29.75, z: 1.92, w: 1.1, d: 0.74, top: G0 + 0.78 },
   woodBox: { x: 30.6, z: 4.01, w: 0.44, d: 0.46, top: G0 + 0.57 },
   stove: { x: CHIM.x, z: CHIM.z - CHIM.sz / 2 - 0.3, top: G0 + 0.84 },
   livingTable: { x: 28.55, z: 6.45, w: 1.0, d: 0.8, top: G0 + 0.78 },
@@ -578,7 +578,8 @@ function hangDoors(kit: BuildingKit, ops: OpMap): void {
   D('door:caretaker_front', 'd_front', { style: 'panel4', mat: 'painted_wood_brown_ext', handle: 'knob' }, -1, 1, { sound: 'wood', room: 'ct_hall', maxOpen: 1.6 });
   // kitchen back door to the yard and the woodshed path: stands ajar
   D('door:caretaker_back', 'd_back', { style: 'ledged', mat: 'painted_wood_green', handle: 'lever', handleMat: 'rust_metal_int', seed: 5 }, -1, -1, { open: 0.65, sound: 'wood', room: 'ct_kitchen' });
-  D('door:caretaker_kitchen', 'd_kitchen', panel, -1, -1, { open: 1.4, maxOpen: 1.55, room: 'ct_kitchen' });
+  // opens into the hall (into the kitchen it would sweep through the Kredenz)
+  D('door:caretaker_kitchen', 'd_kitchen', panel, -1, 1, { open: 1.45, maxOpen: 1.6, room: 'ct_hall' });
   D('door:caretaker_larder', 'd_larder', { style: 'ledged', mat: 'painted_wood_white', handle: 'lever', seed: 2 }, -1, -1, { open: 0.3, maxOpen: 1.55, room: 'ct_larder' });
   D('door:caretaker_living', 'd_living', panel, 1, 1, { open: 0.9, maxOpen: 1.5, room: 'ct_living' });
   D('door:caretaker_bedroom', 'd_bedroom', panel, 1, -1, { open: 0.2, maxOpen: 1.5, room: 'ct_bedroom' });

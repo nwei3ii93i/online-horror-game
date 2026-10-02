@@ -22,8 +22,9 @@ const wall: PropOptions = { anchor: 'back', collider: 'none' };
 
 const INTERIOR: PropPlacement[] = [
   // ---------------------------------------------------------------- kitchen (Wohnküche)
-  ['painted_wooden_chair_01', S.kitchenTable.x, G0, S.kitchenTable.z + 0.7, PI - 0.06],
-  ['painted_wooden_chair_01', S.kitchenTable.x + 0.9, G0, S.kitchenTable.z + 0.06, -H + 0.18],
+  // (the table's west end stays free: that is the way to the foot of the attic ladder)
+  ['painted_wooden_chair_01', S.kitchenTable.x - 0.27, G0, S.kitchenTable.z + 0.7, PI - 0.06],
+  ['painted_wooden_chair_01', S.kitchenTable.x + 0.3, G0, S.kitchenTable.z + 0.74, PI + 0.12],
   ['painted_wooden_cabinet', 31.665, G0, 3.4, -H],                                    // Kredenz on the east wall
   ['wall_clock', 31.975, G0 + 1.98, 3.4, -H, wall],
   ['wicker_basket_01', 31.68, G0 + 1.18, 3.05, -H + 0.2, none],                      // on the Kredenz
@@ -41,26 +42,23 @@ const INTERIOR: PropPlacement[] = [
   ['can_rusted', S.larderShelf.x0 + 0.14, G0 + S.larderShelf.boards[3] + 0.0125, 3.3, 0.5, none],
   ['wicker_basket_01', 32.64, G0, 3.55, H, none],
 
-  // ---------------------------------------------------------------- hall
-  ['power_box_01', 30.75, G0 + 1.55, 5.15, H, wall],                                 // fuse box (generator circuit)
-
   // ---------------------------------------------------------------- living room (Stube)
-  ['Rockingchair_01', 29.62, G0, 5.88, PI],                                          // facing the tiled stove
+  ['Rockingchair_01', 28.36, G0, 5.2, H + 0.15],                                     // by the shelf, facing the tiled stove
   ['Shelf_01', 27.63, G0, 5.05, H],
   ['hanging_picture_frame_02', 28.35, G0 + 1.95, 4.525, 0, wall],
-  ['wicker_basket_01', 30.24, G0, 5.62, 0.6, none],                                  // knitting basket
+  ['wicker_basket_01', 28.5, G0, 5.84, 0.6, none],                                   // knitting basket
 
   // ---------------------------------------------------------------- bedroom
   ['old_bed_frame', 34.03, G0, 5.55, 0],                                             // headboard against the spine wall
   ['ClassicNightstand_01', 33.25, G0, 4.76, 0],
   ['drawer_cabinet', 32.37, G0, 6.87, H],
-  ['WoodenTable_03', 33.75, G0, 7.21, PI],                                           // desk under the window
-  ['painted_wooden_chair_01', 33.1, G0, 6.65, 0.08],
+  ['WoodenTable_03', 33.75, G0, 7.21, PI],                                           // desk under the window (no chair: the path to it stays free)
 
   // ---------------------------------------------------------------- porch (Vorbau)
-  ['rubber_boots', 31.95, PORCH.y, 8.3, 0.08, none],
+  ['rubber_boots', 30.31, PORCH.y, 8.47, H + 0.06, none],                            // along the west wall, clear of both door leaves
   ['wooden_broom', 32.5, PORCH.y, 9.58, PI, { tiltX: -0.12, collider: 'none' }],
   ['planter_pot_clay', 30.34, PORCH.y + 0.45, 9.45, 0.4, none],                      // on the porch bench
+  ['power_box_01', 32.25, PORCH.y + 1.72, PORCH.z0, 0, { anchor: 'back' }],         // fuse box (generator circuit), above head height
 
   // ---------------------------------------------------------------- cellar
   ['Barrel_01', 32.9, C0, 6.9, 0.4],                                                 // sauerkraut
