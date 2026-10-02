@@ -42,7 +42,8 @@ the folder the game falls back to its procedural materials.
 | Shift | run (stamina) |
 | C | crouch → crawl (through crawl spaces) |
 | F | flashlight |
-| E | use / open / unlock |
+| E | use / open / unlock / read / pick up |
+| Tab | (while reading) German original ↔ English transcript |
 | Q | lean (peek) |
 | Esc | release mouse |
 
@@ -61,6 +62,16 @@ the folder the game falls back to its procedural materials.
 You start next to the group's van on the service road below the estate. Example:
 `http://localhost:5173/?quality=medium&cam=4,1.7,4,8,3` starts in the courtyard looking at
 the manor.
+
+## What's in the world
+
+You arrive on the service road below the chained estate gate (the way in is a breach in the
+wall further east). The estate: the manor (cellars, sealed coal cellar, attic, U-stair with
+half landing), the caretaker's house (cellar, crawl space, attic) with woodshed and mailbox,
+workshop, barn, pump house with the generator, the service tunnel and coal gallery under the
+grounds, the glasshouse, the chapel with crypt, the overgrown cemetery and a hunting stand at
+the old pasture. 30+ readable documents tell the story; the manor key hangs on the caretaker's
+key board.
 
 ## Tech
 
